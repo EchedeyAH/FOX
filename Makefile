@@ -1,50 +1,46 @@
 # Variables
-CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -Idrivers/include -g
-SRC_DIR = src
-BUILD_DIR = build
-TEST_DIR = tests
-EXECUTABLE = $(BUILD_DIR)/project_executable
+CC := gcc
+CFLAGS := -Wall -Wextra -g
+SRC_DIR := src
+BUILD_DIR := build
+TEST_DIR := tests
+EXECUTABLE := my_program
 
-# Listas de archivos fuente
-SRC_FILES = $(wildcard $(SRC_DIR)/*.c) \
-            $(wildcard $(SRC_DIR)/can_module/*.c) \
-            $(wildcard $(SRC_DIR)/usb_module/*.c) \
-            $(wildcard $(SRC_DIR)/scheduler_module/*.c) \
-            $(wildcard $(SRC_DIR)/rt_tasks/*.c)
+# Archivos fuente y objeto
+SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
-# Archivos objeto
-OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
-
-# Reglas
+# Regla principal
 all: $(EXECUTABLE)
 
+# Regla para crear el ejecutable
 $(EXECUTABLE): $(OBJ_FILES)
 	$(CC) -o $@ $^
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(BUILD_DIR)
+# Regla para compilar archivos fuente en archivos objeto
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Reglas para pruebas
-test: $(TEST_DIR)/test_can_module.o $(TEST_DIR)/test_usb_module.o $(TEST_DIR)/test_rt_scheduler.o \
-      $(TEST_DIR)/test_task_comm.o $(TEST_DIR)/test_task_sensor.o
-	$(CC) -o $(BUILD_DIR)/test_executable $^
+# Crear el directorio de construcción si no existe
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-$(TEST_DIR)/%.o: $(TEST_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# Regla para ejecutar pruebas unitarias
+test: $(EXECUTABLE)
+	@echo "Ejecutando pruebas..."
+	$(TEST_DIR)/run_tests.sh
 
-# Limpieza
+# Regla para limpiar archivos generados
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(EXECUTABLE) $(BUILD_DIR)/test_executable
+	rm -rf $(BUILD_DIR)/*.o $(EXECUTABLE)
 
-# Instalación (opcional)
-install: all
-	@echo "Instalando el ejecutable en /usr/local/bin"
-	cp $(EXECUTABLE) /usr/local/bin/
+# Regla para instalar el ejecutable
+install: $(EXECUTABLE)
+	install -m 755 $(EXECUTABLE) /usr/local/bin/
 
-# Ejecución del programa
-run: all
+# Regla para ejecutar el programa
+run: $(EXECUTABLE)
 	./$(EXECUTABLE)
 
+# Declarar reglas como .PHONY
 .PHONY: all clean install test run
