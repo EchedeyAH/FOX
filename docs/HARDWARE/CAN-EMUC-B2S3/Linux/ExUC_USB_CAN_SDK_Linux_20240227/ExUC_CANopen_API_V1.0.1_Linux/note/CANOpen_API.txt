@@ -1,0 +1,273 @@
+
+1.
+=================================================================================================
+Prototype:
+    int EMUCCANOpenEnable(char *setup_ini, CANOPEN_CB_INFO canopen_cb_info);
+
+Description:
+    Enable a CANOpen network with the parameter information of a selected INI file and function pointers of callback handlers
+
+Parameter:
+    setup_ini:
+        A char pointer(array) which represent INI file name location
+    canopen_cb_info:
+        A CANOPEN_CB_INFO structure defined as below
+
+        .canopen_handle_sdo_abort_cb: a function pointer of the callback handler to handle SDO abort
+        .canopen_handle_sdo_cb: a function pointer of the callback handler to handle SDO response
+        .canopen_cob_cb: a function pointer of the callback handler to handle PDO and EMCY
+        .canopen_update_cb: a function pointer of the callback handler, this function periodically called from the CANopen stack
+        .canopen_set_state_cb: a function pointer of the callback handler to handle application layer operational state changes
+        .canopen_time_cb: a function pointer of the callback handler to handle every TIME message
+        .canopen_sync_cb: a function pointer of the callback handler to handle every SYNC message
+        .canopen_init_device_cb: a function pointer of the callback handler to initialize external devices once
+        .canopen_can_rx_cb: a function pointer of the callback handler to handle CAN frame received
+        .canopen_can_tx_cb: a function pointer of the callback handler to handle CAN frame transmitted
+
+        returned parameters of callback functions:
+            p, port:
+                A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+            n:
+                The nth CANOpen CSDO(CSDO: Client Service Data Object)
+            index:
+                A 16-bit unsigned integer which represent a CANOpen object dictionary addressed index
+            subindex:
+                A 8-bit unsigned integer which represent a CANOpen object dictionary addressed sub-index
+            cs:
+                0=server sdo, 1=client sdo
+            abort_code:
+                A 32-bit unsigned integer which represent CANOpen abort code, please refer to CiA301 7.2.4.3.17 for more detail
+            buf:
+                A pointer to store a started address of the 8-bit unsigned integer array data buffer
+            buf_len:
+                A 8-bit unsigned integer which represent a length of the given parameter "buf"
+            fcode:
+                A 8-bit unsigned integer which represent CANOpen function code, please refer to CiA301 for more detail
+            src:
+                A 8-bit unsigned integer which represent the source address(i.e., CANOpen node-id)
+            state:
+                CANOpen NMT state
+                (state=0x00: boot-up, state=0x04: stopped, state=0x05: operational, state=0x7F: pre-operational)
+            milliseconds:
+                A 32-bit unsigned integer which represent milliseconds since midnight Jan 1, 1984
+            days:
+                A 16-bit unsigned integer which represent days since midnight Jan 1, 1984
+            counter:
+                counter is optional, configure via 0x1019 introduced with CiA301 v4.1
+            id:
+                A 8-bit unsigned integer which represent a node-ID of the CANOpen network
+
+Return Value:
+    return = 0: success
+    return = 1: failure; CANOpen network has already be enabled
+    return = 2: failure; open setup_ini failed
+    return = 3: failure; read setup_ini failed
+    10 <= return <= 19: failure; load B202 library failed
+    20 <= return <= 99: failure; initialize B202 failed
+    100 <= return <= 109: failure; create CAN received thread failed
+    return = 255: CANOpen library is currently not supported on this product
+
+Define:
+    typedef void (*CANOPEN_HANDLE_SDO_ABORT_CB) (uint8_t p, uint8_t n, uint16_t index, uint8_t subindex, uint8_t cs, uint32_t abort_code);
+    typedef void (*CANOPEN_HANDLE_SDO_CB) (uint8_t p, uint8_t n, uint16_t index, uint8_t subindex, uint8_t *buf, uint8_t buf_len);
+    typedef void (*CANOPEN_COB_CB) (uint8_t port, uint8_t fcode, uint8_t src, uint8_t *buf, uint8_t buf_len);
+    typedef void (*CANOPEN_UPDATE_CB) (int port);
+    typedef void (*CANOPEN_SET_STATE_CB) (uint8_t p, uint8_t state);
+    typedef void (*CANOPEN_TIME_CB) (uint8_t p, uint32_t milliseconds, uint16_t days);
+    typedef void (*CANOPEN_SYNC_CB) (uint8_t p, uint8_t counter);
+    typedef void (*CANOPEN_INIT_DEVICE_CB) (uint8_t p);
+    typedef void (*CANOPEN_CAN_RX_CB) (uint8_t p, uint32_t id, uint8_t *buf, uint8_t buf_len);
+    typedef void (*CANOPEN_CAN_TX_CB) (uint8_t p, uint32_t id, uint8_t *buf, uint8_t buf_len);
+
+    typedef struct
+    {
+        CANOPEN_HANDLE_SDO_ABORT_CB canopen_handle_sdo_abort_cb;
+        CANOPEN_HANDLE_SDO_CB canopen_handle_sdo_cb;
+        CANOPEN_COB_CB canopen_cob_cb;
+        CANOPEN_UPDATE_CB canopen_update_cb;
+        CANOPEN_SET_STATE_CB canopen_set_state_cb;
+        CANOPEN_TIME_CB canopen_time_cb;
+        CANOPEN_SYNC_CB canopen_sync_cb;
+        CANOPEN_INIT_DEVICE_CB canopen_init_device_cb;
+        CANOPEN_CAN_RX_CB canopen_can_rx_cb;
+        CANOPEN_CAN_TX_CB canopen_can_tx_cb;
+
+    } CANOPEN_CB_INFO;
+
+
+2.
+=================================================================================================
+Prototype:
+    void EMUCCANOpenDisable(void);
+
+Description:
+    Disable present CANOpen network(both CAN1 and CAN2)
+    The function should be called after EMUCCANOpenEnable(); otherwise, it is meaningless.
+
+Parameter:
+    void
+
+Return Value:
+    void
+
+Define:
+    none
+
+3.
+=================================================================================================
+Prototype:
+    int EMUCWriteOD(uint8_t p, uint16_t ix, uint8_t sx, uint8_t *buf, uint8_t bl);
+
+Description:
+    To modify the data value of the specificed CANOpen object dictionary addressed index and sub-index
+
+Parameter:
+    p:
+        A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+    ix:
+        A 16-bit unsigned integer which represent a CANOpen object dictionary addressed index
+    sx:
+        A 8-bit unsigned integer which represent a CANOpen object dictionary addressed sub-index
+    buf:
+        A pointer to store a started address of the 8-bit unsigned integer array data buffer
+    bl:
+        A 8-bit unsigned integer which represent a length of the given parameter "buf"
+
+Return Value:
+    return = 0: success
+    return = 1: failure; input parameters is illegal
+    return = 2: failure; CANopen network is not enabled
+
+Define:
+    none
+
+4.
+=================================================================================================
+Prototype:
+    int EMUCCANOpenTx(uint8_t p, CAN_TX_INFO can_tx_info);
+
+Description:
+    To transmit a CAN SID frame by the given port and CAN frame information
+
+Parameter:
+    p:
+        A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+    can_tx_info:
+        A CAN_TX_INFO structure defined as below
+
+        .id: CAN frame standard ID(legal value: 0x000 <= .id <= 0x7FF)
+        .buf: CAN frame data(8-bit unsigned integer array with array size MAX_CAN_FRAME_DATA_LEN)
+        .buf_len: CAN frame data length(legal value: 0 <= .buf_len <= 8)
+
+Return Value:
+    return = 0: success
+    return = 1: failure
+
+Define:
+    #define MAX_CAN_FRAME_DATA_LEN 8
+
+    typedef struct
+    {
+        uint32_t id;
+        uint8_t buf[MAX_CAN_FRAME_DATA_LEN];
+        uint8_t buf_len;
+
+    } CAN_TX_INFO;
+
+5.
+=================================================================================================
+Prototype:
+    int EMUCCANOpenSetState(uint8_t p, uint8_t node_id, uint8_t state);
+
+Description:
+    To transmit a CANOpen NMT communication object with node-ID and state of the designate port
+
+Parameter:
+    p:
+        A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+    node_id:
+        A 8-bit unsigned integer which represent a node-ID of the CANOpen network
+    state:
+        CANOpen NMT state
+        (state=0x00: boot-up, state=0x04: stopped, state=0x05: operational, state=0x7F: pre-operational)
+
+Return Value:
+    return = 0: success
+    return = 2: failure; CANopen network is not enabled
+
+Define:
+    none
+
+6.
+=================================================================================================
+Prototype:
+    int EMUCCANOpenRqstState(uint8_t p, uint8_t node_id);
+
+Description:
+    To transmit a RTR CAN SID frame by the given port and CANOpen node-id
+
+Parameter:
+    p:
+        A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+    node_id:
+        A 8-bit unsigned integer which represent a node-ID of the CANOpen network
+
+Return Value:
+    return = 0: success
+    return = 1: failure; send CAN frame failed
+    return = 2: failure; CANopen network is not enabled
+
+Define:
+    none
+
+7.
+=================================================================================================
+Prototype:
+    int EMUCCANOpenCheckNodeState(uint8_t p, uint8_t nodeid, NSD_INFO *nsd_info);
+
+Description:
+    Temp
+
+Parameter:
+    p:
+        A 8-bit unsigned integer which represent port1(p=0) or port2(p=1)
+    nodeid:
+        A 8-bit unsigned integer which represent a node-ID of the CANOpen network(legal value: 0x01 <= nodeid <= 0x7F)
+    nsd_info:
+        A pointer of NSD_INFO structure which is defined as below to the output information returned by API function
+
+        .nodeid: if the value of .nodeid is not equal to the parameter nodeid value, it is meaningless
+        .state: CANOpen NMT state
+                (.state=0x00: boot-up, .state=0x04: stopped, .state=0x05: operational, .state=0x7F: pre-operational, .state=0xFF: meaningless)
+        .lastseen_timestamp: to-do
+
+Return Value:
+    return = 0: success
+    return = 2: failure; CANopen network is not enabled
+
+Define:
+    typedef struct
+    {
+        uint8_t nodeid;
+        uint8_t state;
+        uint32_t lastseen_timestamp;
+
+    } NSD_INFO;
+
+8.
+=================================================================================================
+Prototype:
+    void EMUCCANOpenGetVer(char str[VER_LEN]);
+
+Description:
+    Get CANOpen API library version with char array string(ASCII)
+
+Parameter:
+    str:
+        A char pointer(array) to the output library version string returned by API function
+
+Return Value:
+    void
+
+Define:
+    #define VER_LEN 16

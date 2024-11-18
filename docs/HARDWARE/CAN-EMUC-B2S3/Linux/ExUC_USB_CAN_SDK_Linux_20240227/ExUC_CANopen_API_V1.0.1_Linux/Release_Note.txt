@@ -1,0 +1,7 @@
+EMUC-B202 CANopen Linux API
+
+--v1.0.1
+Fix core dump memory issue
+
+--v1.0.0
+First release

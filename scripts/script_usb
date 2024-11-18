@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#Este script esta incluido en la imagen, por lo que se
+#carga en la memoria al arrancar.
+#La particion QNX del HD esta montada en PATH_ROOT,
+#en ella van el .boot y el directorio con los ejecutables.
+#La particion DOS del HD esta montada en PATH_HD,
+#en ella se guardan los data-logs.
+#La particion del pendrive esta en PATH_USB.
+
+# Define la ruta en la que se encuentra la unidad USB montada
+PATH_USB=/fs/hd10-dos-1
+# Define la ruta donde se encuentra la partición del disco duro en la que se almacenan los logs y otros datos
+PATH_HD=/datos
+# Define la ruta donde están los archivos relacionados con el programa de la ECU
+PATH_ECU=/ecu
+
+# Verificación de directorios y creación de directorios si no existen
+if [ ! -d $PATH_HD/datos_imu ]
+then
+	mkdir $PATH_HD/datos_imu
+fi
+if [ ! -d $PATH_HD/log_ecu ]
+then
+	mkdir $PATH_HD/log_ecu
+fi
+
+# Detección de la unidad USB
+if [ -d $PATH_USB ]
+then
+	echo "Unidad USB detectada."
+	if [ -d $PATH_USB$PATH_ECU ]
+	then
+		if [ -f $PATH_USB$PATH_ECU/fox.ifs ]
+		then
+			echo "Copiando nueva imagen..."
+			cp $PATH_USB$PATH_ECU/fox.ifs /.boot
+			rm $PATH_USB$PATH_ECU/fox.ifs	
+			cp $PATH_USB$PATH_ECU/fox_debug.ifs /.altboot
+			rm $PATH_USB$PATH_ECU/fox_debug.ifs	
+			umount $PATH_USB			
+			echo "Imagen copiada."			
+			echo "Reiniciando..."
+			shutdown
+		else
+			echo "Copiando programa ECU..."
+			cp -r -c $PATH_USB$PATH_ECU /
+			rm -r $PATH_USB$PATH_ECU
+			chmod -R 777 $PATH_ECU
+			echo "Programa ECU copiado."
+		fi	
+	fi
+	
+	echo "Copiando datos en Unidad USB..."
+	cp -r -c -n $PATH_HD/datos_imu $PATH_USB
+	echo "Registros IMU copiados."
+	cp -r -c -n $PATH_HD/log_ecu $PATH_USB
+	echo "Registros ECU copiados."
+	umount $PATH_USB
+else
+	echo "No hay unidad USB o no se ha montado."
+fi

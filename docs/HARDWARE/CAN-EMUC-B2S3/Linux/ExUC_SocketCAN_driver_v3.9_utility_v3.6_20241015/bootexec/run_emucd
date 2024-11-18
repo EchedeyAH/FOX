@@ -1,0 +1,143 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:				EMUC-B202
+# Required-Start:		$local_fs $remote_fs $syslog $network $time
+# Required-Stop:		$local_fs $remote_fs $syslog $network 
+# Default-Start:		2 3 4 5
+# Default-Stop:			0 1 6
+# Short-Description:	INNODISK CAN Bus Starter
+# Description:			INNODISK CAN Bus Starter, used for setup canbus
+### END INIT INFO
+
+### parameter
+socket_name_1=can0
+socket_name_2=can1
+dev_name=ttyACM0
+baudrate=7  # 0~3: support FW version >= 03.00
+            # 0: 5   KBPS, 1: 10  KBPS,  2: 20  KBPS, 3: 50  KBPS,
+            # 4: 100 KBPS, 5: 125 KBPS,  6: 250 KBPS, 7: 500 KBPS,
+            # 8: 800 KBPS, 9: 1 MBPS,   10: 400 KBPS
+error_type=0 # 0: EMUC_DIS_ALL, 1: EMUC_EE_ERR, 2: EMUC_BUS_ERR, 3: EMUC_EN_ALL
+
+do_start()
+{
+    sudo pkill -2 emucd_64
+    sleep 0.2
+    sudo rmmod emuc2socketcan
+    # sudo insmod /etc/init.d/emuc2socketcan.ko
+    sudo modprobe emuc2socketcan
+
+    timeout=60
+
+    # check emuc_64
+    str_dev=""
+    check_times=0
+    while [ "${str_dev}" == "" ]
+    do
+        sudo service ModemManager stop
+        sudo emucd_64 -s${baudrate} -e${error_type} ${dev_name} ${socket_name_1} ${socket_name_2}
+        sleep 0.2
+
+        if command -v ifconfig &> /dev/null
+        then
+            str_dev=$(ifconfig -a |grep ${socket_name_1})
+        elif command -v ip &> /dev/null
+        then
+            str_dev=$(ip addr |grep ${socket_name_1})
+        else
+            echo "ip & ifconfig command could not be found" > /dev/kmsg
+            exit 0
+        fi
+
+        check_times=$((${check_times}+1))
+        if [ ${check_times} -ge ${timeout} ]; then
+            exit 0
+        fi
+    done
+    echo "emuc: ${dev_name} reg!" > /dev/kmsg
+
+    # check socketcan1
+    str_socketcan1=""
+    check_times=0
+    while [ "${str_socketcan1}" == "" ]
+    do
+        if command -v ifconfig &> /dev/null
+        then
+            sudo ifconfig ${socket_name_1} txqueuelen 1000
+            sudo tc qdisc add dev ${socket_name_1} root handle 1: pfifo
+            sudo ifconfig ${socket_name_1} up
+            sleep 0.2
+            str_socketcan1=$(ifconfig |grep ${socket_name_1})
+        elif command -v ip &> /dev/null
+        then
+            sudo ip link set ${socket_name_1} txqueuelen 1000
+            sudo tc qdisc add dev ${socket_name_1} root handle 1: pfifo
+            sudo ip link set ${socket_name_1} up
+            sleep 0.2
+            str_socketcan1=$(ip addr |grep -E ${socket_name_1}.*UP)
+        else
+            echo "ip & ifconfig command could not be found" > /dev/kmsg
+            exit 0
+        fi
+
+        check_times=$((${check_times}+1))
+        if [ ${check_times} -ge ${timeout} ]; then
+            exit 0
+        fi
+    done
+    echo "emuc: ${socket_name_1} up!" > /dev/kmsg
+
+    # check socketcan2
+    str_socketcan2=""
+    check_times=0
+    while [ "${str_socketcan2}" == "" ]
+    do
+        if command -v ifconfig &> /dev/null
+        then
+            sudo ifconfig ${socket_name_2} txqueuelen 1000
+            sudo tc qdisc add dev ${socket_name_2} root handle 1: pfifo
+            sudo ifconfig ${socket_name_2} up
+            sleep 0.2
+            str_socketcan2=$(ifconfig |grep ${socket_name_2})
+        elif command -v ip &> /dev/null
+        then
+            sudo ip link set ${socket_name_2} txqueuelen 1000
+            sudo tc qdisc add dev ${socket_name_2} root handle 1: pfifo
+            sudo ip link set ${socket_name_2} up
+            sleep 0.2
+            str_socketcan2=$(ip addr |grep -E ${socket_name_2}.*UP)
+        else
+            echo "ip & ifconfig command could not be found" > /dev/kmsg
+            exit 0
+        fi
+
+        check_times=$((${check_times}+1))
+        if [ ${check_times} -gt ${timeout} ]; then
+            exit 0
+        fi
+    done
+    echo "emuc: ${socket_name_2} up!" > /dev/kmsg
+}
+
+do_stop()
+{
+    sudo pkill -2 emucd_64
+}
+
+# Carry out specific functions when asked to by the system
+case "$1" in
+  start)
+    echo "emuc: Starting run_emucd" > /dev/kmsg
+    do_start
+    ;;
+  stop)
+    echo "emuc: Stopping run_emucd" > /dev/kmsg
+    do_stop
+    ;;
+  *)
+    echo "emuc: Usage: /etc/init.d/blah {start|stop}" > /dev/kmsg
+    exit 1
+    ;;
+esac
+ 
+exit 0
