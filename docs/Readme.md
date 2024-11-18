@@ -102,9 +102,9 @@ project_root/
     ├── ARCHITECTURE.md                 # Explicación de la arquitectura
     ├── can_protocol_spec.pdf           # Especificación del protocolo CAN
     └── rt_task_scheduling.md           # Documentación de tareas y programación RT
+```
 
-
-_____________________________________________________________________________________
+__________________________________________________________________________________________________________________________________________
 
 # Makefile
 
