@@ -25,8 +25,9 @@ Consulta [INSTALL.md](INSTALL.md) para más detalles sobre el proceso de instala
 Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las instrucciones para interactuar con el sistema en tiempo real.
 
 
-# Estructura de ficheros
+# Estructura del Proyecto
 
+```plaintext
 project_root/
 │
 ├── src/                                # Código fuente principal
