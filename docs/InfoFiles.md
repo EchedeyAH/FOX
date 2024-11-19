@@ -1,4 +1,4 @@
-### Makefile
+# Makefile
 
 Este proyecto incluye un Makefile que facilita la compilación, prueba y gestión del código fuente. A continuación, se describen las variables, archivos y reglas que componen el Makefile.
 Variables
