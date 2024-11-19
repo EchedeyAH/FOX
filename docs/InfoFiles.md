@@ -1,18 +1,18 @@
 # Makefile
 
 Este proyecto incluye un Makefile que facilita la compilación, prueba y gestión del código fuente. A continuación, se describen las variables, archivos y reglas que componen el Makefile.
-Variables
+### Variables
 
     CC: El compilador utilizado para la construcción del proyecto (en este caso, gcc).
     CFLAGS: Opciones de compilación que incluyen advertencias (-Wall, -Wextra), directorios de inclusión y la opción -g para incluir información de depuración.
     SRC_DIR, BUILD_DIR, TEST_DIR: Directorios que organizan el código fuente, los archivos compilados y las pruebas, respectivamente.
 
-#### Archivos Fuente y Objeto
+### Archivos Fuente y Objeto
 
     SRC_FILES: Esta variable se genera automáticamente a partir de los archivos .c en los directorios correspondientes.
     OBJ_FILES: Convierte la lista de archivos fuente en una lista de archivos objeto, que son necesarios para la creación del ejecutable.
 
-#### Reglas
+### Reglas
 
     El Makefile define varias reglas para gestionar el proceso de construcción:
 
@@ -24,7 +24,7 @@ Variables
     - install: Regla opcional que permite instalar el ejecutable en un directorio del sistema.
     - run: Regla que permite ejecutar el programa compilado directamente desde el Makefile, facilitando pruebas rápidas.
 
-#### .PHONY
+### .PHONY
 
 Las reglas all, clean, install, test y run están declaradas como .PHONY, lo que indica que no corresponden a archivos reales. Esto evita conflictos y asegura que estas reglas se ejecuten cada vez que se invocan.
 
