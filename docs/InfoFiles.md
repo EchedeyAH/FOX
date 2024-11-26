@@ -59,36 +59,26 @@ Espera un tiempo determinado antes de volver a ejecutar el bucle.
 Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
 
 ## Estrutura de ficheros para el archivo ecu_fox.c
-<span style="color:blue">some *blue* text</span>
-    ```plain text
-    /ecu_fox/
-
+  ```    
+ /ecu_fox/
 ├── include/
-
 │   ├── constantes_fox.h
-
 │   ├── estructuras_fox.h
-
 │   ├── declaraciones_fox.h
-
 │   └── funciones.h
-
-├── src/
-
-│   ├── main.c
-
-│   ├── hilos.c
-
-│   ├── comunicacion.c
-
-│   ├── impresion.c
-
-│   └── inicializacion.c
-
-└── Makefile
+└── src/
+    ├── main.c
+    ├── hilos.c
+    ├── comunicacion.c
+    ├── impresion.c
+    └── inicializacion.c
 ```
 
-## main.c
+## INCLUDES 
+    
+    ###
+
+## SRC
 
 
 
