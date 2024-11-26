@@ -56,4 +56,73 @@ Comprueba si hay errores antes de iniciar el bucle principal.
 Ejecuta el bucle principal, que recibe datos de la cola de mensajes del proceso CAN2 (BMS) y envía datos a la cola de mensajes del proceso IMU datalogging.
 Imprime datos en la pantalla según la configuración.
 Espera un tiempo determinado antes de volver a ejecutar el bucle.
-Mata los procesos hijos y cierra la cola de mensajes al final del programa.
+Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
+
+## Estrutura de ficheros para el archivo ecu_fox.c
+<span style="color:blue">some *blue* text</span>
+    ```plain text
+    /ecu_fox/
+
+├── include/
+
+│   ├── constantes_fox.h
+
+│   ├── estructuras_fox.h
+
+│   ├── declaraciones_fox.h
+
+│   └── funciones.h
+
+├── src/
+
+│   ├── main.c
+
+│   ├── hilos.c
+
+│   ├── comunicacion.c
+
+│   ├── impresion.c
+
+│   └── inicializacion.c
+
+└── Makefile
+```
+
+## main.c
+
+
+
+_________________________________________________________________________________________
+# SUPERVISOR
+
+_________________________________________________________________________________________
+# VEHICULO
+
+_________________________________________________________________________________________
+# IMU
+
+_________________________________________________________________________________________
+# BATERÍA
+
+_________________________________________________________________________________________
+# CONTROLADOR-MOTOR
+
+_________________________________________________________________________________________
+# POTENCIA
+
+_________________________________________________________________________________________
+# ERRORES
+
+_________________________________________________________________________________________
+# TARJETA DE ADQUISICIÓN DE DATOS
+
+_________________________________________________________________________________________
+# PILA HIDRÓGENO
+
+_________________________________________________________________________________________
+
+
+_________________________________________________________________________________________
+
+
+_________________________________________________________________________________________
