@@ -16,7 +16,7 @@
 		BOOL enviado_off;	// Toma valores TRUE-FALSE en funcion de si se ha enviado la peticion de apagado al supervisor
 		BOOL peticion_off;	// Toma valores TRUE-FALSE en funcion de si se ha de apagar el supervisor
 		BOOL on;			// Toma valores TRUE-FALSE en funcion de si se ha encendido ya el supervisor (recibe heartbeat por primera vez)
-		BOOL motor_on[NUM_MOTORES];	//Permite elegir desde el supervisor sobre que motores se actuara
+		BOOL motor_on[NUM_MOTORES];	// Permite elegir desde el supervisor sobre que motores se actuara
 	} est_superv_t;
 	
 	/* VEHICULO */

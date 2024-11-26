@@ -53,7 +53,6 @@ datosImu_t tDatosImu;
 pthread_mutex_t mut_hilos_listos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mut_inicio = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t inicio = PTHREAD_COND_INITIALIZER;
-
 pthread_mutex_t mut_supervisor = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mut_vehiculo = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mut_bateria = PTHREAD_MUTEX_INITIALIZER;
