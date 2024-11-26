@@ -74,14 +74,14 @@ Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
     └── inicializacion.c
 ```
 
-### includes 
+### include/
     
     - constantes_fox.h
     - estructuras_fox.h
     - declaraciones_fox.h
     - funciones.h
 
-### src 
+### src/
     - main.c
     - hilos.c
     - comunicacion.c
