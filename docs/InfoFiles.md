@@ -58,7 +58,7 @@ Imprime datos en la pantalla según la configuración.
 Espera un tiempo determinado antes de volver a ejecutar el bucle.
 Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
 
-## Estrutura de ficheros para el archivo ecu_fox.c
+## Propuesta inicial estrutura de ficheros para el archivo ecu_fox.c
   ```    
  /ecu_fox/
 ├── include/
@@ -81,8 +81,7 @@ Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
     - declaraciones_fox.h
     - funciones.h
 
-### src
- 
+### src 
     - main.c
     - hilos.c
     - comunicacion.c
