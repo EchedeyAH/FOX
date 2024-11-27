@@ -1,7 +1,9 @@
 /***************************************/
 // Proyecto: FOX
+// Nombre fichero: hilos.c
 // Descripción: Funciones relacionadas con la creación y gestión de hilos
-// Autor: Echedey
+// Autor: Echedey Aguilar Hernández
+// email: eaguilar@us.es
 // Fecha: 2024-11-26
 // ***************************************/
 

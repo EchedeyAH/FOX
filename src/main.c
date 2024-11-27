@@ -1,8 +1,10 @@
 /***************************************/
 // Proyecto: FOX
+// Nombre fichero: main.c
 // Descripción: Función main y flujo principal del programa
-// Autor: Echedey
-// Fecha: 2024-11-26
+// Autor: Echedey Aguilar Hernández
+// email: eaguilar@us.es
+// Fecha: 2024-11-27
 // ***************************************/
 #include <stdio.h>
 #include <stdlib.h>

@@ -2,7 +2,8 @@
 // Proyecto: FOX
 // Nombre fichero: inicializacion.c
 // Descripción: Funciones para la inicialización de variables y configuraciones.
-// Autor: Echedey
+// Autor: Echedey Aguilar Hernández
+// email: eaguilar@us.es
 // Fecha: 2024-11-26
 // ***************************************/
 

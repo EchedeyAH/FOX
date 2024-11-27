@@ -1,7 +1,9 @@
 /***************************************/
 // Proyecto: FOX
+// Nombre fichero: comunicacion.c
 // Descripción: Funciones para la comunicación entre procesos y el manejo de colas de mensajes.
-// Autor: Echedey
+// Autor: Echedey Aguilar Hernández
+// email: eaguilar@us.es
 // Fecha: 2024-11-26
 // ***************************************/
 
