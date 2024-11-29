@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "estructuras_fox.h": "c",
+        "funciones_fox.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "declaraciones_fox.h": "c",
+        "string.h": "c"
+    }
+}
