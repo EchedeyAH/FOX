@@ -6,14 +6,12 @@
 // email: eaguilar@us.es
 // Fecha: 2024-11-27
 // ***************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <mqueue.h>
-#include <signal.h>
-#include <time.h>
 #include "include/declaraciones_fox.h"
-#include "include/funciones.h"
+#include "include/funciones_fox.h"
 
 int main(int argc, char **argv) {
     // Inicialización y configuración
@@ -25,9 +23,9 @@ int main(int argc, char **argv) {
     crea_hilos();
 
     // Bucle principal
-    bucle_principal();
+    while (1) {
+        espera_hilos();
+    }
 
-    // Cierre y limpieza
-    cerrar_hilos_y_procesos();
     return 0;
 }

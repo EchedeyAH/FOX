@@ -8,8 +8,10 @@
 // ***************************************/
 
 #include "include/declaraciones_fox.h"
-#include "include/funciones.h"
+#include "include/funciones_fox.h"
 
 void imprime_pantalla(uint16_t imprimir) {
-    // Lógica para imprimir datos en la pantalla
+    // Lógica para imprimir datos en pantalla
+    printf("Imprimiendo datos...\n");
+    // Aquí puedes imprimir las variables que desees
 }
