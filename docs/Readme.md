@@ -106,6 +106,35 @@ project_root/
     ├── ARCHITECTURE.md                 # Explicación de la arquitectura
     ├── can_protocol_spec.pdf           # Especificación del protocolo CAN
     └── rt_task_scheduling.md           # Documentación de tareas y programación RT
+
+
+ Proyecto_FOX  
+│
+├── src
+│   ├── can
+│   │   ├── can_config.h         // Archivo de configuración del bus CAN
+│   │   ├── can_driver.c         // Implementación del controlador del bus CAN
+│   │   ├── can_driver.h         // Cabecera del controlador del bus CAN
+│   │   └── can_utils.c          // Funciones utilitarias para el bus CAN
+│   │
+│   ├── main.c                   // Archivo principal del proyecto
+│   └── Makefile                 // Archivo para la construcción del proyecto
+│
+├── tests
+│   ├── test_can_driver.c        // Pruebas para el controlador del bus CAN
+│   └── test_can_utils.c         // Pruebas para las funciones utilitarias del bus CAN
+│
+├── docs
+│   ├── requisitos.md             // Documentación de requisitos del proyecto
+│   ├── diseño.md                // Documentación de diseño y arquitectura
+│   └── manual_usuario.md         // Manual de usuario para el proyecto
+│
+├── examples
+│   └── example_usage.c          // Ejemplo de uso del bus CAN
+│
+├── .gitignore                    // Archivos y carpetas a ignorar por Git
+├── README.md                     // Documentación general del proyecto
+└── LICENSE                       // Licencia del proyecto
 ```
 
 __________________________________________________________________________________________________________________________________________
