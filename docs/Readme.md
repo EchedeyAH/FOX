@@ -32,6 +32,7 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
 # Estructura del Proyecto
 
 ```plaintext
+- Estructura ideal - 
 project_root/
 │
 ├── src/                                # Código fuente principal
@@ -136,7 +137,6 @@ project_root/
 ├── README.md                     // Documentación general del proyecto
 └── LICENSE                       // Licencia del proyecto
 ```
-
 __________________________________________________________________________________________________________________________________________
 
 
