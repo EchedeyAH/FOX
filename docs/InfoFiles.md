@@ -88,8 +88,6 @@ Mata los procesos hijos y cierra la cola de mensajes al final del programa.0
     - impresion.c
     - inicializacion.c
 
-
-
 _________________________________________________________________________________________
 # SUPERVISOR
 

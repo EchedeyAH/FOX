@@ -1,0 +1,90 @@
+Drivers y Comunicación CAN
+
+    emuc_parse.c y emuc_parse.h:
+        Función: Manejo de estructuras de datos y procesamiento de tramas CAN para el driver.
+        Características: Incluye funciones para calcular checksums y verificar tamaños de datos.
+
+    main.c (Driver):
+        Función: Archivo principal del driver que establece la comunicación CAN.
+        Características: Basado en implementaciones anteriores, como slip.c y slcan.c, ajustado para este hardware.
+
+    transceive.c y transceive.h:
+        Función: Manejo de transmisión y recepción de tramas CAN.
+        Características: Utiliza estructuras del kernel de Linux para procesar mensajes.
+
+APIs para Protocolo CAN
+
+    lib_j1939.h:
+        Función: Define macros y estructuras para el protocolo J1939 (ampliación de CAN).
+        Características: Soporta características específicas como solicitudes de PGN y gestión de direcciones.
+
+    lib_canopen.h:
+        Función: Interfaz para protocolo CANopen.
+        Características: Define límites de datos, versiones, y otras configuraciones.
+
+    lib_emuc_2.h:
+        Función: Proporciona funciones genéricas para el manejo del dispositivo EMUC-B2.
+        Características: Define límites de comunicación y configuraciones específicas del hardware.
+
+Ejemplos y Utilidades
+
+    utility/main.c:
+        Función: Implementación de un daemon para gestionar la comunicación CAN en espacio de usuario.
+        Características: Administra configuraciones del dispositivo y depuración.
+
+    Sample_J1939/main.c:
+        Función: Ejemplo de uso de la API J1939 para enviar y recibir datos.
+        Características: Incluye configuraciones para múltiples puertos CAN.
+
+    kbhit.c:
+        Función: Implementación de una utilidad para detectar entrada de teclado en Linux.
+        Características: Utilidad auxiliar para ejemplos interactivos.
+
+    Loopback_EMUC2/main.c:
+        Función: Programa de prueba para verificar la comunicación en bucle (loopback).
+        Características: Usa la API EMUC para enviar y recibir datos.
+___________________________________________________________________________________________________________________
+
+
+1. Drivers para Comunicación CAN
+
+    Archivos relevantes:
+        main.c (driver)
+        emuc_parse.c y emuc_parse.h
+        transceive.c y transceive.h
+    Razón: Estos archivos son esenciales si necesitas interactuar directamente con el hardware CAN desde un entorno Linux. Proporcionan las funciones base para configurar, transmitir y recibir mensajes CAN.
+
+2. Protocolos específicos
+
+Si tu proyecto necesita compatibilidad con protocolos avanzados, selecciona:
+
+    CANopen:
+        lib_canopen.h (y el ejemplo en C_Configurable/main.c)
+        Razón: Implementa características estándar de CANopen, como manejo de objetos y perfiles.
+    J1939:
+        lib_j1939.h (y el ejemplo en Sample_J1939/main.c)
+        Razón: Para aplicaciones industriales o vehículos que usan este estándar.
+
+3. Pruebas y Depuración
+
+    Archivos relevantes:
+        Loopback_EMUC2/main.c (prueba en bucle)
+        utility/main.c (demonio en espacio de usuario)
+    Razón: Facilitan la validación de la comunicación CAN y simplifican la integración.
+
+4. Utilidades
+
+    Archivos relevantes:
+        kbhit.c
+    Razón: Útil si necesitas entrada del usuario para interactuar con el sistema durante pruebas.
+
+Pasos para Integrarlos
+
+    Core Drivers y Headers:
+        Añade main.c, emuc_parse.*, y transceive.* para crear una base de comunicación CAN en tu sistema.
+
+    Protocolos adicionales (si es necesario):
+        Selecciona lib_j1939.h o lib_canopen.h según los requisitos.
+
+    Pruebas iniciales:
+        Usa los ejemplos como Loopback_EMUC2/main.c para garantizar que el hardware está configurado correctamente.

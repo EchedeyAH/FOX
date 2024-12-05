@@ -1,0 +1,131 @@
+src/
+main.c
+
+Descripción: Punto de entrada del programa. Aquí se inicia la ejecución del sistema, se realizan inicializaciones y se entra en el bucle principal.
+Funciones Clave:
+Inicializa variables y configura el entorno.
+Crea hilos y procesos.
+Maneja el bucle principal para la ejecución del sistema.
+can_config.c
+
+Descripción: Contiene funciones para la configuración del bus CAN.
+Funciones Clave:
+init_can_bus(): Inicializa el socket CAN.
+set_can_bitrate(int bitrate): Configura la tasa de bits del bus CAN.
+hilos.c
+
+Descripción: Implementa funciones relacionadas con la creación y gestión de hilos.
+Funciones Clave:
+crea_hilos(): Crea hilos para diferentes tareas.
+espera_hilos(): Espera a que los hilos estén listos.
+comunicacion.c
+
+Descripción: Maneja la comunicación entre procesos y el manejo de colas de mensajes.
+Funciones Clave:
+crea_colas_mensajes(): Crea y configura colas de mensajes para la comunicación.
+recibe_datos_cola_can2(): Recibe datos de la cola de mensajes desde el proceso CAN.
+envia_datos_cola_imu(): Envía datos a la cola de mensajes del proceso IMU.
+impresion.c
+
+Descripción: Funciones para imprimir datos en la pantalla.
+Funciones Clave:
+imprime_pantalla(uint16_t imprimir): Imprime información relevante en la consola.
+inicializacion.c
+
+Descripción: Contiene funciones para la inicialización de variables y configuraciones.
+Funciones Clave:
+inicializa_variables(): Inicializa variables globales.
+bloquea_senales(): Bloquea señales específicas para evitar interferencias.
+selecciona_procesos(int argc, char **argv): Lógica para seleccionar qué procesos e hilos se deben ejecutar.
+gestion_potencia.c
+
+Descripción: Implementa el hilo de gestión de potencia del sistema.
+Funciones Clave:
+gestion_potencia_main(): Lógica para gestionar la potencia del vehículo.
+ctrl_trac_estab.c
+
+Descripción: Implementa los hilos de control de tracción y estabilidad.
+Funciones Clave:
+ctrl_traccion_main(): Controla la tracción del vehículo.
+ctrl_estabilidad_main(): Controla la estabilidad del vehículo.
+tad.c
+
+Descripción: Implementa el hilo de adquisición de datos de la tarjeta de adquisición (DAQ).
+Funciones Clave:
+adq_main(): Lógica para adquirir datos de la tarjeta.
+imu_datalog.c
+
+Descripción: Proceso de datalogging para la IMU.
+Funciones Clave:
+imuMain(): Función principal para recibir datos de la IMU y almacenarlos.
+can_motor.c
+
+Descripción: Implementa funciones relacionadas con el manejo del bus CAN para motores.
+Funciones Clave:
+envia_can(): Envía mensajes CAN a los motores.
+interpreta_can_entrada(): Interpreta los mensajes CAN recibidos.
+include/
+constantes_fox.h
+
+Descripción: Define constantes utilizadas en todo el proyecto.
+Contenido: Constantes para tasas de bits, tiempos, mensajes de error, etc.
+estructuras_fox.h
+
+Descripción: Define las estructuras de datos utilizadas en el proyecto.
+Contenido: Estructuras para almacenar datos de vehículos, IMU, errores, etc.
+declaraciones_fox.h
+
+Descripción: Contiene las declaraciones de funciones que se utilizan en varios archivos.
+Contenido: Declaraciones de funciones de todos los módulos.
+funciones.h
+
+Descripción: Archivo de cabecera que agrupa funciones comunes que pueden ser utilizadas en diferentes módulos.
+Contenido: Declaraciones de funciones auxiliares.
+**
+
+
+puedes acabar el resto
+
+
+Por supuesto, aquí continúo con la descripción de los archivos que completarían la carpeta include/ de tu proyecto FOX.
+
+include/ (continuación)
+funciones.h
+
+Descripción: Archivo de cabecera que agrupa funciones comunes que pueden ser utilizadas en diferentes módulos.
+Contenido: Declaraciones de funciones auxiliares que no encajan en las categorías específicas de otros archivos. Por ejemplo:
+Funciones para manipular cadenas, manejo de errores, etc.
+can_config.h
+
+Descripción: Archivo para las configuraciones del bus CAN.
+Contenido: Declaraciones de funciones específicas para la configuración del bus CAN.
+void init_can_bus(void);: Para inicializar el bus CAN.
+void set_can_bitrate(int bitrate);: Para establecer la tasa de bits del bus CAN.
+tad.h
+
+Descripción: Archivo de cabecera para la tarjeta de adquisición de datos (DAQ).
+Contenido: Declaraciones de funciones y estructuras específicas para la gestión de la DAQ.
+void *adq_main(void *pi);: Función principal para la adquisición de datos.
+Estructuras para almacenar parámetros de configuración de la DAQ.
+imu_datalog.h
+
+Descripción: Archivo de cabecera para el proceso de datalogging de la IMU.
+Contenido: Declaraciones de funciones relacionadas con la adquisición y almacenamiento de datos de la IMU.
+void *imuMain(void *pi);: Función principal para el datalogging de la IMU.
+gestion_potencia.h
+
+Descripción: Archivo de cabecera para la gestión de potencia.
+Contenido: Declaraciones de funciones relacionadas con la gestión de la potencia del vehículo.
+void *gestion_potencia_main(void *pi);: Función principal para la gestión de la potencia.
+ctrl_trac_estab.h
+
+Descripción: Archivo de cabecera para el control de tracción y estabilidad.
+Contenido: Declaraciones de funciones relacionadas con el control de tracción y estabilidad del vehículo.
+void *ctrl_traccion_main(void *pi);: Función para el control de tracción.
+void *ctrl_estabilidad_main(void *pi);: Función para el control de estabilidad.
+can_motor.h
+
+Descripción: Archivo de cabecera para las funciones relacionadas con el bus CAN de los motores.
+Contenido: Declaraciones de funciones para la comunicación con los motores a través del bus CAN.
+int envia_can(int tipo_msg, int id_can);: Función para enviar mensajes CAN.
+int interpreta_can_entrada(int tipo_msg, struct can_object *p_can);: Función para interpretar mensajes CAN.
