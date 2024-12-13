@@ -9,23 +9,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include "include/declaraciones_fox.h"
-#include "include/funciones_fox.h"
+#include <unistd.h>
+#include "can_manager.h"
+#include "can_handler.h"
 
-int main(int argc, char **argv) {
-    // Inicialización y configuración
-    inicializa_variables();
-    bloquea_senales();
-    selecciona_procesos(argc, argv);
-    crea_colas_mensajes();
-    crea_procesos();
-    crea_hilos();
-
-    // Bucle principal
-    while (1) {
-        espera_hilos();
+int main() {
+    // Inicializar el bus CAN
+    if (can_init() < 0) {
+        return -1;
     }
 
+    struct can_frame frame;
+    while (1) {
+        // Recibir un mensaje del bus CAN
+        if (can_receive_message(&frame) > 0) {
+            // Procesar el mensaje recibido
+            process_can_message(&frame);
+        }
+    }
+
+    // Cerrar el bus CAN
+    can_close();
     return 0;
 }
