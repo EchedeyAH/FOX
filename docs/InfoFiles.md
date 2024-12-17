@@ -116,6 +116,32 @@ ________________________________________________________________________________
 # PILA HIDRÓGENO
 
 _________________________________________________________________________________________
+#########################################################################################
+_________________________________________________________________________________________
+# MIGRACION QNX A LINUX, CAMBIOS EN SOFTWARE
+## + can2_fox.c
+### Cabeceras específicas de QNX:
+    <sys/neutrino.h>, <sys/mman.h>, <hw/inout.h>: Estas cabeceras no están disponibles en Linux y deberán ser reemplazadas con alternativas de Linux o reimplementaciones.
+    Mensajería (MsgReceivePulse_r, ChannelCreate, ConnectAttach): Estas llamadas son específicas de QNX y se deben sustituir con mecanismos equivalentes en Linux, como pipes, sockets, o colas de mensajes POSIX.
+### Driver CAN:
+    El acceso a dispositivos CAN en Linux se gestiona con SocketCAN, disponible en el kernel de Linux, en lugar de las funciones propietarias de QNX (ConnectDriver, CanRead, CanRestart, etc.).
+### Colas de mensajes:
+    Las colas de mensajes POSIX (mq_open, mq_send) son compatibles tanto en QNX como en Linux, por lo que esta parte requiere pocos cambios.
+
+### Comunicación con el hardware CAN:
+    El código utiliza funciones como ConnectDriver, CanRead, CanRestart, etc., que son probablemente específicas de una librería QNX.
+    Deberás sustituir estas llamadas por una librería CAN compatible con tu entorno (por ejemplo, SocketCAN en Linux).
+### Colas de mensajes y pulsos:
+    ChannelCreate, ConnectAttach, MsgReceivePulse_r, y SIGEV_PULSE_INIT son específicas de QNX. En otro sistema, puedes usar otras alternativas:
+    Para Linux, considera usar mqueue para colas de mensajes y señales (signal.h) para manejar notificaciones.
+### Temporización:
+    Las funciones como nanosleep y timer_timeout son comunes en POSIX, pero algunos detalles de su uso pueden variar.
+### Error Handling (errno):
+    Aunque errno es común en POSIX, asegúrate de que la lógica de manejo de errores sea compatible con tu entorno.
+### Interacción con hardware CAN:
+    Asegúrate de adaptar el manejo de mensajes CAN (msg_can_in, CanRead, CanGetStatus, etc.) para trabajar con la nueva librería CAN en tu sistema operativo.
+### Otros detalles menores:
+    Algunos encabezados (sys/neutrino.h, sys/mman.h, etc.) no estarán disponibles en otros sistemas y deberán ser reemplazados por equivalentes.
 
 
 _________________________________________________________________________________________
