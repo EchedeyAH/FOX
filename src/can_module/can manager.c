@@ -1,84 +1,61 @@
 /***************************************/
 // Proyecto: FOX
 // Nombre fichero: can_manager.c
-// Descripción: Funciones para inicializar el bus CAN, recibir y enviar mensajes utilizando SocketCAN
+// Descripción: Gestión de alto nivel para la comunicación CAN
 // Autor: Echedey Aguilar Hernández
 // email: eaguilar@us.es
-// Fecha: 2024-12-11
+// Fecha: 2025-01-08
 // ***************************************/
+
+#include "can_driver.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/can.h>
-#include <linux/can/raw.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <errno.h>
+#include <stdint.h>
 
-#define CAN_INTERFACE "can0"  // El nombre de la interfaz CAN (ajustar según configuración)
+#define MAX_CAN_DATA_LEN 8
 
-int can_socket;
+typedef struct {
+    uint32_t id;
+    uint8_t data[MAX_CAN_DATA_LEN];
+    uint8_t len;
+} can_message_t;
 
-int can_init() {
-    struct sockaddr_can addr;
-    struct ifreq ifr;
-
-    // Crear un socket CAN
-    can_socket = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (can_socket < 0) {
-        perror("Error al crear el socket CAN");
-        return -1;
-    }
-
-    // Obtener la interfaz de red para el CAN
-    strcpy(ifr.ifr_name, CAN_INTERFACE);
-    ioctl(can_socket, SIOCGIFINDEX, &ifr);
-    
-    // Configurar la dirección del socket CAN
-    addr.can_family = AF_CAN;
-    addr.can_ifindex = ifr.ifr_ifindex;
-
-    // Enlazar el socket a la interfaz
-    if (bind(can_socket, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        perror("Error al enlazar el socket CAN");
-        close(can_socket);
-        return -1;
-    }
-
-    printf("Bus CAN inicializado correctamente\n");
-    return 0;
+int can_manager_init(const char *interface_name) {
+    return can_driver_init(interface_name);
 }
 
-int can_send_message(uint32_t id, uint8_t *data, uint8_t len) {
+int can_manager_send_message(uint32_t id, const uint8_t *data, uint8_t len) {
+    if (len > MAX_CAN_DATA_LEN) {
+        fprintf(stderr, "Error: Longitud de datos (%d) excede el máximo permitido (%d).\n", len, MAX_CAN_DATA_LEN);
+        return -1;
+    }
+
+    can_message_t message;
+    message.id = id;
+    message.len = len;
+    memcpy(message.data, data, len);
+
+    // Aquí se podrían aplicar reglas de negocio, filtrado, etc.
+
+    return can_driver_send_message(message.id, message.data, message.len);
+}
+
+int can_manager_receive_message(can_message_t *message) {
     struct can_frame frame;
-    frame.can_id = id;
-    frame.can_dlc = len;
-    memcpy(frame.data, data, len);
-
-    // Enviar el mensaje al bus CAN
-    if (write(can_socket, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-        perror("Error al enviar mensaje CAN");
-        return -1;
+    int result = can_driver_receive_message(&frame);
+    
+    if (result >= 0) {
+        message->id = frame.can_id;
+        message->len = frame.can_dlc;
+        memcpy(message->data, frame.data, frame.can_dlc);
+        
+        // Aquí se podrían aplicar reglas de negocio, filtrado, etc.
+        
+        printf("Mensaje CAN procesado - ID: 0x%X, Longitud: %d\n", message->id, message->len);
     }
-
-    return 0;
+    
+    return result;
 }
 
-int can_receive_message(struct can_frame *frame) {
-    // Recibir un mensaje desde el bus CAN
-    int nbytes = read(can_socket, frame, sizeof(struct can_frame));
-    if (nbytes < 0) {
-        perror("Error al recibir mensaje CAN");
-        return -1;
-    }
-
-    return nbytes;
-}
-
-void can_close() {
-    close(can_socket);
-    printf("Bus CAN cerrado\n");
+void can_manager_close() {
+    can_driver_close();
 }
