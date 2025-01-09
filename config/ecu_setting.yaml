@@ -1,0 +1,11 @@
+can:
+  baud_rate: 500000
+  max_messages: 100
+
+imu:
+  update_rate: 100
+  sensitivity: 0.01
+
+motor_control:
+  update_rate: 1000
+  max_torque: 100

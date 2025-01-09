@@ -38,104 +38,74 @@ project_root/
 ├── src/                                # Código fuente principal
 │   ├── main.c                          # Punto de entrada del programa
 │   ├── can_module/                     # Módulo para procesos CAN
-│   │   ├── can_manager.c               # Código para la gestión de CAN
-│   │   └── can_handler.c               # Manejador de mensajes CAN
+│   │   ├── can_manager.c               # Gestión de mensajes CAN
+│   │   ├── can_handler.c               # Manejo de eventos CAN
+│   │   ├── can_driver.c                # Interacción directa con el hardware
+│   │   └── Makefile                    # Construcción específica del módulo CAN
 │   │
-│   ├── usb_module/                     # Módulo USB (si es relevante para RT)
-│   │   └── usb_manager.c               # Código para la gestión de USB
+│   ├── imu_module/                     # Módulo para IMU
+│   │   ├── imu_manager.c               # Gestión de la IMU
+│   │   ├── imu_driver.c                # Driver para la IMU
+│   │   └── Makefile                    # Construcción específica del módulo IMU
 │   │
-│   ├── scheduler_module/               # Módulo para el planificador de tareas RT
-│   │   └── rt_scheduler.c              # Planificador de tareas RT
+│   ├── scheduler_module/               # Módulo para el planificador
+│   │   ├── rt_scheduler.c              # Planificador de tareas en tiempo real
+│   │   └── Makefile                    # Construcción específica del módulo
 │   │
-│   └── ...                             # Otros módulos de funcionalidad
+│   └── Makefile                        # Archivo de construcción global
 │
 ├── include/                            # Archivos de cabecera compartidos
-│   ├── can_manager.h                   # Cabecera del módulo CAN Manager
-│   ├── can_handler.h                   # Cabecera del manejador CAN
-│   ├── usb_manager.h                   # Cabecera del módulo USB Manager
-│   ├── rt_scheduler.h                  # Cabecera para el planificador RT
-│   ├── project_config.h                # Configuración general del proyecto
-│   └── ...                             # Cabeceras de otros módulos
+│   ├── can_manager.h                   # Cabecera del gestor CAN
+│   ├── imu_manager.h                   # Cabecera del gestor IMU
+│   ├── rt_scheduler.h                  # Cabecera del planificador
+│   ├── ecu_config.h                    # Configuración general
+│   └── ...                             # Más cabeceras
 │
 ├── drivers/                            # Controladores de hardware
-│   ├── can_driver.c                    # Controlador CAN con optimizaciones RT
-│   ├── usb_driver.c                    # Controlador USB (si aplica)
-│   └── include/                        # Cabeceras de los controladores
-│       ├── can_driver.h                # Cabecera para el controlador CAN
-│       └── usb_driver.h                # Cabecera para el controlador USB
+│   ├── can/                            # Controladores CAN
+│   │   ├── can_driver.c
+│   │   ├── can_dual.c                  # Compatibilidad con hardware dual
+│   │   └── Makefile
+│   │
+│   ├── imu/                            # Controladores IMU
+│   │   ├── imu_driver.c
+│   │   └── Makefile
 │
-├── config/                             # Configuraciones externas en JSON/YAML
-│   ├── can_config.json                 # Configuración CAN (baudios, filtro, etc.)
-│   ├── usb_config.json                 # Configuración USB (si es relevante)
-│   ├── rt_task_priorities.json         # Configuración de prioridades de tareas RT
-│   └── project_settings.yaml           # Configuración general del proyecto
+├── tests/                              # Pruebas unitarias e integración
+│   ├── can_module/                     # Pruebas para el módulo CAN
+│   │   ├── test_can_manager.c
+│   │   ├── test_can_driver.c
+│   │   └── Makefile
+│   │
+│   ├── imu_module/                     # Pruebas para el módulo IMU
+│   │   ├── test_imu_manager.c
+│   │   └── Makefile
 │
-├── rt_tasks/                           # Tareas críticas en tiempo real
-│   ├── task_comm.c                     # Tareas de comunicación en tiempo real
-│   ├── task_sensor.c                   # Tareas de adquisición de datos en tiempo real
-│   ├── task_control.c                  # Tareas de control y actuadores
-│   ├── task_monitor.c                  # Tareas de monitoreo del sistema
-│   └── ...                             # Otros archivos específicos de tareas RT
+├── config/                             # Configuración externa (JSON, YAML)
+│   ├── can_config.json                 # Configuración del bus CAN
+│   ├── imu_config.json                 # Configuración de la IMU
+│   └── ecu_settings.yaml               # Configuración global del ECU
 │
 ├── scripts/                            # Scripts de automatización
-│   ├── deploy.sh                       # Script para despliegue en el dispositivo
-│   ├── build.sh                        # Script para compilar el proyecto
-│   ├── clean.sh                        # Script para limpieza de archivos generados
-│   ├── setup_env.sh                    # Configura el entorno para RT Linux
-│   └── monitor_rt.sh                   # Monitorización de tareas en tiempo real
+│   ├── build.sh                        # Script para compilar todo el proyecto
+│   ├── deploy.sh                       # Despliegue en el vehículo
+│   ├── clean.sh                        # Limpieza de binarios
+│   └── monitor_can.sh                  # Monitorización del bus CAN
 │
-├── build/                              # Archivos binarios generados
-│   ├── can_manager.o                   # Objeto compilado de CAN Manager
-│   ├── usb_manager.o                   # Objeto compilado de USB Manager
-│   ├── rt_scheduler.o                  # Objeto compilado del planificador
-│   ├── task_comm.o                     # Objeto compilado de tarea de comunicación
-│   ├── task_sensor.o                   # Objeto compilado de tarea de sensor
-│   └── project_executable              # Ejecutable final del proyecto
+├── build/                              # Binarios generados
+│   ├── can_module.o
+│   ├── imu_module.o
+│   ├── rt_scheduler.o
+│   ├── project_executable              # Binario final del proyecto
+│   └── logs/                           # Registros de compilación
 │
-├── tests/                              # Pruebas unitarias y de integración
-│   ├── test_can_module.c               # Pruebas para el módulo CAN
-│   ├── test_usb_module.c               # Pruebas para el módulo USB
-│   ├── test_rt_scheduler.c             # Pruebas para el planificador RT
-│   ├── test_task_comm.c                # Pruebas para la tarea de comunicación
-│   ├── test_task_sensor.c              # Pruebas para la tarea de sensor
-│   └── mock_can_driver.c               # Mocks para pruebas del driver CAN
+├── docs/                               # Documentación del proyecto
+│   ├── README.md                       # Guía general
+│   ├── ARCHITECTURE.md                 # Explicación de la arquitectura
+│   ├── CAN_PROTOCOL_SPEC.md            # Especificaciones del protocolo CAN
+│   └── RT_TASK_DESIGN.md               # Diseño de tareas en tiempo real
 │
-└── docs/                               # Documentación del proyecto
-    ├── README.md                       # Descripción general y guía de uso
-    ├── INSTALL.md                      # Guía de instalación en sistema RT Linux
-    ├── USAGE.md                        # Documentación de uso
-    ├── ARCHITECTURE.md                 # Explicación de la arquitectura
-    ├── can_protocol_spec.pdf           # Especificación del protocolo CAN
-    └── rt_task_scheduling.md           # Documentación de tareas y programación RT
-
-
- Proyecto_FOX  
-│
-├── src
-│   ├── can
-│   │   ├── can_config.h         // Archivo de configuración del bus CAN
-│   │   ├── can_driver.c         // Implementación del controlador del bus CAN
-│   │   ├── can_driver.h         // Cabecera del controlador del bus CAN
-│   │   └── can_utils.c          // Funciones utilitarias para el bus CAN
-│   │
-│   ├── main.c                   // Archivo principal del proyecto
-│   └── Makefile                 // Archivo para la construcción del proyecto
-│
-├── tests
-│   ├── test_can_driver.c        // Pruebas para el controlador del bus CAN
-│   └── test_can_utils.c         // Pruebas para las funciones utilitarias del bus CAN
-│
-├── docs
-│   ├── requisitos.md             // Documentación de requisitos del proyecto
-│   ├── diseño.md                // Documentación de diseño y arquitectura
-│   └── manual_usuario.md         // Manual de usuario para el proyecto
-│
-├── examples
-│   └── example_usage.c          // Ejemplo de uso del bus CAN
-│
-├── .gitignore                    // Archivos y carpetas a ignorar por Git
-├── README.md                     // Documentación general del proyecto
-└── LICENSE                       // Licencia del proyecto
+└── Makefile                            # Makefile principal para toda la compilación
 ```
 __________________________________________________________________________________________________________________________________________
 
