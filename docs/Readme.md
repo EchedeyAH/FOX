@@ -14,7 +14,7 @@ Este proyecto implementa un sistema en tiempo real (RT) desarrollado para la pla
 - **docs/**: Documentación del proyecto.
 
 ## Requisitos del Sistema
-- RT Linux
+- RT Linuxca
 - Herramientas de compilación: `gcc`, `make`
 - Dependencias específicas: **librerías CAN, USB**
 
