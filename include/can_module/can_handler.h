@@ -1,28 +1,26 @@
-/***************************************/
-// Proyecto: FOX
-// Nombre fichero: can_handler.h
-// Descripción: Este archivo manejará la lógica para procesar los mensajes recibidos.
-// Autor: Echedey Aguilar Hernández
-// email: eaguilar@us.es
-// Fecha: 2024-12-11
-// ***************************************/
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include "can_manager.h"  // Incluir la cabecera de can_manager
+/***************************************/ 
+// Proyecto: FOX 
+// Nombre fichero: can_manager.h 
+// Descripción: Funciones que se utilizarán en can_manager.c 
+// Autor: Echedey Aguilar Hernández 
+// email: eaguilar@us.es 
+// Fecha: 2024-12-11 
+// ***************************************/ 
 
-void process_can_message(struct can_frame *frame) {
-    // Aquí podemos implementar diferentes acciones dependiendo del ID del mensaje
-    printf("Recibido mensaje CAN: ID=0x%X, DLC=%d, Datos=", frame->can_id, frame->can_dlc);
-    
-    for (int i = 0; i < frame->can_dlc; i++) {
-        printf("0x%02X ", frame->data[i]);
-    }
-    printf("\n");
+#ifndef CAN_MANAGER_H 
+#define CAN_MANAGER_H 
 
-    // Ejemplo: Procesar mensaje con ID 0x123
-    if (frame->can_id == 0x123) {
-        // Realizar alguna acción específica con los datos recibidos
-        printf("Procesando datos para el mensaje con ID 0x123\n");
-    }
-}
+#include <linux/can.h>
+
+int can_init();
+int can_send_message(uint32_t id, uint8_t *data, uint8_t len);
+int can_receive_message(struct can_frame *frame);
+void can_close();
+
+// Declarations for CAN handler functions
+int can_handler_init();
+int can_handler_send(uint32_t id, uint8_t *data, uint8_t len);
+int can_handler_receive(struct can_frame *frame);
+void can_handler_close();
+
+#endif
