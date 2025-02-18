@@ -21,4 +21,4 @@ jobs:
         run: |
           echo "Deteniendo el runner..."
           sudo systemctl stop $(systemctl list-units --type=service | grep actions.runner | awk '{print $1}')
-        if: always
+        if: ${{ always() }}
