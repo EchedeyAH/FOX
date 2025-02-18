@@ -21,4 +21,4 @@ jobs:
         run: |
           echo "Cerrando el runner ..."
           sudo systemctl stop.actions.runner.${{ github.repository_owner }}.${{ github.event.repository.name }}.*
-        if: (always)
+        if: always
