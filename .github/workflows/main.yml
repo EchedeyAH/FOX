@@ -7,15 +7,11 @@ on:
 
 jobs:
   deploy_and_test:
-    runs-on: self-hosted  # O un runner propio
+    runs-on: ubuntu-lastest  # O un runner propio
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Ejecutar script de despliegue
         run: echo "Hello world!"
-          # Aquí puedes poner los comandos que necesites:
-          # por ejemplo, instalar dependencias, compilar, etc.
           echo "Ejecutando script de despliegue..."
-          # simula un comando de test o script en tu proyecto
-          #./run_tests.sh
