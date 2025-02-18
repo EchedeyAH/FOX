@@ -3,15 +3,16 @@ name: Deploy and Test
 on:
   push:
     branches:
-      - main  # O la rama que uses
+      - main  # Cambia la rama si deseas otra
 
 jobs:
   deploy_and_test:
-    runs-on: ubuntu-lastest  # O un runner propio
-
+    runs-on: [self-hosted, linux]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v2
+
       - name: Ejecutar script de despliegue
-        run: echo "Hello world!"
+        run: |
+          echo "Hello world!"
           echo "Ejecutando script de despliegue..."
