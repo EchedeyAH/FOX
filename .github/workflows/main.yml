@@ -16,9 +16,3 @@ jobs:
         run: |
           echo "Hello world!"
           #echo "Ejecutando script de despliegue..."
-
-      - name: Apagar el runner después del workflow
-        run: |
-          echo "Deteniendo el runner..."
-          sudo systemctl stop $(systemctl list-units --type=service | grep actions.runner | awk '{print $1}')
-        if: ${{ always() }}
