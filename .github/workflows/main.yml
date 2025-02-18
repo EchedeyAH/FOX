@@ -16,3 +16,9 @@ jobs:
         run: |
           echo "Hello world!"
           #echo "Ejecutando script de despliegue..."
+
+      - name: Apaagar el runner después del workflow
+        run: |
+          echo "Cerrando el runner ..."
+          sudo systemctl stop.actions.runner.${{ github.repository_owner }}.${{ github.event.repository.name }}.*
+        if: (always)
