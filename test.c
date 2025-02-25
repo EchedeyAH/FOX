@@ -13,7 +13,7 @@
     #include <linux/if.h>
 #endif
 
-#define CAN_INTERFACE "emucan1"  // Cambia esto si usas otra interfaz
+#define CAN_INTERFACE "emuccan1"  // Cambia esto si usas otra interfaz
 
 int main() {
     int sock;
