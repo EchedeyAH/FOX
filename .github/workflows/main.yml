@@ -17,8 +17,6 @@ jobs:
 
       - name: Activar interfaces CAN
         run: |
-          cd actions-runner
-          ./run.sh
           sudo ip link set emuccan0 up
           sudo ip link set emuccan1 up
           sudo ip link set emuccan2 up
