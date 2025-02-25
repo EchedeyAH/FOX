@@ -12,7 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-<<<<<<< HEAD
       - name: Instalar dependencias
         run: sudo apt-get update && sudo apt-get install -y libsocketcan-dev gcc
 
@@ -21,11 +20,3 @@ jobs:
 
       - name: Ejecutar test.c
         run: ./test
-          
-
-=======
-      - name: Ejecutar script de despliegue
-        run: |
-          echo "Hello world!"
-          #echo "Ejecutando script de despliegue..."
->>>>>>> 93f3452064e7cde1b647a396dadadf6b689ce296
