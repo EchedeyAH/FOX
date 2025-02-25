@@ -7,18 +7,18 @@ on:
 
 jobs:
   deploy_and_test:
-      runs-on: self-hosted    
-      steps:
+    runs-on: ubuntu-latest    
+    steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Ejecutar script de despliegue
-        run: |
-          echo "Hello world!"
-          #echo "Ejecutando script de despliegue..."
+      - name: Instalar dependencias
+        run: sudo apt-get update && sudo apt-get install -y libsocketcan-dev gcc
 
-      - name: Apaagar el runner después del workflow
-        run: |
-          echo "Cerrando el runner ..."
-          sudo systemctl stop.actions.runner.${{ github.repository_owner }}.${{ github.event.repository.name }}.*
-        if: (always)
+      - name: Compilar test.c
+        run: gcc -o test test.c -Wall
+
+      - name: Ejecutar test.c
+        run: ./test
+          
+

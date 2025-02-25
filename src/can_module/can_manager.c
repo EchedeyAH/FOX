@@ -5,59 +5,33 @@
 // Autor: Echedey Aguilar Hernández 
 // email: eaguilar@us.es 
 // Fecha: 2025-01-08 
-// ***************************************/
+/***************************************/
 
-#include "can_driver.h"
-#include "can_handler.h"  // Include the new CAN handler header
 #include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#include "can_manager.h"
 
-#define MAX_CAN_DATA_LEN 8
-
-typedef struct {
-    uint32_t id;
-    uint8_t data[MAX_CAN_DATA_LEN];
-    uint8_t len;
-} can_message_t;
-
-int can_manager_init(const char *interface_name) {
-    return can_handler_init();  // Use the new CAN handler initialization
-}
-
-int can_manager_send_message(uint32_t id, const uint8_t *data, uint8_t len) {
-    if (len > MAX_CAN_DATA_LEN) {
-        fprintf(stderr, "Error: Longitud de datos (%d) excede el máximo permitido (%d).\n", len, MAX_CAN_DATA_LEN);
-        return -1;
+// Inicializar el módulo CAN
+void initialize_can() {
+    int sock = setup_can_socket();
+    if (sock < 0) {
+        printf("Error al inicializar el socket CAN\n");
+        return;
     }
-
-    can_message_t message;
-    message.id = id;
-    message.len = len;
-    memcpy(message.data, data, len);
-
-    // Aquí se podrían aplicar reglas de negocio, filtrado, etc.
-
-    return can_handler_send(message.id, message.data, message.len);  // Use the new CAN handler send function
+    printf("Socket CAN inicializado correctamente.\n");
 }
 
-int can_manager_receive_message(can_message_t *message) {
+// Enviar mensaje de prueba
+void test_can_send() {
+    int sock = setup_can_socket();
     struct can_frame frame;
-    int result = can_handler_receive(&frame);  // Use the new CAN handler receive function
-    
-    if (result >= 0) {
-        message->id = frame.can_id;
-        message->len = frame.can_dlc;
-        memcpy(message->data, frame.data, frame.can_dlc);
-        
-        // Aquí se podrían aplicar reglas de negocio, filtrado, etc.
-        
-        printf("Mensaje CAN procesado - ID: 0x%X, Longitud: %d\n", message->id, message->len);
-    }
-    
-    return result;
-}
 
-void can_manager_close() {
-    can_handler_close();  // Use the new CAN handler close function
+    frame.can_id = 0x123;
+    frame.can_dlc = 2;
+    frame.data[0] = 0xAB;
+    frame.data[1] = 0xCD;
+
+    send_can_message(sock, &frame);
+    printf("Mensaje CAN enviado.\n");
+
+    close(sock);
 }
