@@ -3,20 +3,29 @@ name: Deploy and Test
 on:
   push:
     branches:
-      - main  # Cambia la rama si deseas otra
+      - main
 
 jobs:
   deploy_and_test:
-    runs-on: ubuntu-latest    
+    runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Checkout del código
         uses: actions/checkout@v2
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias en la máquina remota
         run: sudo apt-get update && sudo apt-get install -y libsocketcan-dev gcc
+
+      - name: Activar interfaces CAN
+        run: |
+          cd actions-runner
+          ./run.sh
+          sudo ip link set emuccan0 up
+          sudo ip link set emuccan1 up
+          sudo ip link set emuccan2 up
+          sudo ip link set emuccan3 up
 
       - name: Compilar test.c
         run: gcc -o test test.c -Wall
 
-      - name: Ejecutar test.c
+      - name: Ejecutar test.c en la máquina remota
         run: ./test
