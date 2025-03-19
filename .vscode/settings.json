@@ -5,7 +5,9 @@
         "stdlib.h": "c",
         "stdio.h": "c",
         "declaraciones_fox.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "funciones.h": "c",
+        "constantes_fox.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

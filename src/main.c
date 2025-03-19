@@ -1,78 +1,41 @@
-/***************************************/
-// Proyecto: FOX
-// Nombre fichero: main.c
-// Descripción: Función principal y el flujo de control del programa.
-// Autor: Echedey Aguilar Hernández
-// email: eaguilar@us.es
-// Fecha: 2025-01-08
-// ***************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <string.h>
-#include "can_manager.h"
-#include "imu_manager.h"
-#include "rt_scheduler.h"
-#include "ecu_config.h"
-#include "logger.h"
+#include <pthread.h>
+#include "ecu_fox/constantes_fox.h"
+#include "ecu_fox/declaraciones_fox.h"
+#include "ecu_fox/funciones.h"
 
-volatile sig_atomic_t running = 1;
-
-void signal_handler(int signum) {
-    running = 0;
-    log_info("Received signal %d. Shutting down...", signum);
-}
-
-void cleanup() {
-    cleanup_can_module();
-    cleanup_imu_module();
-    cleanup_rt_scheduler();
-    log_info("Cleanup completed. Exiting.");
-}
-
-int initialize_modules() {
-    if (init_can_module() != 0) {
-        log_error("Failed to initialize CAN module");
-        return -1;
+int main(int argc, char *argv[]) {
+    // Inicialización del sistema
+    if (inicializarSistema() != ERROR_OK) {
+        fprintf(stderr, "Error inicializando el sistema.\n");
+        exit(EXIT_FAILURE);
     }
     
-    if (init_imu_module() != 0) {
-        log_error("Failed to initialize IMU module");
-        return -1;
+    pthread_t hilo_com, hilo_hilos, hilo_imp;
+    
+    // Crear hilo de comunicación
+    if(pthread_create(&hilo_com, NULL, comunicacion_thread, NULL) != 0) {
+        error_exit("Error creando el hilo de comunicación");
     }
     
-    if (init_rt_scheduler() != 0) {
-        log_error("Failed to initialize RT scheduler");
-        return -1;
+    // Crear hilo de gestión de hilos
+    if(pthread_create(&hilo_hilos, NULL, hilos_thread, NULL) != 0) {
+        error_exit("Error creando el hilo de hilos");
     }
     
-    return 0;
-}
-
-int main() {
-    log_info("Starting FOX control system");
-
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
-    
-    if (load_configuration("config.json") != 0) {
-        log_error("Failed to load configuration");
-        return EXIT_FAILURE;
-    }
-
-    if (initialize_modules() != 0) {
-        cleanup();
-        return EXIT_FAILURE;
+    // Crear hilo de impresión/logging
+    if(pthread_create(&hilo_imp, NULL, impresion_thread, NULL) != 0) {
+        error_exit("Error creando el hilo de impresión");
     }
     
-    log_info("All modules initialized. Starting main loop");
-
-    while (running) {
-        run_rt_tasks();
-        usleep(10000); // 10ms sleep to prevent CPU hogging
-    }
+    // Espera a la finalización de los hilos
+    pthread_join(hilo_com, NULL);
+    pthread_join(hilo_hilos, NULL);
+    pthread_join(hilo_imp, NULL);
     
-    cleanup();
+    // Finalización del sistema
+    finalizarSistema();
+    
     return EXIT_SUCCESS;
 }

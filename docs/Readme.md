@@ -33,82 +33,37 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
 
 ```plaintext
 - Estructura ideal - 
-project_root/
-│
-├── src/                                # Código fuente principal
-│   ├── main.c                          # Punto de entrada del programa
-│   ├── can_module/                     # Módulo para procesos CAN
-│   │   ├── can_manager.c               # Gestión de mensajes CAN
-│   │   ├── can_handler.c               # Manejo de eventos CAN
-│   │   ├── can_driver.c                # Interacción directa con el hardware
-│   │   └── Makefile                    # Construcción específica del módulo CAN
-│   │
-│   ├── imu_module/                     # Módulo para IMU
-│   │   ├── imu_manager.c               # Gestión de la IMU
-│   │   ├── imu_driver.c                # Driver para la IMU
-│   │   └── Makefile                    # Construcción específica del módulo IMU
-│   │
-│   ├── scheduler_module/               # Módulo para el planificador
-│   │   ├── rt_scheduler.c              # Planificador de tareas en tiempo real
-│   │   └── Makefile                    # Construcción específica del módulo
-│   │
-│   └── Makefile                        # Archivo de construcción global
-│
-├── include/                            # Archivos de cabecera compartidos
-│   ├── can_manager.h                   # Cabecera del gestor CAN
-│   ├── imu_manager.h                   # Cabecera del gestor IMU
-│   ├── rt_scheduler.h                  # Cabecera del planificador
-│   ├── ecu_config.h                    # Configuración general
-│   └── ...                             # Más cabeceras
-│
-├── drivers/                            # Controladores de hardware
-│   ├── can/                            # Controladores CAN
-│   │   ├── can_driver.c
-│   │   ├── can_dual.c                  # Compatibilidad con hardware dual
-│   │   └── Makefile
-│   │
-│   ├── imu/                            # Controladores IMU
-│   │   ├── imu_driver.c
-│   │   └── Makefile
-│
-├── tests/                              # Pruebas unitarias e integración
-│   ├── can_module/                     # Pruebas para el módulo CAN
-│   │   ├── test_can_manager.c
-│   │   ├── test_can_driver.c
-│   │   └── Makefile
-│   │
-│   ├── imu_module/                     # Pruebas para el módulo IMU
-│   │   ├── test_imu_manager.c
-│   │   └── Makefile
-│
-├── config/                             # Configuración externa (JSON, YAML)
-│   ├── can_config.json                 # Configuración del bus CAN
-│   ├── imu_config.json                 # Configuración de la IMU
-│   └── ecu_settings.yaml               # Configuración global del ECU
-│
-├── scripts/                            # Scripts de automatización
-│   ├── build.sh                        # Script para compilar todo el proyecto
-│   ├── deploy.sh                       # Despliegue en el vehículo
-│   ├── clean.sh                        # Limpieza de binarios
-│   └── monitor_can.sh                  # Monitorización del bus CAN
-│
-├── build/                              # Binarios generados
-│   ├── can_module.o
-│   ├── imu_module.o
-│   ├── rt_scheduler.o
-│   ├── project_executable              # Binario final del proyecto
-│   └── logs/                           # Registros de compilación
-│
-├── docs/                               # Documentación del proyecto
-│   ├── README.md                       # Guía general
-│   ├── ARCHITECTURE.md                 # Explicación de la arquitectura
-│   ├── CAN_PROTOCOL_SPEC.md            # Especificaciones del protocolo CAN
-│   └── RT_TASK_DESIGN.md               # Diseño de tareas en tiempo real
-│
-└── Makefile                            # Makefile principal para toda la compilación
-```
-__________________________________________________________________________________________________________________________________________
+/FOX
+├── CMakeLists.txt         // Archivo de configuración del sistema de build (o Makefile)
+├── include/
+│   ├── ecu_fox/
+│   │   ├── constantes_fox.h      // Constantes globales del proyecto
+│   │   ├── estructuras_fox.h     // Declaración de estructuras de datos
+│   │   ├── declaraciones_fox.h   // Prototipos de funciones comunes
+│   │   └── funciones.h           // Funciones auxiliares o utilitarias
+│   └── third_party/              // (Opcional) Headers de librerías de terceros
+├── src/
+│   ├── main.c                    // Punto de entrada del programa
+│   ├── hilos/                    // Módulo de gestión de hilos
+│   │   └── hilos.c
+│   ├── comunicacion/             // Módulo de comunicación (por ejemplo, SocketCAN)
+│   │   └── comunicacion.c
+│   ├── impresion/                // Módulo de impresión, logging o depuración
+│   │   └── impresion.c
+│   ├── inicializacion/           // Módulo de inicialización y configuración del sistema
+│   │   └── inicializacion.c
+│   ├── drivers/                  // (Opcional) Código específico de drivers o abstracción hardware
+│   │   └── can_driver.c          // Ejemplo: driver para el bus CAN
+│   └── utils/                    // (Opcional) Funciones utilitarias y de apoyo (por ejemplo, logging avanzado)
+│       └── logger.c
+├── tests/                        // Directorio para pruebas unitarias y de integración
+│   ├── test_main.c
+│   └── CMakeLists.txt            // Configuración de build para las pruebas
+└── docs/                         // Documentación del proyecto
+    └── README.md                // Documentación general y guía de uso
 
+```
+_________________________________________
 
 
 
