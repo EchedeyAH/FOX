@@ -33,6 +33,10 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
 
 ```plaintext
 - Estructura ideal - 
+
+>[!CAUTION]
+> Estructura desactualizada, se está desarrollando.
+
 /FOX
 ├── CMakeLists.txt         // Archivo de configuración del sistema de build (o Makefile)
 ├── include/
