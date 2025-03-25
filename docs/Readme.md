@@ -29,15 +29,12 @@ Consulta [INSTALL.md](INSTALL.md) para más detalles sobre el proceso de instala
 Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las instrucciones para interactuar con el sistema en tiempo real.
 
 
-# Estructura del Proyecto
-
 >[!CAUTION]
 > Estructura desactualizada, se está desarrollando.
 
+# Estructura del Proyecto
 
 ```plaintext
-- Estructura ideal - 
-
 /FOX
 ├── CMakeLists.txt         // Archivo de configuración del sistema de build (o Makefile)
 ├── include/
