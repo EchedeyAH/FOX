@@ -29,9 +29,6 @@ Consulta [INSTALL.md](INSTALL.md) para más detalles sobre el proceso de instala
 Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las instrucciones para interactuar con el sistema en tiempo real.
 
 
->[!CAUTION]
-> Estructura desactualizada, se está desarrollando.
-
 # Estructura del Proyecto
 
 ```plaintext
@@ -65,7 +62,9 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
     └── README.md                // Documentación general y guía de uso
 
 ```
-_________________________________________
+
+>[!WARNING]
+> Estructura desactualizada, se está desarrollando.
 
 
 
