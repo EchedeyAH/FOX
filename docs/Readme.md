@@ -31,7 +31,7 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
 
 # Estructura del Proyecto
 
->[!CAUTION]
+>[!ATENCION]
 > Estructura desactualizada, se está desarrollando.
 
 
