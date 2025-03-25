@@ -1,0 +1,72 @@
+#!/bin/sh
+
+###########################################################################
+# subs
+#
+# Script to substitute string in a given file structure.
+#
+# $1 - The match pattern
+# $2 - The replacement
+# $3 - The file structure (could be file or directory name, do not use *)
+#
+# Required Utilities
+#
+#   sed  Stream Editor, sed exists on most of unix system,
+#        if your system hasn't it, try download it from:
+#        ftp://ftp.gnu.org/gnu/sed/
+#
+# Author: Reed Lai
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+###########################################################################
+
+###########################################################################
+# File level history, record changes for this file here.
+#
+# v 0.0.0  4 Mar 2003 by Reed Lai
+#   Hello world.
+###########################################################################
+
+
+
+get_file_date()
+{
+	FILEINFO=`ls --full-time $1 | cut -c44-67`
+        set $FILEINFO
+        unset IFS; MONTHNAME=$1; TIME=$2
+
+        YEAR=`echo $MONTHNAME | cut -d '-' -f 1`
+        MONTH=`echo $MONTHNAME | cut -d '-' -f 2`
+        DAY=`echo $MONTHNAME | cut -d '-' -f 3`
+
+        HOUR=`echo $TIME | cut -d ':' -f 1`
+        MIN=`echo $TIME | cut -d ':' -f 2`
+        SEC=`echo $TIME | cut -d ':' -f 3 | cut -d '.' -f 1`
+
+        filedate=$YEAR$MONTH$DAY$HOUR$MIN.$SEC
+}
+
+# for target_file in `find $3 -printf "%p "`
+for target_file in `grep -rl "$1" $3`
+do
+	echo -n "process file $target_file... "
+	get_file_date $target_file; echo -n "$filedate... "
+	sed -n "s/$1/$2/g;w $target_file.tmp" $target_file
+	chmod --reference=$target_file $target_file.tmp
+	rm -f $target_file
+	mv $target_file.tmp $target_file
+	touch -t $filedate $target_file
+	echo "done"
+done

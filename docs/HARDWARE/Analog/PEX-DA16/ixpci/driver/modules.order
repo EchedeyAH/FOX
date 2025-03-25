@@ -1,0 +1,16 @@
+/root/winson/ixpci/driver/ixpci.o
+/root/winson/ixpci/driver/ixpcitmc12.o
+/root/winson/ixpci/driver/ixpcip16x16.o
+/root/winson/ixpci/driver/ixpcip8r8.o
+/root/winson/ixpci/driver/ixpci1800.o
+/root/winson/ixpci/driver/ixpci1202.o
+/root/winson/ixpci/driver/ixpci1002.o
+/root/winson/ixpci/driver/ixpci1602.o
+/root/winson/ixpci/driver/ixpcim512.o
+/root/winson/ixpci/driver/ixpcifc16.o
+/root/winson/ixpci/driver/ixpcilanner.o
+/root/winson/ixpci/driver/ixpci826.o
+/root/winson/ixpci/driver/ixpcie8622.o
+/root/winson/ixpci/driver/ixpci822.o
+/root/winson/ixpci/driver/ixpcid96.o
+/root/winson/ixpci/driver/ixpci2602u.o

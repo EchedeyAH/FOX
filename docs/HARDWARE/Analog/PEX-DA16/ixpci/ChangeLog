@@ -1,0 +1,217 @@
+IxPCI - Linux driver for PCI series.
+v 0.8.19 28 Jun 2024 by Winson Chen
+  To give support to Linux kernel 6.8.0
+
+v 0.8.18 3 Oct 2022 by Winson Chen
+  To give support to Linux kernel 5.16.0
+
+v 0.8.17 30 DEC 2021 by Winson Chen
+  Support PCI-D96_D128
+  To give support to Linux kernel 5.10.0
+
+v 0.8.16 5 NOV 2019 by Winson Chen
+  Support systemd autoinstall.
+  Give support PCI-1002 lib.
+
+v 0.8.15 22 Jul 2019 by Winson Chen
+  To give support to Linux kernel 4.15.0
+
+v 0.8.14 7 Mar 2017 by Golden Wang
+  Give support PCI-FC16U
+  Add PCI-P16X16 User Manual.
+
+v 0.8.13 21 Sep 2015 by Winson Chen
+  Give support to PCIe-8622 
+
+v 0.8.12 10 Aug 2015 by Winson Chen
+  To add PCI-1602's demo "adspolling" "daca" "dio" "dioa" in exmaples/pci1602 folder.
+  Add lib function PCI_1602_AdsPolling(WORD, float [], WORD);
+
+v 0.8.11 30 Jun 2015 by Winson Chen
+  To give support to linuc kernel 4.0.0
+
+v 0.8.10 11 Nov 2014 by Winson Chen
+  To give support to linux kernel 3.16.0
+
+v 0.8.9 7 Aug 2014 by Winson Chen
+  Give lib support to 32bit OS and 64bit OS.
+
+v 0.8.8 25 Feb 2014 by Winson Chen
+  Support IxPCI driver module auto install.
+  remove PISO-CAN200/400 serial card for IxPCI driver.
+
+v 0.8.7 5 DEC 2013 by Winson Chen
+  To give support to linux kernel 3.12.0
+
+v 0.8.6 1 Nov 2013 by Winson Chen
+  Give support to PCI-822.
+
+v 0.8.5 29 Oct 2013 by Winson Chen
+  Give support to PCI-826.
+
+v 0.8.4 12 Mar 2013 by Winson Chen
+  Give support to Linux Kernel 3.8.2.
+
+v 0.8.3 5 Dec 2012
+  To add ioctl command "IXPCI_IOCTL_XOR" for PCI-TMC12A's XOR-control register.
+  To add PCI-TMC12A's demo "led".
+
+v 0.8.2 18 Jan 2012
+  To fix the PISO-CAN200/400 bug that kernel show the warning when opening the
+  device file for linux kernel 3.2.20.
+  To extend the Tx/Rx buffer for PISO-CAN200/400.
+
+v 0.8.1 18 Jan 2012
+  Fixed the bug for PCI-1602.
+
+v 0.8.0 16 Jan 2012
+  Give support to linux kenrel 3.x.x.
+  Fixed the bug of "ixpci.inst" for Ubuntu OS.
+
+v 0.7.14 6 Apr 2011
+  Give support to linux kernel 2.6.37.
+
+v 0.7.13 18 Feb 2011
+  To fix bug for PCI-1002 and PCI-TMC12(A).
+
+v 0.7.12 2  Aug 2010
+
+  To fix function "Get_Lanner_Gain_Offset" for Lanner I/O Card(LEN-IO01).
+
+v 0.7.11 24  Jun 2010
+  To add the AI timeout function for Lanner OEM I/O library.
+  To fix bug that get error code "DNM_GET_ATTRIBUTE_RESPONSE_TIMEOUT" in
+  function "DNM_GetAttribute".
+
+v 0.7.10 4  Jun 2010
+  To add driver, library, demo and manual for Lanner OEM I/O Card.
+
+v 0.7.9 9  Apr 2010
+  Fixed the bug for PISO-CAN200/400 Series Card.
+
+v 0.7.8 30 Mar 2010
+  Give support to linux kernel 2.6.32.
+  Fixed the ixpci.inst bug that getting "$minor" error in character device.
+
+v 0.7.7 13 Jan 2010
+  Give support to linux kernel 2.6.31.
+  CANopen and DeviceNet Library for linux distribution that use linux kernel 2.6.31.
+
+v 0.7.6 31 Dec 2009
+  driver/_pisocan400.c and driver/_pisocan200.c
+
+  1.when RTR = 1, fix the id of frameinfo question in function "irq_handler"
+    , "ixpisocan400_write" and Ioctl "IXPCI_CAN_SENDMSG".
+  2.add "udelay(5)" to fill EFF data with IRQ or Ioctl "IXPCI_CAN_SENDMSG".
+  3.when RTR = 1, set the receiving CAN data = 0 in "irq_handler"
+    and Ioctl "IXPCI_CAN_RECEMSG.
+  4.fix the bug that receiving CAN message with interrupt when the CAN message
+    length is different.
+  5.when interrupt "CAN_TRANSMIT_INT" happened, driver don't save the can tx data. The bug     would result in the error that caculating can rx count .
+
+  CANopen Library support:
+
+  Add CANopen Library "libcpm.a"
+
+  Add CANopen Library demo "canopen_a" to example "pisocan200" and "pisocan400"
+  for PISO-CAN200/400.
+
+  Add CANopen Library manual to doc/PDF.
+
+  CAN DeviceNet Library support:
+
+  Add CAN DeviceNet Library "libdnm.a"
+
+  Add CAN DeviceNet Library demo "canodnm_a" to example "pisocan200" and "pisocan400"
+  for PISO-CAN200/400.
+
+  Add CANopen Library manual to doc/PDF.
+
+v 0.7.5 24 Jun 2009
+  Give support to PISO-CAN200/400-D/T CAN bus card.
+  Give support to PISO-CAN200U/400U-D/T CAN bus card.
+  Give support to PISO-CAN200E/400E-D/T(PCI Express) CAN bus card.
+  Give support to PCM-CAN200/400-D/T CAN bus card.
+  CAN bus library support.
+  Add example "pisocan200" and "pisocan400" for PISO-CAN200/400-D/T.
+
+v 0.7.4 16 Jan 2009
+  Give support to PCI-M512 memory card.
+  Add example "dio" and "sram" for PCI-M512.
+  Give support to linux kernel 2.6.27
+
+v 0.7.3 2 May 2008
+  To give pci libary support to pci180X.
+
+v 0.7.2 29 Jan 2008
+  To fix the "tar" syntax in Makefile, Makefile.am, Makefile.in  
+
+v 0.7.1 16 May 2007
+  Refresh Makefile to resolve warning message when the driver compiled.
+
+v 0.7.0 6 Feb 2007
+  Give support to linux kernel 2.6.X
+
+v 0.6.4 19 Apr 2004
+  Add an example for PCI1202.
+  It's an example for analog input by software trigger.(Emmy)
+
+v 0.6.3 22 Sep 2003
+  Fixed the problem of unrecoginzed format of kernel version in the
+  ixpci.inst and ixpci.remove (Reed)
+  Added service module for PCI-1602 which with new ids (Emmy)
+
+v 0.6.2  8 Jul 2003 by Reed Lai
+  Fixed a bug about _align_minor().
+  Fixed the disable_irq() and enable_irq() name conflicting error when
+  compiling.
+
+v 0.6.1 25 Jun 2003 by Reed Lai
+  Fixed the configuring problem. Uses kernel source as Linux Torvald
+  recommanded.
+
+  Fixed some source corruptions.
+
+  Defines IXPCI_PROC_FILE for application.
+
+v 0.6.0 20 Mar 2003 by Reed Lai
+  Gives support to PCI-TMC12.
+  Handles sub-vendor sub-device IDs.
+  Fixed a bug that caused kernel was unable to handle a NULL pointer when
+  interrupting.
+
+v 0.5.0 22 Jan 2003 by Reed Lai
+  Gives support to PCI-1002.
+
+v 0.4.0  9 Jan 2003 by Reed Lai
+  Gives support to PCI-P8R8.
+
+v 0.3.3  8 Jan 2003 by Reed Lai
+  Fixed bugs that caused only one card for a model could be detected
+  in a system and the failure of opening a device.
+
+v 0.3.2 11 Nov 2002 by Reed Lai
+  Checks IO region before request.
+  Uses slab.h in place of malloc.h.
+  Complies to the kernel module license check.
+
+v 0.3.1 11 Sep 2002 by Reed Lai
+  Fixes bugs of the unresolved symbols ixpci_cardname and _carname...
+
+v 0.3.0 17 May 2002 by Reed Lai
+  Gives support to PCI-P16R16/P16C16/P16POR16
+
+v 0.2.0  7 Jan 2001 by Reed Lai
+  Linux kernel 2.4
+  Project renames to IxPCI.
+
+v 0.1.0 24 May 2001 by Reed Lai
+  PCI-1800/1802/1602.
+
+v 0.0.0 22 May 2001 by Reed Lai
+  PCI-1202.
+  Device file (one card one file.)
+  Open, close and ioctl commands.
+  Read/Write registers.
+  Dynamic device allocation.
+  One major number for multiple devices.

@@ -1,0 +1,56 @@
+@Makefile_conf@
+
+moddir = $(kmoddir)
+mod_PROGRAMS = ixpcitmc12 ixpcip16x16 ixpcip8r8 ixpci1800 ixpci1202 ixpci1002 ixpci1602 ixpci826 ixpci822 ixpcie8622 ixpci
+
+AM_CPPFLAGS = -I$(kerneldir)/include -I. -I../include
+
+AM_CFLAGS = -O2 -Wall -m486 -fomit-frame-pointer -fno-strength-reduce
+CFLAGS_KM = -c -DEXPORT_SYMTAB -DMODULE -D__KERNEL__ -DLINUX
+LDFLAGS_KM = -m elf_i386 -r
+
+EXEEXT = ".o"
+
+%.o: %.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpcitmc12$(EXEEXT): _pcitmc12.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpcip16x16$(EXEEXT): _pcip16x16.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpcip8r8$(EXEEXT): _pcip8r8.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci1800$(EXEEXT): _pci1800.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci1202$(EXEEXT): _pci1202.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci1002$(EXEEXT): _pci1002.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci1602$(EXEEXT): _pci1602.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci826$(EXEEXT): _pci826.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci822$(EXEEXT): _pci822.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpcie8622$(EXEEXT): _pcie8622.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpci$(EXEEXT): _pci.o _proc.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+# Read the root Makefile.am
+# indent:
+#	indent -kr -ts4 -nsc -pmt *.c
+
+CLEANFILES = *~ \#*
+
+.PHONY: indent

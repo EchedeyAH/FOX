@@ -1,0 +1,11 @@
+[Unit]
+Description=IxPCI autoinstall for systemd.
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/winson/ixpci
+ExecStart=/root/winson/ixpci/ixpci.inst
+
+[Install]
+WantedBy=multi-user.target
+

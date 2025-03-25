@@ -1,0 +1,90 @@
+#!/bin/sh
+################################################################
+#
+# ixpci.remove
+#
+# Script to remove (unload) loaded ixpci device drivers
+# automatically and properly
+#
+# Required Utilities
+#
+#   uname
+#
+#   sed  Stream Editor, sed exists on most of unix system,
+#        if your system hasn't it, try download it from:
+#        ftp://ftp.gnu.org/gnu/sed/
+#
+# History
+# v 0.5.2  21 Feb 2018 by Winson Chen
+#   Support auto install to systemd init process.
+#
+# v 0.5.1  30 Jun 2015 by Winson Chen
+#   Give support to kernel version 4.0.0
+#
+# v 0.5.0  25 Feb 2014 by Winson Chen
+#   Support IxPCI driver module auto install.
+#
+# v 0.4.0  16 Jan 2012 by Reed Lai
+#   Support kernel 3.x.x .
+#
+# v 0.3.0  31 Jan 2007 by Reed Lai
+#   Support kernel 2.6.x .
+#
+# v 0.2.1  8 Aug 2003 by Reed Lai
+#   Fixed KVER bug.
+#
+# v 0.2.0 28 Dec 2001 by Reed Lai
+#   Support kernel 2.4
+#
+# v 0.1.0 25 Oct 2001 by Reed Lai
+#   Re-filename to ixpci.remove (from pdaq.remove.)
+#   Change all "pdaq" to "ixpci."
+#
+# v 0.0.0 8 May 2001 by Reed Lai
+#   Create.
+################################################################
+
+echo "IxPCI Removement v 0.5.2"
+SYSTEMD_PATH='/lib/systemd/system'
+INIT_TYPE=`ps --pid 1 | tail -1 | awk -F" " '{printf $4}'`      #check init type
+PWD=`pwd`
+
+
+if [ -f /etc/fedora-release ]; then
+        DIS_PATH='/etc/rc.d/rc.local'
+else
+        DIS_PATH='/etc/rc.local'
+fi
+
+echo -n "Check Kernel version... "
+KVER=`uname -r`; IFS=.; set $KVER; unset IFS; KVER=$1.$2 MVER=$1
+echo $KVER
+
+if [ $KVER = "2.2" ]; then
+        INFO="/proc/ixpci"
+else
+	INFO="/proc/ixpci/ixpci"
+fi
+
+if [ -r "$INFO" ]; then
+	for module in `sed -n '/mod: /p' $INFO | sed 's/mod: //g'`
+	do
+		echo "Unload module $module"
+		rmmod $module
+	done
+else
+	echo  "No IxPCI module found!"
+fi
+
+	#autoremove
+        if [ $INIT_TYPE = "systemd" ]; then	#init with systemd
+		if [ -e $SYSTEMD_PATH/ixpci-inst.service ];then
+			systemctl disable ixpci-inst.service > /dev/null 2>&1
+			rm -f $SYSTEMD_PATH/ixpci-inst.service
+		fi
+        else					#init with sysVinit
+		sed -i '/ixpci/d' $DIS_PATH
+        fi
+
+echo "Unload module ixpci"
+rmmod ixpci

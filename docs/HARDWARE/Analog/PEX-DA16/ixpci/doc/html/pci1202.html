@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en">
+<head>
+<title>PCI-1202</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta name="author" content="Reed Lai" />
+<meta name="Keywords" content="driver,pci-1202,pci1202" />
+<meta name="Description" content="PCI-1202 device driver for Linux" />
+<meta name="generator" content="vi/vim" />
+<meta name="revised" content="Reed Lai, 20 Apr 2001" />
+<link rel="stylesheet" type="text/css" href="default.css" />
+</head>
+<body>
+
+
+<h1>PCI-1202</h1>
+
+<table width="100%"><tr>
+<td><em style="color:#808080">Visitor</em> <em style="color:#F080A0">699</em></td>
+<td align="right"><em style="color:#808080">Last updated</em> <em style="color:#F080A0">Monday, 19-Apr-2004 13:09:33 CST</em></td>
+</tr></table>
+<hr /><div class="navbar"><table width="100%" border="0"><tr>
+<td align="left">[<a href="http://w3.icpdas.com/reed/pj/ixpio/">IxPIO</a>] <span style="background:#e0e0ff">[<a href="index.html"><b>IxPCI</b></a>]</span> [<a href="http://w3.icpdas.com/reed/pj/ixisa/">IxISA</a>] [<a href="http://w3.icpdas.com/reed/pj/ixwdt/">IxWDT</a>][<a href="http://www.icpdas.com/">ICPDAS</a>]</td>
+<td align="right">[<a href="http://w3.icpdas.com/reed/pj/pl/">Projects</a>] [<a href="http://w3.icpdas.com/reed/pj/pl/ixpci.html">Status</a>]</td>
+</tr></table>
+</div>
+
+<table width="100%"><tr>
+<td>
+<table class="tab" cellpadding="0" cellspacing="0">
+<tr><td class="title" align="center">Supported Models</td></tr>
+<tr><td class="body"><a href="pci1002.html">PCI-1002</a><br /><a href="pci1202.html">PCI-1202</a><br /><a href="pci1602.html">PCI-1602</a><br /><a href="pci180x.html">PCI-1800/1802</a><br /><a href="pcip16x16.html">PCI-P16R16/P16C16/P16POR16</a><br /><a href="pcip8r8.html">PCI-P8R8</a><br /><a href="pcitmc12.html">PCI-TMC12</a></td></tr>
+</table>
+
+</td>
+<td align="right" valign="top">
+<a href="http://validator.w3.org/check/referer"><img src="/reed/images/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a>
+<a href="http://jigsaw.w3.org/css-validator/validator?uri=http://w3.icpdas.com/reed/pj/ixpci/default.css"><img style="border:0;width:88px;height:31px" src="/reed/images/vcss.gif" alt="Valid CSS!" /></a>
+</td>
+</tr></table>
+
+<p>
+<a href="pkg/last/HTML/">Source Code Tour for IxPCI</a><br />
+<a id="i_did" href="#did">Device ID</a><br />
+<a id="i_dev" href="#dev">Device File</a><br />
+<a id="i_ioc" href="#ioc">ioctl Commands</a><br />
+<a id="i_str" href="#str">Data Structures</a><br />
+<a id="i_reg" href="#reg">Registers</a><br />
+<a id="i_exa" href="#exa">Examples</a><br />
+</p>
+
+<!-- Device ID -->
+<h3><a id="did" href="#i_did">Device ID</a></h3>
+<p>PCI_1202</p>
+
+<!-- Device File -->
+<h3><a id="dev" href="#i_dev">Device File</a></h3>
+<p>/dev/ixpci<var>n</var></p>
+<p>The <var>n</var> is the IXPCI device number.</p>
+
+<!-- ioctl Commands -->
+<h3><a id="ioc" href="#i_ioc">ioctl Commands</a></h3>
+<dl>
+<dt>IXPCI_GET_INFO</dt>
+	<dd>Retrieve a device's information, and put it into the ixpci_devinfo (ixpci_devinfo_t) structure. Example: list.c.</dd>
+<dt>IXPCI_READ_REG</dt>
+	<dd>Read a specified register's value, and put the value into the ixpci_reg (ixpci_reg_t) structure. Example: ixpci1202/dio.c</dd>
+<dt>IXPCI_WRITE_REG</dt>
+	<dd>Write a given value to a specified register. Example: ixpci1202/dio.c</dd>
+<dt>IXPCI_RESET</dt>
+	<dd>Reset device.<ul>
+		<li>Stop the timer0/1/2.</li>
+		<li>Reset the control register.<ul>
+			<li>A/D channel 0, Gain control PGA = 1.</li>
+			<li>Input range control = PGA (+/- 5V.)</li>
+			<li>Reset the MagicScan controller.</li>
+			<li>Assert the MagicScan handshake control bit (bit-13.)</li>
+			<li>Clear FIFO.</li></ul></li>
+		<li>Clear DO to 0.</li>
+		<li>Clear DA1/2 to 0.</li></ul>Example: ixpci1202/reset.c</dd>
+<dt>IXPCI_TIME_SPAN&nbsp;&nbsp;&nbsp;&nbsp;IXPCI_BLOCK&nbsp;&nbsp;&nbsp;&nbsp;IXPCI_DELAY&nbsp;&nbsp;&nbsp;&nbsp;IXPCI_WAIT</dt>
+	<dd>IXPCI_TIME_SPAN uses the 8254 counter-2 to be the machine-indepent-timer by the internal 8 MHz clock. Command will be blocked before the countering has finished. The maximum counter value is 8190 micro-seconds. IXPCI_TIME_SPAN, IXPCI_BLOCK, IXPCI_DELAY, and IXPCI_WAIT all are identical. Example: ixpci1202/time_span.c.</dd>
+</dl>
+
+<!-- Data Structure -->
+<h3><a id="str" href="#i_str">Data Structures</a></h3>
+<dl>
+<dt>ixpci_devinfo_t</dt>
+	<dd>The data type of structure ixpci_devinfo which contains a device's id, base address, and so on. Example: list.c</dd>
+<dt>ixpci_reg_t</dt>
+	<dd>The data type of structure ixpci_reg which contains a register's id and value. Example: pci1202/port.c</dd>
+</dl>
+
+<!-- Registers -->
+<h3><a id="reg" href="#i_reg">Registers</a></h3>
+<p><b class="allow">R</b>=Readable&nbsp;&nbsp;<b class="allow">W</b>=Writable</p>
+<p>Available registers that can be used in structure ixpci_reg for PCI-1202.</p>
+<dl>
+<dt>IXPCI_8254C0 <b class="allow">R</b> <b class="allow">W</b></dt>
+	<dd>8254 Counter 0.</dd>
+<dt>IXPCI_8254C1 <b class="allow">R</b> <b class="allow">W</b></dt>
+	<dd>8254 Counter 0.</dd>
+<dt>IXPCI_8254C2 <b class="allow">R</b> <b class="allow">W</b></dt>
+	<dd>8254 Counter 2.</dd>
+<dt>IXPCI_8254CR <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>8254 Control Register.</dd>
+<dt>IXPCI_CR <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>Control Register.</dd>
+<dt>IXPCI_SR <b class="allow">R</b> <b class="disallow">W</b></dt>
+	<dd>Status Register.</dd>
+<dt>IXPCI_ADST <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>AD Software Trigger.</dd>
+<dt>IXPCI_DI <b class="allow">R</b> <b class="disallow">W</b></dt>
+	<dd>Digital Input.</dd>
+<dt>IXPCI_DO <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>Digital Output.</dd>
+<dt>IXPCI_AD <b class="allow">R</b> <b class="disallow">W</b></dt>
+	<dd>Analog to Digital Port.</dd>
+<dt>IXPCI_DA1 <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>Digital to Analog Channel 1.</dd>
+<dt>IXPCI_DA2 <b class="disallow">R</b> <b class="allow">W</b></dt>
+	<dd>Digital to Analog Channel 2.</dd>
+</dl>
+
+<!-- Examples -->
+<h3><a id="exa" href="#i_exa">Examples</a></h3>
+<dl>
+<dt>list.c</dt>
+	<dd>An example for ioctl command IXPCI_GET_INFO.</dd>
+<dt>ixpci1202/ai_soft.c</dt>
+	<dd>An example for analog input by software trigger.</dd>
+<dt>ixpci1202/dio.c</dt>
+	<dd>An example for reading and writing registers by ioctl commands IXPCI_READ_REG and IXPCI_WRITE_REG.</dd>
+<dt>ixpci1202/reset.c</dt>
+	<dd>An example for ioctl command IXPCI_RESET.</dd>
+<dt>pci1202/time_span.c</dt>
+	<dd>An example for ioctl command IXPCI_TIME_SPAN.</dd>
+</dl>
+
+<div class="navbar"><table width="100%" border="0"><tr>
+<td align="left">[<a href="http://w3.icpdas.com/reed/pj/ixpio/">IxPIO</a>] <span style="background:#e0e0ff">[<a href="index.html"><b>IxPCI</b></a>]</span> [<a href="http://w3.icpdas.com/reed/pj/ixisa/">IxISA</a>] [<a href="http://w3.icpdas.com/reed/pj/ixwdt/">IxWDT</a>][<a href="http://www.icpdas.com/">ICPDAS</a>]</td>
+<td align="right">[<a href="http://w3.icpdas.com/reed/pj/pl/">Projects</a>] [<a href="http://w3.icpdas.com/reed/pj/pl/ixpci.html">Status</a>]</td>
+</tr></table>
+</div>
+<hr />
+<address><a href="mailto:emmy@icpdas.com">Emmy Tsai &lt;emmy@icpdas.com&gt;</a> | <a href="mailto:service@icpdas.com">Service from ICPDAS &lt;service@icpdas.com&gt;</a></address>
+
+
+</body>
+</html>

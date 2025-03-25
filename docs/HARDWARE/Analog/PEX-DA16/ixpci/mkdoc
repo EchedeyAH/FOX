@@ -1,0 +1,11 @@
+#!/bin/sh
+
+articles='index pci1002 pci1202 pci1602 pci180x pcip16x16 pcip8r8 pcitmc12'
+
+rm doc/html/*
+
+for target in $articles; do
+	echo -n "make doc - $target.html... "
+	w3m -dump_source w3.icpdas.com/reed/pj/ixpci/$target.shtml | sed -n "s/shtml/html/g; w doc/html/$target.html"
+	echo 'done'
+done

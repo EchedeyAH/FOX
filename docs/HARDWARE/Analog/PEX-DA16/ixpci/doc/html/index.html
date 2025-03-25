@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en">
+<head>
+<title>IXPCI</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta name="author" content="Reed Lai" />
+<meta name="Keywords" content="driver,pci,ixpci" />
+<meta name="Description" content="PCI DAQ card device driver for Linux" />
+<meta name="generator" content="vi/vim" />
+<meta name="revised" content="Reed Lai, 25 Apr 2003" />
+<link rel="stylesheet" type="text/css" href="default.css" />
+</head>
+<body>
+
+
+<h1>IxPCI</h1>
+<p>Linux driver for PCI DAQ cards (PCI- series)</p>
+
+<table width="100%"><tr>
+<td><em style="color:#808080">Visitor</em> <em style="color:#F080A0">2179</em></td>
+<td align="right"><em style="color:#808080">Last updated</em> <em style="color:#F080A0">Monday, 19-Apr-2004 14:32:36 CST</em></td>
+</tr></table>
+<hr /><div class="navbar"><table width="100%" border="0"><tr>
+<td align="left">[<a href="http://w3.icpdas.com/reed/pj/ixpio/">IxPIO</a>] <span style="background:#e0e0ff">[<a href="index.html"><b>IxPCI</b></a>]</span> [<a href="http://w3.icpdas.com/reed/pj/ixisa/">IxISA</a>] [<a href="http://w3.icpdas.com/reed/pj/ixwdt/">IxWDT</a>][<a href="http://www.icpdas.com/">ICPDAS</a>]</td>
+<td align="right">[<a href="http://w3.icpdas.com/reed/pj/pl/">Projects</a>] [<a href="http://w3.icpdas.com/reed/pj/pl/ixpci.html">Status</a>]</td>
+</tr></table>
+</div>
+
+<table width="100%"><tr>
+<td>
+<table class="tab" cellpadding="0" cellspacing="0">
+<tr><td class="title" align="center">Supported Models</td></tr>
+<tr><td class="body"><a href="pci1002.html">PCI-1002</a><br /><a href="pci1202.html">PCI-1202</a><br /><a href="pci1602.html">PCI-1602</a><br /><a href="pci180x.html">PCI-1800/1802</a><br /><a href="pcip16x16.html">PCI-P16R16/P16C16/P16POR16</a><br /><a href="pcip8r8.html">PCI-P8R8</a><br /><a href="pcitmc12.html">PCI-TMC12</a></td></tr>
+</table>
+
+</td>
+<td align="right" valign="top">
+<a href="http://validator.w3.org/check/referer"><img src="/reed/images/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a>
+<a href="http://jigsaw.w3.org/css-validator/validator?uri=http://w3.icpdas.com/reed/pj/ixpci/default.css"><img style="border:0;width:88px;height:31px" src="/reed/images/vcss.gif" alt="Valid CSS!" /></a>
+</td>
+</tr></table>
+
+<p>
+<a id="i_fea" href="#fea">Feature</a><br />
+<a id="i_ins" href="#ins">Installation</a><br />
+<a id="i_dow" href="#dow">Download</a><br />
+<a id="i_req" href="#req">Requirement</a><br />
+<a id="i_his" href="#his">ChangeLog</a><br />
+</p>
+
+<!-- Feature -->
+<h3><a id="fea" href="#i_fea">Feature</a></h3><ul>
+	<li>Device file.</li>
+	<li>Open, close, and ioctl commands.</li>
+	<li>Read/write registers.</li>
+	<li>Signaling IRQ.</li>
+	<li>Dynamic device allocation.</li>
+	<li>Dynamic major number.</li>
+	<li>One major number for multiple devices.</li>
+	<li>Use the GNU configure and build system.</li>
+</ul>
+
+<!-- Installation -->
+<h3><a id="ins" href="#i_ins">Installation</a></h3><ul>
+	<li>Download and save IXPCI package to a directory which you have access to.</li>
+	<li>Extract the package. For example, the package's file name is <code>ixpci-0.6.0.tar.gz</code> and its path related to your current working directory is <code>../pkg</code>, then the extraction command would be<pre><code>	gunzip -c ../pkg/ixpci-0.6.0.tar.gz | tar xvf -</code>
+
+		or
+
+<code>	tar -zxvf ../pkg/ixpci-0.6.0.tar.gz</code></pre></li>
+	<li>An <code>ixpci-0.6.0</code> directory is created after extraction.  For convienient access, it is a good idea to put a symbol-link on it.<pre><code>	ln -s ixpci-0.6.0 ixpci</code></pre></li>
+	<li>Change working directory to the ixpci you just made, type <code>./configure</code> to create proper Makefiles.</li>
+	<li>Once the configuring has done successfully, type <code>make</code> to build all.</li>
+	<li>If you like to install files to system directory, the <code>make install</code> will do it for you. However, install files to system directory is not necessary for further operation. You will need the root privilege for that.</li>
+	<li>Script <code>./ixpci.inst</code> loads modules automatically. Script <code>./ixpci.remove</code> removes the loaded modules. The root privilege is required when installing or removing these kernel modules.</li>
+	<li>Please read file README if it is there.</li>
+</ul>
+
+<!-- Download Section -->
+<h3><a id="dow" href="#i_dow">Download</a></h3><ul>
+	<li><a href="pkg/ixpci-0.6.4.tar.gz">ixpci-0.6.4.tar.gz</a>&nbsp;&nbsp;103,801&nbsp;bytes&nbsp;&nbsp;Monday, 19-Apr-2004 14:30:27 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.6.3.tar.gz">ixpci-0.6.3.tar.gz</a>&nbsp;&nbsp;103,432&nbsp;bytes&nbsp;&nbsp;Monday, 22-Sep-2003 10:51:50 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.6.2.tar.gz">ixpci-0.6.2.tar.gz</a>&nbsp;&nbsp;102,687&nbsp;bytes&nbsp;&nbsp;Tuesday, 22-Jul-2003 13:24:13 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.6.1.tar.gz">ixpci-0.6.1.tar.gz</a>&nbsp;&nbsp;102,729&nbsp;bytes&nbsp;&nbsp;Thursday, 26-Jun-2003 10:28:12 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.6.0.tar.gz">ixpci-0.6.0.tar.gz</a>&nbsp;&nbsp;104,439&nbsp;bytes&nbsp;&nbsp;Thursday, 27-Mar-2003 15:27:34 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.5.0.tar.gz">ixpci-0.5.0.tar.gz</a>&nbsp;&nbsp;92,099&nbsp;bytes&nbsp;&nbsp;Wednesday, 22-Jan-2003 13:50:31 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.4.0.tar.gz">ixpci-0.4.0.tar.gz</a>&nbsp;&nbsp;86,969&nbsp;bytes&nbsp;&nbsp;Thursday, 09-Jan-2003 13:50:09 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.3.3.tar.gz">ixpci-0.3.3.tar.gz</a>&nbsp;&nbsp;88,542&nbsp;bytes&nbsp;&nbsp;Wednesday, 08-Jan-2003 15:56:31 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.3.2.tar.gz">ixpci-0.3.2.tar.gz</a>&nbsp;&nbsp;87,716&nbsp;bytes&nbsp;&nbsp;Monday, 11-Nov-2002 14:14:40 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.3.1.tar.gz">ixpci-0.3.1.tar.gz</a>&nbsp;&nbsp;71,545&nbsp;bytes&nbsp;&nbsp;Wednesday, 11-Sep-2002 15:32:11 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.3.0.tar.gz">ixpci-0.3.0.tar.gz</a>&nbsp;&nbsp;71,326&nbsp;bytes&nbsp;&nbsp;Friday, 17-May-2002 12:47:55 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/ixpci-0.2.0.tar.gz">ixpci-0.2.0.tar.gz</a>&nbsp;&nbsp;70,249&nbsp;bytes&nbsp;&nbsp;Monday, 07-Jan-2002 17:14:35 CST<br />Linux kernel 2.4<br />Linux kernel 2.2</li>
+	<li><a href="pkg/pdaq_0.1.0.tar.gz">pdaq_0.1.0.tar.gz</a>&nbsp;&nbsp;57,316&nbsp;bytes&nbsp;&nbsp;Thursday, 24-May-2001 15:47:09 CST<br />Linux kernel 2.2</li>
+	<li><a href="pkg/pdaq_0.0.0.tar.gz">pdaq_0.0.0.tar.gz</a>&nbsp;&nbsp;57,503&nbsp;bytes&nbsp;&nbsp;Tuesday, 22-May-2001 11:00:09 CST<br />Linux kernel 2.2</li>
+</ul>
+
+<!-- Requirement -->
+<h3><a id="req" href="#i_req">Requirement</a></h3><ul>
+	<li>Sed</li>
+	<li>GNU Make<!-- version 3.77 -->.</li>
+	<li>GNU gcc<!-- version egcs-2.91.66 19990314/Linux (egcs-1.1.2 release) -->.</li>
+</ul>
+
+<!-- ChangeLog -->
+<h3><a id="his" href="#i_his">ChangeLog</a></h3>
+<pre><code>IxPCI - Linux driver for PCI series.
+v 0.6.4 19 Apr 2004
+  Add an example for PCI1202.
+  It's an example for analog input by software trigger.(Emmy)
+
+v 0.6.3 22 Sep 2003
+  Fixed the problem of unrecoginzed format of kernel version in the
+  ixpci.inst and ixpci.remove (Reed)
+  Added service module for PCI-1602 which with new ids (Emmy)
+
+v 0.6.2  8 Jul 2003 by Reed Lai
+  Fixed a bug about _align_minor().
+  Fixed the disable_irq() and enable_irq() name conflicting error when
+  compiling.
+
+v 0.6.1 25 Jun 2003 by Reed Lai
+  Fixed the configuring problem. Uses kernel source as Linux Torvald
+  recommanded.
+
+  Fixed some source corruptions.
+
+  Defines IXPCI_PROC_FILE for application.
+
+v 0.6.0 20 Mar 2003 by Reed Lai
+  Gives support to PCI-TMC12.
+  Handles sub-vendor sub-device IDs.
+  Fixed a bug that caused kernel was unable to handle a NULL pointer when
+  interrupting.
+
+v 0.5.0 22 Jan 2003 by Reed Lai
+  Gives support to PCI-1002.
+
+v 0.4.0  9 Jan 2003 by Reed Lai
+  Gives support to PCI-P8R8.
+
+v 0.3.3  8 Jan 2003 by Reed Lai
+  Fixed bugs that caused only one card for a model could be detected
+  in a system and the failure of opening a device.
+
+v 0.3.2 11 Nov 2002 by Reed Lai
+  Checks IO region before request.
+  Uses slab.h in place of malloc.h.
+  Complies to the kernel module license check.
+
+v 0.3.1 11 Sep 2002 by Reed Lai
+  Fixes bugs of the unresolved symbols ixpci_cardname and _carname...
+
+v 0.3.0 17 May 2002 by Reed Lai
+  Gives support to PCI-P16R16/P16C16/P16POR16
+
+v 0.2.0  7 Jan 2001 by Reed Lai
+  Linux kernel 2.4
+  Project renames to IxPCI.
+
+v 0.1.0 24 May 2001 by Reed Lai
+  PCI-1800/1802/1602.
+
+v 0.0.0 22 May 2001 by Reed Lai
+  PCI-1202.
+  Device file (one card one file.)
+  Open, close and ioctl commands.
+  Read/Write registers.
+  Dynamic device allocation.
+  One major number for multiple devices.
+</code></pre>
+
+<div class="navbar"><table width="100%" border="0"><tr>
+<td align="left">[<a href="http://w3.icpdas.com/reed/pj/ixpio/">IxPIO</a>] <span style="background:#e0e0ff">[<a href="index.html"><b>IxPCI</b></a>]</span> [<a href="http://w3.icpdas.com/reed/pj/ixisa/">IxISA</a>] [<a href="http://w3.icpdas.com/reed/pj/ixwdt/">IxWDT</a>][<a href="http://www.icpdas.com/">ICPDAS</a>]</td>
+<td align="right">[<a href="http://w3.icpdas.com/reed/pj/pl/">Projects</a>] [<a href="http://w3.icpdas.com/reed/pj/pl/ixpci.html">Status</a>]</td>
+</tr></table>
+</div>
+<hr />
+<address><a href="mailto:emmy@icpdas.com">Emmy Tsai &lt;emmy@icpdas.com&gt;</a> | <a href="mailto:service@icpdas.com">Service from ICPDAS &lt;service@icpdas.com&gt;</a></address>
+
+
+</body>
+</html>

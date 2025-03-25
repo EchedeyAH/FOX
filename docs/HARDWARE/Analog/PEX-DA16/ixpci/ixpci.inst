@@ -1,0 +1,147 @@
+#!/bin/bash
+################################################################
+#
+# ixpci.inst
+#
+# Script to load ixpci device drivers automatically and properly
+#
+# Required Utilities
+#
+#   uname
+#
+#   sed  Stream Editor, sed exists on most of unix system,
+#        if your system hasn't it, try download it from:
+#        ftp://ftp.gnu.org/gnu/sed/
+#
+# History
+# v 0.7.3  1 Nov 2019 by Winson Chen
+#   Fix auto-install repeat record in sysVinit init process.
+#
+# v 0.7.2 21 Feb 2018 by Winson Chen
+#   Support auto install to systemd init process.
+#
+# v 0.7.1 30 Jun 2015 by Winson Chen
+#   Give support to kernel version 4.0.0
+#
+# v 0.7.0 25 Feb 2014 by Winson Chen
+#   Support IxPCI driver module auto install.
+#
+# v 0.6.0 16 Jan 2012 by Golden Wang
+#   Fixed for Ubuntu OS.
+#   Support kernel 3.x.x  
+#
+# v 0.5.0 30 Mar 2010 by Golden Wang
+#   Fixed a $minor bug.
+#
+# v 0.4.0 31 Jan 2007 by Reed Lai
+#   Support kernel 2.6.x
+#
+# v 0.3.1  8 Aug 2003 by Reed Lai
+#   Fixed a KVER bug.
+#
+# v 0.3.0 26 Jul 2002 by Reed Lai
+#   Fixed the bug that failing to remove ixpci module.
+#
+# v 0.2.0 28 Dec 2001 by Reed Lai
+#   Support kernel 2.4
+#
+# v 0.1.0 25 Oct 2001 by Reed Lai
+#   Re-filename to ixpci.inst (from pdaq.inst.)
+#   Change all "pdaq" to "ixpci."
+#
+# v 0.0.0 8 May 2001 by Reed Lai
+#   Create...
+################################################################
+
+echo "IxPCI Installation v 0.7.2"
+
+DEV_NAME='/dev/ixpci'
+DEV_TYPE='c'
+DEV_MODE='u=rw,g=rw,o=rw'
+DIR_DRV='driver'
+
+SYSTEMD_PATH='/lib/systemd/system'
+INIT_TYPE=`ps --pid 1 | tail -1 | awk -F" " '{printf $4}'`	#check init type
+IXPCI_SERVICE='ixpci-inst.service'
+EXE_TYPE=`echo ${0:0:1}`
+if [ "$EXE_TYPE" = "." ];then	#Decide how to determine pwd.
+	PWD=`pwd`
+else
+	PWD=`cat /lib/systemd/system/$IXPCI_SERVICE | grep WorkingDirectory | awk -F"=" '{printf $2}'`
+fi
+DIRECTORY=`cat $PWD/$IXPCI_SERVICE | grep WorkingDirectory | awk -F"=" '{printf $2}'`
+EXECSTART=`cat $PWD/$IXPCI_SERVICE | grep ExecStart | awk -F"=" '{printf $2}'`
+IXPCI_SERVICE_P="$PWD/$IXPCI_SERVICE"
+
+
+if [ -f /etc/fedora-release ]; then
+	DIS_PATH='/etc/rc.d/rc.local'
+else
+	DIS_PATH='/etc/rc.local'
+fi
+
+if [ "$1" = "Manual" ]; then
+	TYPE='Manual'
+fi
+
+echo -n "Check Kernel version... "
+KVER=`uname -r`; IFS=.; set $KVER; unset IFS; KVER=$1.$2 MVER=$1
+echo $KVER
+
+if [ $KVER = "2.2" ]; then
+        INFO="/proc/ixpci"
+else
+        INFO="/proc/ixpci/ixpci"
+fi
+
+echo "Load module ixpci"
+if [ $KVER = "2.4" ]; then
+        insmod $DIR_DRV/ixpci.o
+else
+        insmod $DIR_DRV/ixpci.ko
+fi
+
+if [ -r "$INFO" ]; then
+
+	major=`sed -n '/maj: /p' $INFO | sed 's/maj: //g'`
+
+	for module in `sed -n '/^mod: /p' $INFO | sed 's/^mod: //g'`
+	do
+		echo "Load module $module"
+		if [ $KVER = "2.4" ]; then
+                        insmod $DIR_DRV/$module.o
+                else
+                        insmod $DIR_DRV/$module.ko
+                fi
+	done
+
+	for minor in `sed -n '/^dev: /p' $INFO | sed 's/^dev: ixpci//g; s/ .*//g'`
+	do
+		echo "Re-make device file $DEV_NAME$minor $major $minor"
+		rm -f $DEV_NAME$minor
+
+		#mknod -m=u=rw,g=rw,o=rw /dev/ixpci$minor c $major $minor
+		mknod -m=$DEV_MODE $DEV_NAME$minor $DEV_TYPE $major $minor
+	done
+
+	#autoinstall
+	if [ "$TYPE" != "Manual" ]; then
+		if [ $INIT_TYPE = "systemd" ]; then     #init with systemd
+			sed -i "6,6s@$DIRECTORY@$PWD@g" $IXPCI_SERVICE_P
+			sed -i "7,7s@$EXECSTART@$PWD/ixpci.inst@g" $IXPCI_SERVICE_P
+			cp $IXPCI_SERVICE_P $SYSTEMD_PATH
+			systemctl enable $IXPCI_SERVICE > /dev/null 2>&1
+		else                                    #init with sysVinit
+			grep ixpci.inst $DIS_PATH
+			VAL=$?
+			if [ $VAL == 1 ]; then
+				sed -i '$i cd '$PWD'' $DIS_PATH
+				sed -i '$i ./ixpci.inst' $DIS_PATH
+			fi
+		fi
+	fi
+
+else
+	echo  "No PCI DAQ device found!"
+	rmmod ixpci
+fi
