@@ -1,0 +1,96 @@
+@Makefile_conf@
+
+moddir = $(kmoddir)
+mod_PROGRAMS = ixpio ixpiod144 ixpiod48 ixpiod56 ixpiod64 ixpiod96 ixpioda16 ixpiso725 ixpiso730 ixpiso730a ixpiso813 ixpisop32c32 ixpisop8r8 ixpisop16r16u ixpisop32a32 ixpiod168a ixpisop64 ixpisoc64 ixpisoa64 ixpisoda2 ixpisoenc600 ixpisops300 ixpiod168 ixpio821 ixpiod64a
+
+AM_CPPFLAGS = -I$(kerneldir)/include -I. -I../include
+
+AM_CFLAGS = -O2 -Wall -fomit-frame-pointer -fno-strength-reduce
+CFLAGS_KM := -c -DEXPORT_SYMTAB -DMODULE -D__KERNEL__ -DLINUX
+LDFLAGS_KM := -m elf_i386 -r
+
+EXEEXT = ".o"
+
+%.o: %.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpio$(EXEEXT): _pio.o _proc.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpio821$(EXEEXT): _pio821.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod144$(EXEEXT): _piod144.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod48$(EXEEXT): _piod48.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod56$(EXEEXT): _piod56.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod64a$(EXEEXT): _piod64a.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod64$(EXEEXT): _piod64.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod96$(EXEEXT): _piod96.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpioda16$(EXEEXT): _pioda16.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiso725$(EXEEXT): _piso725.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiso730$(EXEEXT): _piso730.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiso730a$(EXEEXT): _piso730a.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiso813$(EXEEXT): _piso813.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpisop32c32$(EXEEXT): _pisop32c32.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpisop32a32$(EXEEXT): _pisop32a32.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpisop8r8$(EXEEXT): _pisop8r8.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpisop16r16u$(EXEEXT): _pisop16r16u.c
+	$(COMPILE) $(CFLAGS_KM) $< -o $@
+
+ixpiod168$(EXEEXT): _piod168.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpiod168a$(EXEEXT): _piod168a.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpisop64$(EXEEXT): _pisop64.c  
+	$(COMPILE) $(CFLAGS_KM) -o $@ $^
+
+ixpisops300$(EXEEXT): _pisops300.c  
+	$(COMPILE) $(CFLAGS_KM) -o $@ $^
+
+ixpisoc64$(EXEEXT): _pisoc64.c 
+	$(COMPILE) $(CFLAGS_KM) -o $@ $^
+
+ixpisoa64$(EXEEXT): _pisoa64.c 
+	$(COMPILE) $(CFLAGS_KM) -o $@ $^
+
+ixpisoda2$(EXEEXT): _pisoda2.o _signal.o
+	$(LD) $(LDFLAGS_KM) -o $@ $^
+
+ixpisoenc600$(EXEEXT): _pisoenc600.c 
+	$(COMPILE) $(CFLAGS_KM) -o $@ $^
+
+# Read the root Makefile.am
+# indent:
+#	indent -kr -ts4 -nsc -pmt *.c
+
+CLEANFILES = *~ \#*

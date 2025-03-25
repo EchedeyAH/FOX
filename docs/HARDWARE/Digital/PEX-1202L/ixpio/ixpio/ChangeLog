@@ -1,0 +1,272 @@
+The Linux driver for PIO series.
+v 0.23.7 28 Jun 2024 by Winson Chen
+  Support to Linux kernel 6.8.0
+
+v 0.23.6 7 Feb 2024 by Winson Chen
+  Support PISO-730 lib.
+
+v 0.23.5 29 May 2023 by Winson Chen
+  Disable DO output when install driver. (PISO-P16R16, PEX-P16R16)
+  Support to Linux kernel 5.16.0
+
+v 0.23.4 16 Aug 2022 by Winson Chen
+  Disable DO output when install driver. (PEX-D64, PIO-D64)
+
+v 0.23.3 30 Dec 2021 by Winson Chen
+  Support to Linux kernel 5.10.0
+  Fix example piso730a/port & port2
+
+v 0.23.2 26 Feb 2021 by Winson Chen
+  Support to Linux kernel 5.6.0
+
+v 0.23.1 30 Aug 2019 by Winson Chen
+  Support PEX-P16R16 lib.
+  Support systemd autoinstall.
+  Support multiple cards with lib.
+
+v 0.23.0 6 Jun 2019 by Winson Chen
+  Support to Linux kernel 4.15.0
+  Support PIO_PEX-D48 lib.
+
+v 0.22.9 24 Jun 2015 by Winson Chen
+  Support to Linux kernel 4.0.0
+  To modify enc600 lib, can open two cards simultaneously.
+
+v 0.22.8 15 Apr 2015 by Winson Chen
+  Fix lib header file to Compatibility C++.
+  Fix function PIODA16_Digital_Output() to support DO channel 9~16.
+  Fix warning in Ubuntu.
+  Sopport to Ubuntu 14.04 OS.
+
+v 0.22.7  7 Apr 2015 by Winson Chen
+  Modify driver pioda16.c DI register.
+  Add pioda16 demo "card_id.c" to read card id.
+
+v 0.22.6 11 Nov 2014 by Winson Chen
+  Give support to linux kernel 3.16.0
+  Fix warning by driver name defined.
+
+V 0.22.5 26 Aug 2014 by Winson Chen
+  Fix Real time signal event by adjust the order of signal and intterrupt from /lib/src/piodio.c PIODA_IntRemove function.
+
+v 0.22.4 11 AUg 2014 by Winson Chen
+  Give lib support to 32bit OS and 64bit OS.
+
+v 0.22.3 12 Mar 2014 by Winson Chen
+  Support IxPIO driver module auto install. (To see INSTALL)
+
+v 0.22.2  5  DEC 2013 by Winson Chen
+  To give support to linux kernel 3.12.0
+
+v 0.22.1  2  Jul 2013 by Winson Chen
+  To modify ixpio.inst let PIO-D144 support Ubuntu Linux.
+
+v 0.22.0  7  May 2013 by Golden Wang
+  To give support to linux kernel 3.8.2
+
+v 0.21.2  26 Apr 2013 by Golden Wang
+  Add function "PIODA_DeviceInit" for PIO-D144/D168.
+
+v 0.21.1  11 Jan  2012 by Golden Wang
+  Give support to the PEX-P16R16i.
+
+v 0.21.0  11 Jan  2012 by Golden Wang
+  To give support to linux kernel 3.x.x.
+
+v 0.20.16  28 Mar  2011 by Golden Wang
+  To give support to linux kernel 2.6.37.
+
+v 0.20.15  31  Aug 2010 by Golden Wang
+  Fixed the bug of library and demo for the PIO-D144.
+  Updating linux software manual.
+
+v 0.20.14  9   Apr 2010 by Golden Wang
+  Fixed driver and demo bug for the PIO-821.   
+  To add PIO-821 linux user manual.
+
+v 0.20.13  11  Mar 2010 by Golden Wang
+  To modify PISO-ENC600 examples "demo.c".
+
+v 0.20.12  23  Dec 2009 by Golden Wang
+  To modify IxPIO Dynamic Library Makefile.am for Ubuntu Linux.
+	
+v 0.20.11  25  Nov 2009 by Golden Wang
+  To add PIO-DA8 demo "ao_performance.c" for testing AO performance.
+  To add PISO-P16R16U demo "di_polling.c" for testing DI performance.
+  To add PISO-813 demo "aiso" for showing how to use the PIO/PISO dynamic library.
+  To add the compiler of PIO/PISO dynamic library.
+
+v 0.20.10  11  Nov 2009 by Golden Wang
+  To give support to kernel 2.6.31.
+
+v 0.20.9  8  Jan 2009 by Golden Wang
+  To give support to kernel 2.6.27.	
+  To add PIO_821_T3A for new PIO-821 Card.
+
+v 0.20.8  23  Dec 2008 by Golden Wang
+  To init pioda16 AO channel is 0V after the driver install.
+  To fix ixpio.inst and ixpio.remove script file.
+  To add "remove_proc_entry(FAMILY, NULL);" into  driver/_proc.c function "ixpio_proc_exit"  to delete "ixpio" directory in the directory "proc".
+
+v 0.20.7  9  Oct 2008 by Golden Wang
+  To give support to kernel 2.6.24.
+
+v 0.20.6  24  Apr 2008 by Golden Wang
+  To give support to kernel 2.6.22.
+
+v 0.20.5  28  Jan 2008 by Golden Wang
+  To fix the "tar" syntax in Makefile, Makefile.am, Makefile.in
+
+v 0.20.4  7  Sep 2007 by Golden Wang
+  To create linux static libary(ixpio-0.20.4/lib/libpio.a) for piod96.
+
+v 0.20.3  4  Sep 2007 by Golden Wang
+  To create linux static libary(ixpio-0.20.3/lib/libpio.a) for piod-144/168, piod24/piod56.  To create driver software manual(ixpio-0.20.3/doc/pdf) for piod-144/168, piod24/piod56. 
+
+v 0.20.2  23 Jul 2007 by Golden Wang
+  Gives support to the PISO-725-T3C (Golden)
+
+v 0.20.1  15 May 2007 by Golden Wang
+  To fix a bug in driver/_pisop32c32.c that cause a fail when installing PISO-P32c32(T3B)
+  card.
+
+v 0.20.0  2 Feb 2007 by Golden Wang
+  To give support to linux kernel 2.6.x
+	
+v 0.18.0 25 Feb 2004 by Emmy Tsai
+  Gives support to the PIO-821 (Emmy)
+  Gives support to the PIO-D64(Tiger 320). (Emmy)
+
+v 0.17.1 24 Nov 2003 by Emmy Tsai
+  Change cprintf() to printf() (Emmy).
+  
+v 0.17.0 18 Nov 2003 by Emmy Tsai
+  Gives support to the PISO-ENC300/ENC600 (Emmy)
+  The PISO-ENC300/600 lib is wrapped from DOS.
+
+v 0.16.0 20 Oct 2003 by Emmy Tsai
+  Gives support to the PISO-PS300 (Emmy)
+  The motion library is wrapped from DOS.
+
+v 0.15.0 6 Oct 2003 by Emmy Tsai
+  Gives support to the PISO-P32A32, PISO-P64, PISO-C64 and PISO-A64 models. (Emmy)
+  Gives support to the PIO-D168, PISO-DA2 and PISO-PS300 models, not test yet. (Emmy)
+
+v 0.14.0 12 Aug 2003 by Reed Lai
+  Complex signal plans; The new signal structure allows user program to
+  To set up unlimited signal conditions.
+
+v 0.13.1 31 Jul 2003 by Reed Lai
+  Added an example (int.c) to the EXTIRQ facility for the PIO-D64 model.
+
+v 0.13.0  2 Jul 2003 by Reed Lai
+  Gives support to the PIO-D64.
+
+  Individual wave patten control for the PIO-DA16/8/4.
+
+  Fixed a bug that caused the Segmentation fault when opening a fake
+  device file.
+
+v 0.12.3 30 Jun 2003 by Reed Lai
+  Fixed the start_data() and stop_data() in _pioda16.c that used wrong
+  symbol.
+
+v 0.12.2 20 Jun 2003 by Reed Lai
+  Fixed the configuring problem. Uses kernel source as Linus Torvald
+  recommanded.
+
+  Defines IXPIO_PROC_FILE for application.
+
+v 0.12.1 27 Mar 2003 by Reed Lai
+  Fixed the bug that caused kernel was unable to handle a NULL pointer when
+  interrupting.
+
+v 0.12.0  5 Mar 2003 by Reed Lai
+  Gives support to the PIO-DA16/8/4 model.
+
+v 0.11.1  2 Dec 2002 by Reed Lai
+  Improves examples about interrupt and signal operating.
+
+v 0.11.0 28 Nov 2002 by Reed Lai
+  Gives support to the PIO-D96 model.
+
+v 0.10.0 26 Nov 2002 by Reed Lai
+  Gives support to the PISO-P8R8/P8SSR8AC/P8SSR8DC model.
+
+v 0.9.0 14 Nov 2002 by Reed Lai
+  Gives support to the PISO-813 model.
+  Some automake and autoconfig scripts have been changed for new rules.
+
+v 0.8.1  7 Nov 2002 by Reed Lai
+  Fixes the bug that forgets to release the port range for sub aux id when
+  initial searching on kernel 2.2.
+
+  Fixes the interrupt sharing problem which causes the both interrupt
+  sharing devices fail to work.  This problem is caused by an unnecesary
+  disable_irq before the request_irq.
+
+  Complies to the kernel module license.
+  Uses slab.h in place of malloc.h.
+  Corrects the second argument of free_irq.
+  Disables board IRQs before request_irq and free_irq.
+  Checks the results of request_irq.
+  Check_region before request_region.
+  Correct some values in old code.
+  Refine some codes.
+
+v 0.8.0  5 Nov 2002 by Reed Lai
+  Gives support to the PIO-D24 model.
+
+v 0.7.1 29 Jul 2002 by Reed Lai
+  Fixed the bug that failed installation on kernel 2.2.
+
+v 0.7.0 26 Jul 2002 by Reed Lai
+  Gives support to Linux kernel 2.4.
+
+v 0.6.0 25 Jun 2002 by Reed Lai
+  Gives support to the PISO-730A model.
+
+v 0.5.0  4 Jun 2002 by Reed Lai
+  Gives support to the PISO-725 model.
+
+v 0.4.0  3 May 2002 by Reed Lai
+  Gives support to the PISO-P32C32 model.
+
+  Remove the paragraph writes value to ACR which are redundant in PISO-730
+  examples - port.c and port2.c.
+
+v 0.3.0  2 May 2002 by Reed Lai
+  Gives support to the PISO-730 model.
+
+v 0.2.0 23 May 2001 by Reed Lai
+  Use the GNU configure and build system (autoconf, automake.)
+
+v 0.1.1 8 May 2001 by Reed Lai
+  Fixed a bug that caused the cleanup_module to remove the devices
+  which belonged to different family.
+
+v 0.1.0 7 May 2001 by Reed Lai
+  A PIO-D48 driver contributed by Dr. Peter Wurmsdobler.
+
+  The contributed driver can be found in the "contribute" directory.
+
+v 0.0.0 30 Nov 2000 by Reed Lai
+    Gives supports to the PIO-D144 and PIO-D48 models.
+
+    Device file (one card one file.)
+
+    Open, close and ioctl commands.
+
+    Read/write registers.
+
+    Signaling IRQ.
+
+    Simulated edge-interrupt (negative, positive or both.)
+
+    Configurable interrupt signaling condictions.
+
+    Dynamic device allocation.
+
+    Dynamic major number.
+
+    One major number for multiple devices.

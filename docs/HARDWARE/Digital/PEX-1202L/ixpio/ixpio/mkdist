@@ -1,0 +1,68 @@
+#!/bin/sh
+
+###########################################################################
+# mkdist
+#
+# Script to pack distribution.
+#
+# $1 - The distribution name
+# $2 - The package name
+# $3 - The Version number
+#
+# Required Utilities
+#
+#   sed  Stream Editor, sed exists on most of unix system,
+#        if your system hasn't it, try download it from:
+#        ftp://ftp.gnu.org/gnu/sed/
+#
+# Author: Reed Lai
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+###########################################################################
+
+###########################################################################
+# File level history, record changes for this file here.
+#
+# v 0.0.0  5 Mar 2003 by Reed Lai
+#   Create.
+###########################################################################
+
+
+if [ ! -d ../$1 ]; then mkdir ../$1; fi
+
+cd ../$1
+
+rm -rf ./$1-$2-$3*.tar.gz ./$1-$2-$3
+echo probe cp -Rp ../$2-$3/. ./$1-$2-$3
+cp -Rp ../$2-$3/. ./$1-$2-$3
+
+if [ $1 == 'omega' ]; then
+	distname='Omega'
+	./$1-$2-$3/subs '<a href=\"mailto:reed@icpdas.com\">Reed Lai &lt;reed@icpdas.com&gt;<\/a> | ' '' ./$1-$2-$3
+	./$1-$2-$3/subs 'ICP DAS' 'Omega' ./$1-$2-$3
+	./$1-$2-$3/subs 'ICPDAS' 'Omega' ./$1-$2-$3
+	./$1-$2-$3/subs 'icpdas' 'omega' ./$1-$2-$3
+# elif [ $1 == 'whatever' ]; then
+else
+	echo -n "Unknown $1 distribution. Continue? [yes/NO]"
+	read key
+	if [ $key != 'yes' ]; then
+		exit -1
+	fi
+fi
+
+tar -cf - $1-$2-$3 | gzip --best -c > $1-$2-$3.tar.gz
+rm -rf ./$1-$2-$3
+echo The $distname distribution has been packed successfully.

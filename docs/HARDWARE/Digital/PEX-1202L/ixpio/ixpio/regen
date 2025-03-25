@@ -1,0 +1,23 @@
+#!/bin/sh
+if [ -e "lib/Makefile" ] || [ -e "examples/Makefile" ]; then
+	make -i distclean
+	#make -i clean
+fi
+
+if [ -f /etc/fedora-release ]; then
+        DIS_PATH='/etc/rc.d/rc.local'
+else
+        DIS_PATH='/etc/rc.local'
+fi
+
+# Clear all auto-generated files
+rm -rf *~ aclocal.m4 autom4te.cache configure depcomp install-sh missing mkinstalldirs stamp-h.in
+sed -i '/ixpio/d' $DIS_PATH >> /dev/null 2>&1
+sed -i '/ixpiso/d' $DIS_PATH >> /dev/null 2>&1
+sed -i '/netjet/d' $DIS_PATH >> /dev/null 2>&1
+
+aclocal
+# autoheader
+automake -a -c
+autoconf
+rm -rf autom4te.cache

@@ -1,0 +1,11 @@
+[Unit]
+Description=IxPIO autoinstall for systemd.
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/winson/ixpio
+ExecStart=/root/winson/ixpio/ixpio.inst
+
+[Install]
+WantedBy=multi-user.target
+

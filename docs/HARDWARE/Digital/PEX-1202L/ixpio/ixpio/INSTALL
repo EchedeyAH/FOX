@@ -1,0 +1,28 @@
+Warning!!
+The linux driver is design for kernel 2.2.x - 2.6.x and 4.15.x .
+
+Install IO Card Software for Linux
+
+1. The root privilege is required when installing or removing
+   these kernel modules.
+
+2. Extracting package into current directory.
+
+   #tar -zxvf ixpio.tar.gz
+
+3. Configure to create proper Makefiles.
+
+   #./configure
+
+4. make to build all.
+   
+   #make
+
+5. Install/Uninstall
+   (1)
+      Script ./ixpio.inst loads PIO modules automatically and PIO modules will exist after reboot. 
+
+      Script "./ixpio.inst Manual" loads PIO modules automatically but not exist after reboot. 
+
+   (2)
+      Script ./ixpio.remove removes the loaded PIO modules.

@@ -1,0 +1,3 @@
+prefix=@prefix@
+kerneldir=@kerneldir@
+kmoddir=@kmoddir@

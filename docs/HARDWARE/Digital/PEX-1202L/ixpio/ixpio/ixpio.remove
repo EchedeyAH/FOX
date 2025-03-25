@@ -1,0 +1,122 @@
+#!/bin/sh
+################################################################
+#
+# ixpio.remove
+#
+# Script to remove (unload) loaded ixpio device drivers
+# automatically and properly
+#
+#   sed  Stream Editor, sed exists on most of unix system,
+#        if your system hasn't it, try download it from:
+#        ftp://ftp.gnu.org/gnu/sed/
+#
+# Author: Reed Lai
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+###########################################################################
+
+###########################################################################
+# File level history, record changes for this file here.
+# v 0.6.4  16 Sep 2020 by Winson Chen
+#   Support to Linux kernel 5.4.0
+#
+# v 0.6.3   5 Aug 2019 by Winson Chen
+#   Support auto remove to systemd init process.
+#
+# v 0.6.2  24 Jun 2015 by Winson Chen
+#   Support to Linux kernel 4.0.0
+#   Remove ixpiso line in rc.local
+#
+# v 0.6.1  15 Apr 2015 by Winson Chen
+#   Support to Ubuntu 14.04 OS.
+#
+# v 0.6.0  12 Mar 2014 by Winson Chen
+#   Support IxPIO driver module auto install.
+#
+# v 0.5.0  11 Jan 2012 by Golden Wang
+#   Gives support to Linux kernel 3.x.x .
+#
+# v 0.4.0  18 Jan 2007 by Reed Lai
+#   Gives support to Linux kernel 2.6.x .
+#
+# v 0.3.1  4 Mar 2003 by Reed Lai
+#   Unset IFS.
+#
+# v 0.3.0 19 Nov 2002 by Reed Lai
+#   Easy way, no more sed for parsing kernel version.
+#
+# v 0.2.1 26 Jul 2002 by Reed Lai
+#   Gives support to Linux kernel 2.4.
+#
+# v 0.1.0 29 Apr 2002 by Reed Lai
+#   Renames PIO to IXPIO.
+#
+# v 0.0.0 By Reed Lai 2000
+################################################################
+
+UBUNTU_V=0
+
+echo "IxPIO Remover 0.6.4"
+SYSTEMD_PATH='/lib/systemd/system'
+INIT_TYPE=`ps --pid 1 | tail -1 | awk -F" " '{printf $4}'`      #check init type
+PWD=`pwd`
+
+if [ -f /etc/fedora-release ]; then
+        DIS_PATH='/etc/rc.d/rc.local'
+else
+        DIS_PATH='/etc/rc.local'
+	UBUNTU_V=`cat /etc/lsb-release | grep DISTRIB_RELEASE |  awk -F"=" '{ print $2 }'`
+fi
+
+echo -n "Check Kernel version... "
+KVER=`uname -r`; IFS=.; set $KVER; unset IFS; KVER=$1.$2 MVER=$1
+echo $KVER
+
+if [ $KVER = "2.2" ]; then
+	INFO="/proc/ixpio"
+else
+	INFO="/proc/ixpio/ixpio"
+fi
+
+echo "Use proc-file $INFO"
+
+if [ -r "$INFO" ]; then
+	for module in `sed -n '/mod: /p' $INFO | sed 's/mod: //g'`
+	do
+		echo "Unload module $module"
+		rmmod $module
+		rm -f /lib/modules/`uname -r`/kernel/drivers/char/$module.ko
+	done
+else
+	echo "No IxPIO module found!"
+fi
+
+	#autoremove
+        if [ $INIT_TYPE = "systemd" ]; then     #init with systemd
+                if [ -e $SYSTEMD_PATH/ixpio-inst.service ];then
+                        systemctl disable ixpio-inst.service > /dev/null 2>&1
+                        rm -f $SYSTEMD_PATH/ixpio-inst.service
+                fi
+        else                                    #init with sysVinit
+
+		if [ "$UBUNTU_V" != "14.04" ]; then
+			sed -i '/netjet/d' $DIS_PATH
+		fi
+
+                sed -i '/ixpio/d' $DIS_PATH
+        fi
+
+echo "Unload module ixpio"
+rmmod ixpio
