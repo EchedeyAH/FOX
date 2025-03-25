@@ -1,13 +1,3 @@
-/**************************************************************************
-***                                                                  ***
-***   Fichero:       ***
-***   Fecha: 02/04/2013 (modificado en 2023 para Linux)              ***
-***   Autor original: Elena Gonzalez                                 ***
-***   Descripción: Proceso de adquisición de datos CAN desde la BMS.   ***
-***                Se lee un frame CAN, se procesa y se envía a una      ***
-***                cola de mensajes para el proceso principal de la ECU.  ***
-***                                                                  ***
-**************************************************************************/
 /***************************************/
 // Proyecto: FOX
 // Nombre fichero:can.c (Adaptado para Linux Ubuntu 22.04) 
