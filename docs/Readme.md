@@ -65,8 +65,3 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
 
 >[!WARNING]
 > Estructura desactualizada, se está desarrollando.
-
-
-
-
-
