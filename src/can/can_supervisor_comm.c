@@ -1,4 +1,4 @@
-/***************************************/
+/***************************************
 // Proyecto: FOX
 // Nombre fichero: can_supervisor_comm.c
 // Descripción: Hilo de adquisición de datos CAN para motores.    
@@ -6,7 +6,7 @@
 // Autor: Echedey Aguilar Hernández
 // email: eaguilar@us.es
 // Fecha: 2025-03-26
-// ***************************************/
+ ***************************************/
 
 /**************************************************
 ***        CABECERAS                           ***
