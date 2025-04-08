@@ -1,3 +1,7 @@
+
+>[!WARNING]
+>PROYECTO EN DESARROLLO.
+
 # Proyecto FOX - Sistema en Tiempo Real
 
 ## Descripción General
@@ -62,6 +66,3 @@ Para ejecutar el proyecto, consulta la guía [USAGE.md](USAGE.md) y sigue las in
     └── README.md                // Documentación general y guía de uso
 
 ```
-
->[!WARNING]
-> Estructura desactualizada, se está desarrollando.
