@@ -9,10 +9,22 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Ventanas/Elipsoide.cpp \
+    Ventanas/Fuzzy.cpp \
+    Ventanas/Ganancias.cpp \
+    Ventanas/MPC.cpp \
+    Ventanas/PI.cpp \
+    Ventanas/Proporcional.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    Ventanas/Elipsoide.h \
+    Ventanas/Fuzzy.h \
+    Ventanas/Ganancias.h \
+    Ventanas/MPC.h \
+    Ventanas/PI.h \
+    Ventanas/Proporcional.h \
     mainwindow.h
 
 FORMS += \

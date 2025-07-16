@@ -2,5 +2,6 @@
     <qresource prefix="/imagenes">
         <file>coche.PNG</file>
         <file>logo.png</file>
+        <file>advertencia.png</file>
     </qresource>
 </RCC>
