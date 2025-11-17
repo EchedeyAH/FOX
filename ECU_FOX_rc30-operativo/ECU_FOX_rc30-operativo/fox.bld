@@ -1,0 +1,101 @@
+
+[virtual=x86,bios +compress] .bootstrap = {
+	startup-bios 
+	PATH=/proc/boot:/usr/bin:/bin:/usr/photon/bin
+	LD_LIBRARY_PATH=/proc/boot:/usr/lib:/lib:/lib/dll procnto
+}
+
+[+script] .script = {
+	procmgr_symlink ../../proc/boot/libc.so.2 /usr/lib/ldqnx.so.2
+	display_msg What does the FOX say?
+	
+	slogger &
+	seedres &
+	pipe &
+	mqueue &
+	devc-pty &
+	pci-bios
+	waitfor /dev/pci
+	display_msg Montado /dev/pci
+	devb-eide
+	waitfor /dev/hd0t77
+	waitfor /dev/hd0t11
+	display_msg Montados disp. IDE
+	
+	SYSNAME=nto
+	PATH=/proc/boot:/usr/bin:/bin
+	LD_LIBRARY_PATH=/proc/boot:/usr/lib:/lib:/lib/dll
+	HOME=/
+
+	devc-ser8250
+	waitfor /dev/ser1
+	display_msg Iniciado puerto COM
+	
+	io-usb -v -dehci -dohci -duhci
+	waitfor /dev/io-usb/io-usb
+	umass-enum -v -h hd -d /dev -m /fs/hd
+	display_msg Iniciado puerto USB
+
+	mount -t qnx4 /dev/hd0t77 /
+	mount -t dos /dev/hd0t11 /datos
+	
+	/etc/script_usb
+	/ecu/script_fox
+}
+
+# archivos sin ruta los guarda por defecto en /proc/boot
+
+[type=link] /tmp=/dev/shmem
+
+# standard libs
+libc.so
+libm.so
+libcam.so
+cam-disk.so
+io-blk.so
+fs-qnx4.so
+fs-dos.so
+
+libusbdi.so.2
+devu-ehci.so
+devu-ohci.so
+devu-uhci.so
+devh-usb.so
+
+#/etc/umass-enum.cfg=/etc/umass-enum.cfg
+/etc/pcm3718hg_ho.cfg=/etc/pcm3718hg_ho.cfg
+/etc/termcap=/etc/termcap
+/usr/lib/terminfo/q/qansi-m=/usr/lib/terminfo/q/qansi-m
+
+[data=copy]
+devc-pty
+devc-ser8250
+io-usb
+slogger
+mqueue
+devb-eide
+devb-umass
+umass-enum
+devc-con
+more
+/bin/bash=/opt/bin/bash
+ls
+pipe
+ps
+shutdown
+mount
+umount
+cp
+chmod
+mkdir
+rm
+date
+seedres
+pci-bios
+clear
+
+[perms=777] /etc/script_usb=/root/ecu/script_usb
+
+#crear la imagen con mkifs nombre.bld nombre_imagen.ifs (este no debe superar los 3 megas)
+#para ver el contenido de la imagen: dumpifs nombre_imagen.ifs
+#crear disco de inicio en la unidad target con dinit -h -f nombre_imagen.ifs /dev/[..] pondra una serie de archivos

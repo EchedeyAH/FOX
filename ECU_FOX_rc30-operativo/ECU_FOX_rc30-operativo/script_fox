@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Sin opciones: se ejecutan todos los hilos y procesos y no se imprimen datos.
+# Para ejecutar todo: "todo" como primer argumento.
+# Delante de cualquier opcion: "-" no se ejecuta esa opcion, "p" se imprime esa opcion.
+# Las opciones "cansuperv", "canmotor1", "canmotor2", "canmotor3" y "canmotor4" deben
+# ir con la opcion "canrx".
+# Ejemplo: ecu_fox -todo canrx pcanmotor1. Ejecuta solo canrx y canmotor1 imprimiendo este ultimo.
+# Ejemplo: ecu_fox todo -canmbs pimu. Ejecuta todo excepto canbms e imprime solo imu.
+
+# Procesos: imudata, canbms
+
+# Hilos: errores, imu, adq, adqao, canrx, cansuperv, canmotor1, canmotor2
+# canmotor3, canmotor4, gestpot, ctrltrac, ctrlest
+
+PATH_HD=/datos
+PATH_ECU=/ecu
+
+DATE=$(date +"%Y%m%d_%H_%M")
+LOG_FILE=$PATH_HD/log_ecu/log_$DATE.txt
+LOG_ERROR=$PATH_HD/log_ecu/error_$DATE.txt
+
+#$PATH_ECU/ecu_fox > $LOG_FILE 2> $LOG_ERROR
+$PATH_ECU/ecu_fox todo -imprime -errores -ctrlest -gestpot -imudata
+
+shutdown -b

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+PATH_USB=/fs/hd10-dos-1
+PATH_ECU=/root/ecu
+PATH_COD=/ECU_FOX_rc*
+
+if [ -d $PATH_USB$PATH_COD ]
+then
+
+	if [ -d /root/$PATH_COD ]
+	then
+		rm -R /root/$PATH_COD
+	fi
+	cp -c -R $PATH_USB$PATH_COD /root/
+	rm -R $PATH_USB$PATH_COD
+	cd /root/$PATH_COD
+	make clean
+	make all
+
+	if [ -d $PATH_ECU ]
+	then
+		rm -R $PATH_ECU
+	fi
+	
+	mkdir $PATH_ECU
+	cp ./script_fox $PATH_ECU
+	cp ./script_usb $PATH_ECU
+	cp -c ./driver_can/can_dual $PATH_ECU/driver_can/can_dual
+	cp ./proceso_ppal/ecu_fox $PATH_ECU
+	cp ./proceso_can2/can2_fox $PATH_ECU
+	cp ./proceso_imu/imu_datalog_fox $PATH_ECU
+	cp ./dibujo.txt $PATH_ECU
+	echo "Ejecutables copiados.\n"
+
+	if [ $1 ]
+	then
+		mkifs ./fox.bld ./fox.ifs
+		mkifs ./fox_debug.bld ./fox_debug.ifs
+		cp ./fox.ifs $PATH_ECU
+		cp ./fox_debug.ifs $PATH_ECU
+		echo "Imagen creada.\n"		
+	fi
+
+	cp -r -c -n $PATH_ECU $PATH_USB
+	echo "Unidad USB lista.\n"
+fi
