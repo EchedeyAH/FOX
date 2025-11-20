@@ -12,21 +12,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up SSH key and known hosts
+      - name: Check if ECU_SSH_KEY is present
         run: |
-          mkdir -p ~/.ssh
-          printf "%s\n" "${ECU_SSH_KEY}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+          if [ -z "${ECU_SSH_KEY}" ]; then
+            echo "❌ ECU_SSH_KEY is empty. Please check GitHub Secrets."
+            exit 1
+          else
+            echo "✅ ECU_SSH_KEY loaded (length: ${#ECU_SSH_KEY})"
+          fi
         env:
           ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
 
+      - name: Set up SSH key and known hosts
+        run: |
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/id_ed25519 <<EOF
+${{ secrets.ECU_SSH_KEY }}
+EOF
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Test SSH connection to ECU
         run: |
           echo "Testing SSH connection to ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }}..."
-          ssh -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
+          ssh -o StrictHostKeyChecking=yes -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
 
       - name: Trigger remote deployment script on ECU
         run: |
