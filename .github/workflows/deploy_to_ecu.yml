@@ -26,19 +26,26 @@ jobs:
       - name: Set up SSH key and known hosts
         run: |
           mkdir -p ~/.ssh
-          cat > ~/.ssh/id_ed25519 <<EOF
-${{ secrets.ECU_SSH_KEY }}
-EOF
+          echo "${ECU_SSH_KEY}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${ECU_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+        env:
+          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
+          ECU_HOST: ${{ secrets.ECU_HOST }}
 
       - name: Test SSH connection to ECU
         run: |
-          echo "Testing SSH connection to ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }}..."
-          ssh -o StrictHostKeyChecking=yes -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
+          echo "Testing SSH connection to ${ECU_USER}@${ECU_HOST}..."
+          ssh -o StrictHostKeyChecking=yes -o BatchMode=yes "${ECU_USER}@${ECU_HOST}" "echo '✅ Connection successful.'"
+        env:
+          ECU_USER: ${{ secrets.ECU_USER }}
+          ECU_HOST: ${{ secrets.ECU_HOST }}
 
       - name: Trigger remote deployment script on ECU
         run: |
           echo "Running remote script: ~/CI-CD/deploy_ecu.sh"
-          ssh ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "bash ~/CI-CD/deploy_ecu.sh"
+          ssh "${ECU_USER}@${ECU_HOST}" "bash ~/CI-CD/deploy_ecu.sh"
+        env:
+          ECU_USER: ${{ secrets.ECU_USER }}
+          ECU_HOST: ${{ secrets.ECU_HOST }}
