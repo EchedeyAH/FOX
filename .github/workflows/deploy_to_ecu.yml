@@ -1,26 +1,18 @@
+name: Deploy to ECU
+
 on:
   push:
     branches: [ main ]
+
 jobs:
   deploy:
     runs-on: self-hosted
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Set up SSH key and known hosts
+
+      - name: Run deployment script locally (since this is the ECU)
         run: |
-          mkdir -p ~/.ssh
-          printf "%s\n" "${ECU_SSH_KEY}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-        env:
-          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
-      - name: Test SSH connection to ECU
-        run: |
-          echo "Testing SSH connection to ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }}..."
-          ssh -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
-      - name: Trigger remote deployment script on ECU
-        run: |
-          echo "Running remote script: ~/CI-CD/deploy_ecu.sh"
-          ssh ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "bash ~/CI-CD/deploy_ecu.sh"
+          echo "🚀 Ejecutando el script de despliegue local en la ECU..."
+          bash ~/CI-CD/deploy_ecu.sh
