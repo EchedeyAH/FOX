@@ -1,43 +1,25 @@
-name: Deploy to ECU
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Check if ECU_SSH_KEY is present
-        run: |
-          if [ -z "${ECU_SSH_KEY}" ]; then
-            echo "❌ ECU_SSH_KEY is empty. Please check GitHub Secrets."
-            exit 1
-          else
-            echo "✅ ECU_SSH_KEY loaded (length: ${#ECU_SSH_KEY})"
-          fi
-        env:
-          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
-
       - name: Set up SSH key and known hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${ECU_SSH_KEY}" | tr -d '\r' > ~/.ssh/id_ed25519
+          printf "%s\n" "${ECU_SSH_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
         env:
           ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
-
       - name: Test SSH connection to ECU
         run: |
           echo "Testing SSH connection to ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }}..."
-          ssh -o StrictHostKeyChecking=yes -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
-
+          ssh -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
       - name: Trigger remote deployment script on ECU
         run: |
           echo "Running remote script: ~/CI-CD/deploy_ecu.sh"
