@@ -15,10 +15,13 @@ jobs:
       - name: Set up SSH key and known hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.ECU_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf "%s\n" "${ECU_SSH_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+        env:
+          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
+
 
       - name: Test SSH connection to ECU
         run: |
