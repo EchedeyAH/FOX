@@ -1,0 +1,31 @@
+# .github/workflows/deploy_to_ecu.yml
+name: Deploy to ECU
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH access to ECU
+        run: |
+          mkdir -p ~/.ssh
+          echo "$ECU_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H $ECU_HOST >> ~/.ssh/known_hosts
+        env:
+          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
+          ECU_HOST: ${{ secrets.ECU_HOST }}
+
+      - name: Trigger remote deployment on ECU
+        run: |
+          ssh $ECU_USER@$ECU_HOST 'bash ~/deploy_ecu.sh'
+        env:
+          ECU_HOST: ${{ secrets.ECU_HOST }}
+          ECU_USER: ${{ secrets.ECU_USER }}
+          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
