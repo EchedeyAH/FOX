@@ -1,4 +1,3 @@
-# .github/workflows/deploy_to_ecu.yml
 name: Deploy to ECU
 
 on:
@@ -8,24 +7,25 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up SSH access to ECU
+      - name: Set up SSH key and known hosts
         run: |
           mkdir -p ~/.ssh
-          echo "$ECU_SSH_KEY" > ~/.ssh/id_ed25519
+          echo "${{ secrets.ECU_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H $ECU_HOST >> ~/.ssh/known_hosts
-        env:
-          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
-          ECU_HOST: ${{ secrets.ECU_HOST }}
+          ssh-keyscan -H ${{ secrets.ECU_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-      - name: Trigger remote deployment on ECU
+      - name: Test SSH connection to ECU
         run: |
-          ssh $ECU_USER@$ECU_HOST 'bash ~/deploy_ecu.sh'
-        env:
-          ECU_HOST: ${{ secrets.ECU_HOST }}
-          ECU_USER: ${{ secrets.ECU_USER }}
-          ECU_SSH_KEY: ${{ secrets.ECU_SSH_KEY }}
+          echo "Testing SSH connection to ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }}..."
+          ssh -o BatchMode=yes ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "echo '✅ Connection successful.'"
+
+      - name: Trigger remote deployment script on ECU
+        run: |
+          echo "Running remote script: ~/CI-CD/deploy_ecu.sh"
+          ssh ${{ secrets.ECU_USER }}@${{ secrets.ECU_HOST }} "bash ~/CI-CD/deploy_ecu.sh"
