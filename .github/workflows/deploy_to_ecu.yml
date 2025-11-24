@@ -8,11 +8,25 @@ jobs:
   deploy:
     runs-on: self-hosted
 
+    # 🔧 Necesario para evitar fallos con Node 20 en Ubuntu 18.04 (glibc 2.27)
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run deployment script locally (since this is the ECU)
+      - name: Mostrar información del runner
         run: |
-          echo "🚀 Ejecutando el script de despliegue local en la ECU..."
-          bash /home/$(whoami)/CI-CD/deploy_ecu.sh
+          echo "Runner ejecutándose como usuario: $(whoami)"
+          echo "Directorio actual: $(pwd)"
+          echo "Contenido del workspace:"
+          ls -la
+
+      - name: Ejecutar script de despliegue en la ECU
+        run: |
+          echo "🚀 Ejecutando el script de despliegue en la ECU..."
+          bash "/home/$(whoami)/CI-CD/deploy_ecu.sh"
+
+      - name: Confirmación final
+        run: echo "🎉 Despliegue completado correctamente."
