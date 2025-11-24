@@ -15,4 +15,4 @@ jobs:
       - name: Run deployment script locally (since this is the ECU)
         run: |
           echo "🚀 Ejecutando el script de despliegue local en la ECU..."
-          bash ~/CI-CD/deploy_ecu.sh
+          bash /home/$(whoami)/CI-CD/deploy_ecu.sh
