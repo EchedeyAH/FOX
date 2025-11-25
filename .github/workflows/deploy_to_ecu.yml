@@ -8,26 +8,40 @@ jobs:
   deploy:
     runs-on: self-hosted
 
-    # 🔧 Necesario para evitar fallos con Node 20 en Ubuntu 18.04 (glibc 2.27)
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-      REPO_PAT: ${{ secrets.REPO_PAT }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Mostrar información del runner
+      - name: Show runner info
+        shell: cmd
         run: |
-          echo "Runner ejecutándose como usuario: $(whoami)"
-          echo "Directorio actual: $(pwd)"
-          echo "Contenido del workspace:"
-          ls -la
+          echo Runner user: %USERNAME%
+          echo Workspace: %CD%
+          dir
 
-      - name: Ejecutar script de despliegue en la ECU
+      - name: Deploy to ECU via SSH
+        shell: bash
+        env:
+          ECU_HOST: ${{ secrets.ECU_HOST }}
+          ECU_USER: ${{ secrets.ECU_USER }}
+          ECU_KEY: ${{ secrets.ECU_SSH_KEY }}
         run: |
-          echo "🚀 Ejecutando el script de despliegue en la ECU..."
-          bash "/home/$(whoami)/CI-CD/deploy_ecu.sh"
+          echo "🔐 Configurando SSH key..."
+          mkdir -p ~/.ssh
+          
+          # Guardar la clave SSH (preservando saltos de línea)
+          echo "$ECU_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          
+          # Agregar host a known_hosts para evitar prompt
+          ssh-keyscan -H $ECU_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Confirmación final
-        run: echo "🎉 Despliegue completado correctamente."
+          echo "⚙️ Desplegando a ECU ($ECU_USER@$ECU_HOST)..."
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              $ECU_USER@$ECU_HOST \
+              "bash ~/CI-CD/deploy_ecu.sh"
+
+      - name: Done
+        shell: cmd
+        run: echo 🎉 Despliegue completado correctamente.
