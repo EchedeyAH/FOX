@@ -41,8 +41,7 @@ jobs:
           # Establecer permisos restrictivos
           icacls $keyPath /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
           
-          Write-Host "⚙️ Desplegando a ECU ($env:ECU_USER@$env:ECU_HOST)..."
-          
+          Write-Host ("⚙️ Desplegando a ECU (" + $env:ECU_USER + "@" + $env:ECU_HOST + ")...")
           # Ejecutar SSH (OpenSSH debe estar instalado en Windows)
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -i $keyPath "$env:ECU_USER@$env:ECU_HOST" "bash ~/CI-CD/deploy_ecu.sh"
           
