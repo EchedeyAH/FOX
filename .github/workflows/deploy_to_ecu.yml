@@ -13,35 +13,46 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Show runner info
-        shell: cmd
+        shell: pwsh
         run: |
-          echo Runner user: %USERNAME%
-          echo Workspace: %CD%
-          dir
+          Write-Host "Runner user: $env:USERNAME"
+          Write-Host "Workspace: $PWD"
+          Get-ChildItem
 
       - name: Deploy to ECU via SSH
-        shell: cmd
+        shell: pwsh
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
           ECU_KEY: ${{ secrets.ECU_SSH_KEY }}
         run: |
-          echo "🔐 Configurando SSH key..."
-          mkdir -p ~/.ssh
+          Write-Host "🔐 Configurando SSH key..."
           
-          # Guardar la clave SSH (preservando saltos de línea)
-          echo "$ECU_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          # Crear directorio .ssh
+          $sshDir = "$env:USERPROFILE\.ssh"
+          if (-not (Test-Path $sshDir)) {
+              New-Item -ItemType Directory -Path $sshDir | Out-Null
+          }
           
-          # Agregar host a known_hosts para evitar prompt
-          ssh-keyscan -H $ECU_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          echo "⚙️ Desplegando a ECU ($ECU_USER@$ECU_HOST)..."
-          ssh -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
-              $ECU_USER@$ECU_HOST \
-              "bash ~/CI-CD/deploy_ecu.sh"
+          # Guardar la clave SSH
+          $keyPath = "$sshDir\id_ed25519"
+          $env:ECU_KEY | Out-File -FilePath $keyPath -Encoding ASCII -NoNewline
+          
+          # Establecer permisos restrictivos
+          icacls $keyPath /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
+          
+          Write-Host "⚙️ Desplegando a ECU ($env:ECU_USER@$env:ECU_HOST)..."
+          
+          # Ejecutar SSH (OpenSSH debe estar instalado en Windows)
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -i $keyPath "$env:ECU_USER@$env:ECU_HOST" "bash ~/CI-CD/deploy_ecu.sh"
+          
+          if ($LASTEXITCODE -eq 0) {
+              Write-Host "✅ Comando SSH ejecutado correctamente"
+          } else {
+              Write-Error "❌ Error en SSH (código: $LASTEXITCODE)"
+              exit $LASTEXITCODE
+          }
 
       - name: Done
-        shell: cmd
-        run: echo 🎉 Despliegue completado correctamente.
+        shell: pwsh
+        run: Write-Host "🎉 Despliegue completado correctamente."
