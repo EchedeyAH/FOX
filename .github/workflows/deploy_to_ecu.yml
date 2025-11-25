@@ -20,7 +20,7 @@ jobs:
           dir
 
       - name: Deploy to ECU via SSH
-        shell: bash
+        shell: cmd
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
