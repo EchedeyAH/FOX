@@ -1,10 +1,13 @@
-#include <iostream>
+#include "../common/logging.hpp"
 
 namespace interfaces {
 
-void RunUpdater()
-{
-    std::cout << "[interfaces] Updater placeholder" << std::endl;
-}
+class Updater {
+public:
+    void check_for_updates()
+    {
+        LOG_INFO("Updater", "Verificando actualizaciones OTA simuladas");
+    }
+};
 
 } // namespace interfaces

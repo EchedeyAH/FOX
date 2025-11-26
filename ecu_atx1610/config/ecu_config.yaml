@@ -1,0 +1,20 @@
+can:
+  interface: vcan0
+  heartbeat_id: 0x100
+  battery_status_id: 0x180
+
+sensors:
+  adc: pex1202l
+  channels:
+    - { name: acelerador, channel: 0, scale: 1.0, offset: 0.0 }
+    - { name: freno, channel: 1, scale: 1.0, offset: 0.0 }
+    - { name: volante, channel: 2, scale: 1.0, offset: 0.0 }
+
+controllers:
+  traction_control:
+    enable: true
+    torque_limit_nm: 120.0
+  suspension:
+    target_mm: 50
+  battery_manager:
+    soc_min_percent: 5
