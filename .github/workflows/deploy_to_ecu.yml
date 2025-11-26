@@ -13,14 +13,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show runner info
-        shell: pwsh
+        shell: bash
         run: |
           Write-Host "Runner user: $env:USERNAME"
           Write-Host "Workspace: $PWD"
           Get-ChildItem
 
       - name: Deploy to ECU via SSH
-        shell: pwsh
+        shell: bash
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
@@ -34,7 +34,7 @@ jobs:
               New-Item -ItemType Directory -Path $sshDir | Out-Null
           }
           
-          # Guardar la clave SSH preservando saltos de l?nea LF
+          # Guardar la clave SSH preservando saltos de linea LF
           $keyPath = "$sshDir\id_ed25519"
           $cleanKey = $env:ECU_KEY -replace "`r", ""
           [System.IO.File]::WriteAllText($keyPath, $cleanKey, [System.Text.Encoding]::ASCII)
@@ -58,5 +58,6 @@ jobs:
               "bash ~/CI-CD/deploy_ecu.sh"
 
       - name: Done
-        shell: pwsh
+        shell: bash
         run: Write-Host "Deployment completed successfully."
+
