@@ -12,15 +12,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup PowerShell
+        uses: pwsh/setup-pwsh@v2
+
       - name: Show runner info
-        shell: bash
+        shell: pwsh
         run: |
           Write-Host "Runner user: $env:USERNAME"
           Write-Host "Workspace: $PWD"
           Get-ChildItem
 
       - name: Deploy to ECU via SSH
-        shell: bash
+        shell: pwsh
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
@@ -58,6 +61,5 @@ jobs:
               "bash ~/CI-CD/deploy_ecu.sh"
 
       - name: Done
-        shell: bash
+        shell: pwsh
         run: Write-Host "Deployment completed successfully."
-
