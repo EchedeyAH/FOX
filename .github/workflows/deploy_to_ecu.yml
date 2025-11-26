@@ -1,4 +1,4 @@
-name: Deploy to ECU
+name: Deploy to ECU (PowerShell)
 
 on:
   push:
@@ -8,53 +8,55 @@ jobs:
   deploy:
     runs-on: self-hosted
 
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Show runner info
-        shell: powershell
+        shell: pwsh
         run: |
           Write-Host "Runner user: $env:USERNAME"
           Write-Host "Workspace: $PWD"
           Get-ChildItem
 
       - name: Deploy to ECU via SSH
-        shell: powershell
+        shell: pwsh
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
           ECU_KEY: ${{ secrets.ECU_SSH_KEY }}
         run: |
-          Write-Host "🔐 Configurando SSH key..."
+          Write-Host "Configuring SSH key..."
           
-          # Crear directorio .ssh
+          # Crear directorio .ssh si no existe
           $sshDir = "$env:USERPROFILE\.ssh"
           if (-not (Test-Path $sshDir)) {
               New-Item -ItemType Directory -Path $sshDir | Out-Null
           }
           
-          # Guardar la clave SSH
+          # Guardar la clave SSH preservando saltos de l?nea LF
           $keyPath = "$sshDir\id_ed25519"
-          $env:ECU_KEY | Out-File -FilePath $keyPath -Encoding ASCII -NoNewline
+          $cleanKey = $env:ECU_KEY -replace "`r", ""
+          [System.IO.File]::WriteAllText($keyPath, $cleanKey, [System.Text.Encoding]::ASCII)
           
-          # Establecer permisos restrictivos
-          icacls $keyPath /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
+          # Establecer permisos (solo el usuario actual)
+          $acl = Get-Acl $keyPath
+          $acl.SetAccessRuleProtection($true, $false)
+          $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+              $env:USERNAME, "FullControl", "Allow"
+          )
+          $acl.SetAccessRule($rule)
+          Set-Acl $keyPath $acl
           
-          Write-Host ("⚙️ Desplegando a ECU (" + $env:ECU_USER + "@" + $env:ECU_HOST + ")...")
-          # Ejecutar SSH (OpenSSH debe estar instalado en Windows)
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -i $keyPath "$env:ECU_USER@$env:ECU_HOST" "bash ~/CI-CD/deploy_ecu.sh"
+          Write-Host "Deploying to ECU ($env:ECU_USER@$env:ECU_HOST)..."
           
-          if ($LASTEXITCODE -eq 0) {
-              Write-Host "✅ Comando SSH ejecutado correctamente"
-          } else {
-              Write-Error "❌ Error en SSH (código: $LASTEXITCODE)"
-              exit $LASTEXITCODE
-          }
+          # Ejecutar SSH
+          ssh -o StrictHostKeyChecking=no `
+              -o UserKnownHostsFile=NUL `
+              -i $keyPath `
+              "$env:ECU_USER@$env:ECU_HOST" `
+              "bash ~/CI-CD/deploy_ecu.sh"
 
       - name: Done
-        shell: powershell
-        run: Write-Host "🎉 Despliegue completado correctamente."
+        shell: pwsh
+        run: Write-Host "Deployment completed successfully."
