@@ -1,10 +1,10 @@
-#include <iostream>
+#include "web_diagnostic.hpp"
 
 namespace interfaces {
 
-void StartWebDiagnostic()
+void WebDiagnostic::log_snapshot(const common::SystemSnapshot &snapshot)
 {
-    std::cout << "[interfaces] Web diagnostic placeholder" << std::endl;
+    LOG_DEBUG("WebDiagnostic", "Publicando snapshot con SOC=" + std::to_string(snapshot.battery.state_of_charge));
 }
 
 } // namespace interfaces
