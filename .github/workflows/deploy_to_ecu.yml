@@ -1,4 +1,4 @@
-name: Deploy to ECU (PowerShell)
+name: Deploy to ECU (Windows)
 
 on:
   push:
@@ -6,60 +6,32 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PowerShell
-        uses: pwsh/setup-pwsh@v2
-
-      - name: Show runner info
-        shell: pwsh
-        run: |
-          Write-Host "Runner user: $env:USERNAME"
-          Write-Host "Workspace: $PWD"
-          Get-ChildItem
-
-      - name: Deploy to ECU via SSH
+      - name: Configure SSH key
         shell: pwsh
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
           ECU_USER: ${{ secrets.ECU_USER }}
           ECU_KEY: ${{ secrets.ECU_SSH_KEY }}
         run: |
-          Write-Host "Configuring SSH key..."
-          
-          # Crear directorio .ssh si no existe
-          $sshDir = "$env:USERPROFILE\.ssh"
+          $sshDir = "$HOME/.ssh"
           if (-not (Test-Path $sshDir)) {
-              New-Item -ItemType Directory -Path $sshDir | Out-Null
+            New-Item -ItemType Directory -Path $sshDir | Out-Null
           }
-          
-          # Guardar la clave SSH preservando saltos de linea LF
-          $keyPath = "$sshDir\id_ed25519"
+
+          $keyPath = "$sshDir/id_ed25519"
           $cleanKey = $env:ECU_KEY -replace "`r", ""
-          [System.IO.File]::WriteAllText($keyPath, $cleanKey, [System.Text.Encoding]::ASCII)
-          
-          # Establecer permisos (solo el usuario actual)
-          $acl = Get-Acl $keyPath
-          $acl.SetAccessRuleProtection($true, $false)
-          $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
-              $env:USERNAME, "FullControl", "Allow"
-          )
-          $acl.SetAccessRule($rule)
-          Set-Acl $keyPath $acl
-          
-          Write-Host "Deploying to ECU ($env:ECU_USER@$env:ECU_HOST)..."
-          
-          # Ejecutar SSH
-          ssh -o StrictHostKeyChecking=no `
-              -o UserKnownHostsFile=NUL `
-              -i $keyPath `
-              "$env:ECU_USER@$env:ECU_HOST" `
-              "bash ~/CI-CD/deploy_ecu.sh"
+          Set-Content -Path $keyPath -Value $cleanKey -Encoding ascii -NoNewline
+
+          icacls $keyPath /inheritance:r /grant:r "$($env:USERNAME):(R)" | Out-Null
+
+          ssh -o StrictHostKeyChecking=no -i $keyPath "$env:ECU_USER@$env:ECU_HOST" "echo 'Deployment triggered from GitHub Actions'"
 
       - name: Done
         shell: pwsh
-        run: Write-Host "Deployment completed successfully."
+        run: Write-Host "Deployment command executed."
