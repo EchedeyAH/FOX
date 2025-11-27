@@ -12,6 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- NEW STEP: Test connectivity from GitHub Actions ---
+      - name: Test SSH connectivity
+        shell: bash
+        env:
+          ECU_HOST: ${{ secrets.ECU_HOST }}
+        run: |
+          echo "Testing connectivity to $ECU_HOST on port 22..."
+          nc -vz $ECU_HOST 22 || echo "FAILED: GitHub cannot reach your server on port 22"
+
+      # --- Configure SSH Key ---
       - name: Configure SSH key
         shell: pwsh
         env:
