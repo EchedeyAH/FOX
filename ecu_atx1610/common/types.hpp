@@ -25,12 +25,37 @@ struct AnalogSample {
 };
 
 struct BatteryState {
+    // Comunicación
     bool communication_ok{true};
+    bool bms_error{false};
+    
+    // Datos del pack completo
     double pack_voltage_mv{0.0};
     double pack_current_ma{0.0};
-    double state_of_charge{0.0};
-    uint8_t alarm_level{0};
-    Timestamp timestamp{Clock::now()};
+    double state_of_charge{0.0};  // Porcentaje 0-100
+    
+    // Alarmas
+    uint8_t alarm_level{0};  // 0=NO_ALARMA, 1=WARNING, 2=ALARMA, 3=CRITICA
+    uint8_t alarm_type{0};   // Tipo específico de alarma
+    
+    // Datos por celda (24 celdas)
+    std::array<uint16_t, 24> cell_voltages_mv{{0}};
+    std::array<uint8_t, 24> cell_temperatures_c{{0}};
+    
+    // Estadísticas
+    uint8_t num_cells_detected{0};
+    uint8_t temp_avg_c{0};
+    uint8_t temp_max_c{0};
+    uint8_t cell_temp_max_id{0};
+    
+    uint16_t voltage_avg_mv{0};
+    uint16_t voltage_max_mv{0};
+    uint16_t voltage_min_mv{0};
+    uint8_t cell_v_max_id{0};
+    uint8_t cell_v_min_id{0};
+    
+    uint16_t timestamp{0};
+    Timestamp last_update{Clock::now()};
 };
 
 struct MotorState {
