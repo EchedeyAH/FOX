@@ -1,4 +1,4 @@
-name: Deploy to ECU (Windows)
+name: Deploy ECU
 
 on:
   push:
@@ -6,53 +6,11 @@ on:
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: self-hosted  # tu PC Windows ejecutará esto
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- TEST: Ver si GitHub puede llegar a tu servidor ---
-      - name: Test SSH connectivity
-        shell: bash
-        env:
-          ECU_HOST: ${{ secrets.ECU_HOST }}
-        run: |
-          echo "Probando conectividad SSH a $ECU_HOST ..."
-          nc -vz $ECU_HOST 22
-
-      # --- Configurar la clave SSH en el runner ---
-      - name: Configure SSH key
-        shell: pwsh
-        env:
-          ECU_HOST: ${{ secrets.ECU_HOST }}
-          ECU_USER: ${{ secrets.ECU_USER }}
-          ECU_KEY: ${{ secrets.ECU_SSH_KEY }}
-        run: |
-          $sshDir = "$HOME/.ssh"
-          if (-not (Test-Path $sshDir)) {
-            New-Item -ItemType Directory -Path $sshDir | Out-Null
-          }
-
-          $keyPath = "$sshDir/id_ed25519"
-          $cleanKey = $env:ECU_KEY -replace "`r", ""
-          Set-Content -Path $keyPath -Value $cleanKey -Encoding ascii -NoNewline
-
-          # Permisos correctos obligatorios para SSH
-          icacls $keyPath /inheritance:r /grant:r "$($env:USERNAME):(R)" | Out-Null
-
-      # --- Ejecutar comando remoto SSH en Ubuntu ---
-      - name: Deploy to Ubuntu server
-        shell: bash
-        env:
-          ECU_HOST: ${{ secrets.ECU_HOST }}
-          ECU_USER: ${{ secrets.ECU_USER }}
-        run: |
-          echo "Ejecutando despliegue en $ECU_HOST ..."
-          ssh -o StrictHostKeyChecking=no -i "$HOME/.ssh/id_ed25519" \
-              "$ECU_USER@$ECU_HOST" \
-              "echo 'Despliegue exitoso desde GitHub Actions'; uname -a"
-
-      - name: Done
-        shell: pwsh
-        run: Write-Host "Deployment completado."
+      - name: Simple SSH deploy
+        run: ssh fox@193.147.165.236 "echo 'Despliegue funcionando correctamente'"
