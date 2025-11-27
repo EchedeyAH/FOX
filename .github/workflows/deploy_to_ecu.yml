@@ -12,16 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- NEW STEP: Test connectivity from GitHub Actions ---
+      # --- TEST: Ver si GitHub puede llegar a tu servidor ---
       - name: Test SSH connectivity
         shell: bash
         env:
           ECU_HOST: ${{ secrets.ECU_HOST }}
         run: |
-          echo "Testing connectivity to $ECU_HOST on port 22..."
-          nc -vz $ECU_HOST 22 || echo "FAILED: GitHub cannot reach your server on port 22"
+          echo "Probando conectividad SSH a $ECU_HOST ..."
+          nc -vz $ECU_HOST 22
 
-      # --- Configure SSH Key ---
+      # --- Configurar la clave SSH en el runner ---
       - name: Configure SSH key
         shell: pwsh
         env:
@@ -38,10 +38,21 @@ jobs:
           $cleanKey = $env:ECU_KEY -replace "`r", ""
           Set-Content -Path $keyPath -Value $cleanKey -Encoding ascii -NoNewline
 
+          # Permisos correctos obligatorios para SSH
           icacls $keyPath /inheritance:r /grant:r "$($env:USERNAME):(R)" | Out-Null
 
-          ssh -o StrictHostKeyChecking=no -i $keyPath "$env:ECU_USER@$env:ECU_HOST" "echo 'Deployment triggered from GitHub Actions'"
+      # --- Ejecutar comando remoto SSH en Ubuntu ---
+      - name: Deploy to Ubuntu server
+        shell: bash
+        env:
+          ECU_HOST: ${{ secrets.ECU_HOST }}
+          ECU_USER: ${{ secrets.ECU_USER }}
+        run: |
+          echo "Ejecutando despliegue en $ECU_HOST ..."
+          ssh -o StrictHostKeyChecking=no -i "$HOME/.ssh/id_ed25519" \
+              "$ECU_USER@$ECU_HOST" \
+              "echo 'Despliegue exitoso desde GitHub Actions'; uname -a"
 
       - name: Done
         shell: pwsh
-        run: Write-Host "Deployment command executed."
+        run: Write-Host "Deployment completado."
