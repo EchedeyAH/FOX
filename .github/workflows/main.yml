@@ -1,0 +1,16 @@
+name: Deploy ECU
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # tu PC Windows ejecutará esto
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Simple SSH deploy
+        run: ssh fox@193.147.165.236 "echo 'Despliegue funcionando correctamente'"
