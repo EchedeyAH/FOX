@@ -1,16 +1,49 @@
-name: Deploy ECU
+name: CI-CD Windows -> ECU Linux
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  deploy:
-    runs-on: self-hosted  # tu PC Windows ejecutará esto
-
+  build:
+    runs-on: self-hosted   # tu PC Windows
     steps:
-      - name: Checkout code
+      - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Simple SSH deploy
-        run: ssh fox@193.147.165.236 "echo 'Despliegue funcionando correctamente'"
+      - name: Instalar dependencias
+        run: |
+          echo Instalando dependencias...
+          # comandos según tu proyecto
+
+      - name: Ejecutar tests
+        run: |
+          echo corriendo tests...
+
+      - name: Empaquetar
+        run: |
+          echo Construyendo artefacto...
+          # crear carpeta build/
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/
+
+  deploy:
+    needs: build
+    runs-on: self-hosted   # también en tu PC
+    steps:
+      - name: Descargar build
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+
+      - name: Copiar a ECU Linux via SCP
+        run: |
+          scp -r build/* usuario@IP_ECU:/ruta/app/
+
+      - name: Ejecutar comandos remotos
+        run: |
+          ssh usuario@IP_ECU "cd /ruta/app && ./restart.sh"
