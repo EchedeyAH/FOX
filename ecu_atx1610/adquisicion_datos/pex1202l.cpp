@@ -1,6 +1,6 @@
 #include "pex1202l.hpp"
-#include "pex1202_driver.hpp"
 #include "../common/logging.hpp"
+#include "pex1202_driver.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
