@@ -118,26 +118,20 @@ if [ "$MODE" == "virtual" ]; then
 else
     # ========== MODO REAL ==========
     
-    # Detener interfaces si están activas
-    ip link set emuccan0 down 2>/dev/null || true
-    ip link set emuccan1 down 2>/dev/null || true
-    
     # Configurar emuccan0 @ 1 Mbps (Motores + Supervisor)
     if ip link show emuccan0 &>/dev/null; then
-        ip link set emuccan0 type can bitrate 1000000
-        ip link set emuccan0 up
-        echo -e "${GREEN}✓ emuccan0 configurada @ 1 Mbps y activada${NC}"
+        ip link set emuccan0 up 2>/dev/null || true
+        echo -e "${GREEN}✓ emuccan0 activada (hardware EMUC-B2S3)${NC}"
     else
-        echo -e "${YELLOW}⚠ emuccan0 no encontrada (verificar hardware EMUC-B2S3)${NC}"
+        echo -e "${YELLOW}⚠ emuccan0 no encontrada${NC}"
     fi
     
     # Configurar emuccan1 @ 500 Kbps (BMS)
     if ip link show emuccan1 &>/dev/null; then
-        ip link set emuccan1 type can bitrate 500000
-        ip link set emuccan1 up
-        echo -e "${GREEN}✓ emuccan1 configurada @ 500 Kbps y activada${NC}"
+        ip link set emuccan1 up 2>/dev/null || true
+        echo -e "${GREEN}✓ emuccan1 activada (hardware EMUC-B2S3)${NC}"
     else
-        echo -e "${YELLOW}⚠ emuccan1 no encontrada (verificar hardware EMUC-B2S3)${NC}"
+        echo -e "${YELLOW}⚠ emuccan1 no encontrada (normal si solo BMS conectado)${NC}"
     fi
 fi
 
