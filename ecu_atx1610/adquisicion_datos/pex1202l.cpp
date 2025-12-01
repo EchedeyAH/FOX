@@ -23,7 +23,7 @@ public:
         LOG_INFO("Pex1202L", "Abriendo dispositivo /dev/ixpci1...");
         fd_ = open("/dev/ixpci1", O_RDWR);
         if (fd_ < 0) {
-            LOG_ERROR("Pex1202L", "Error abriendo /dev/ixpci1: " + std::string(strerror(errno)));
+            std::cerr << "[ERROR] [Pex1202L] Error abriendo /dev/ixpci1: " << strerror(errno) << std::endl;
             return false;
         }
         LOG_INFO("Pex1202L", "Dispositivo abierto correctamente (fd=" + std::to_string(fd_) + ")");
@@ -58,7 +58,7 @@ public:
             reg.mode = IXPCI_RM_NORMAL;
             
             if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                LOG_ERROR("Pex1202L", "Error seleccionando canal " + std::to_string(channel.channel_id));
+                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel_id << std::endl;
                 continue;
             }
 
@@ -68,7 +68,7 @@ public:
             reg.mode = IXPCI_RM_NORMAL;
             
             if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                LOG_ERROR("Pex1202L", "Error disparando trigger");
+                std::cerr << "[ERROR] [Pex1202L] Error disparando trigger" << std::endl;
                 continue;
             }
 
@@ -85,7 +85,7 @@ public:
                 // Si falla RM_READY, intentamos lectura directa (quizás ya está listo)
                  reg.mode = IXPCI_RM_NORMAL;
                  if (ioctl(fd_, IXPCI_READ_REG, &reg) < 0) {
-                    LOG_ERROR("Pex1202L", "Error leyendo datos canal " + std::to_string(channel.channel_id));
+                    std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel_id << std::endl;
                     continue;
                  }
             }
