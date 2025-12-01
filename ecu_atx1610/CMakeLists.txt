@@ -12,7 +12,7 @@ file(GLOB ECU_SOURCES
     comunicacion_can/*.cpp
     adquisicion_datos/*.cpp
     control_vehiculo/*.cpp
-    interfaces/*.cpp
+    interfaces/cli_interface.cpp
 )
 
 add_executable(${PROJECT_NAME} ${ECU_SOURCES})
