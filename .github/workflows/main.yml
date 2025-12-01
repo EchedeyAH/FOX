@@ -43,22 +43,6 @@ jobs:
           Write-Host "Instalación completada"
         shell: pwsh
 
-      - name: Configurar interfaces CAN
-        run: |
-          Write-Host "Configurando interfaces CAN..."
-          ssh fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
-        shell: pwsh
-
-      - name: Reiniciar ECU
-        run: |
-          Write-Host "Reiniciando ECU..."
-          ssh fox@193.147.165.236 "pkill -9 ecu_atx1610 || true; sleep 2; cd /home/fox/ecu_app/bin; nohup sudo ./ecu_atx1610 > ../logs/ecu_`$(date +%Y%m%d_%H%M%S).log 2>&1 & echo 'ECU reiniciada. PID:' `$!"
-        shell: pwsh
-
-      - name: Verificar estado
-        run: |
-          Write-Host "Verificando estado de la ECU..."
-          Start-Sleep -Seconds 5
           ssh fox@193.147.165.236 "if pgrep -x ecu_atx1610 > /dev/null; then echo 'ECU corriendo correctamente'; echo 'PID:' `$(pgrep -x ecu_atx1610); else echo 'ECU no esta corriendo'; exit 1; fi"
         shell: pwsh
 
