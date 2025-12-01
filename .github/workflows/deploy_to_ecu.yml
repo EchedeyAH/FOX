@@ -25,27 +25,6 @@ jobs:
           ssh fox@193.147.165.236 "cd /home/fox/ecu_atx1610; mkdir -p build; cd build; cmake ..; make -j4"
         shell: pwsh
 
-      - name: Verificar compilación
-        run: |
-          Write-Host "Verificando compilación..."
-          ssh fox@193.147.165.236 "test -f /home/fox/ecu_atx1610/build/ecu_atx1610 && echo 'Compilación exitosa' || exit 1"
-        shell: pwsh
-
-      - name: Instalar en directorio de aplicación
-        run: |
-          Write-Host "Instalando ejecutable..."
-          ssh fox@193.147.165.236 "mkdir -p /home/fox/ecu_app/bin /home/fox/ecu_app/logs"
-          ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/"
-          ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/"
-          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/setup_can.sh"
-          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/ecu_atx1610"
-          Write-Host "Instalación completada"
-        shell: pwsh
-
-      - name: Configurar interfaces CAN
-        run: |
-          Write-Host "Configurando interfaces CAN..."
-          ssh fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
         shell: pwsh
 
       - name: Reiniciar ECU
