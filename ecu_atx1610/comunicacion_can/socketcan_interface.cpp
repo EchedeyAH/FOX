@@ -14,7 +14,7 @@ SocketCanInterface::~SocketCanInterface()
 bool SocketCanInterface::start()
 {
     if (ready_) {
-        LOG_WARNING("SocketCAN", "Interfaz ya inicializada");
+        LOG_WARN("SocketCAN", "Interfaz ya inicializada");
         return true;
     }
 

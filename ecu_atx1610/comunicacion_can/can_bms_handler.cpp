@@ -72,7 +72,7 @@ void BmsCanHandler::interpret_bms_message(const uint8_t* data, size_t length, co
             process_alarm_message(index, value, battery_state);
             break;
         default:
-            LOG_WARNING("BMS", "Tipo de mensaje desconocido: " + std::string(1, param));
+            LOG_WARN("BMS", "Tipo de mensaje desconocido: " + std::string(1, param));
     }
 }
 
@@ -162,49 +162,49 @@ void BmsCanHandler::process_alarm_message(int index, int value, common::BatteryS
             if (value != 0) {
                 battery_state.alarm_level = 2;  // ALARMA
                 battery_state.alarm_type = 1;   // CELL_TEMP_HIGH
-                LOG_WARNING("BMS", "Alarma: Temperatura de celda alta");
+                LOG_WARN("BMS", "Alarma: Temperatura de celda alta");
             }
             break;
         case 3:
             if (value != 0) {
                 battery_state.alarm_level = 2;  // ALARMA
                 battery_state.alarm_type = 2;   // PACK_V_HIGH
-                LOG_WARNING("BMS", "Alarma: Voltaje pack alto");
+                LOG_WARN("BMS", "Alarma: Voltaje pack alto");
             }
             break;
         case 4:
             if (value != 0) {
                 battery_state.alarm_level = 1;  // WARNING
                 battery_state.alarm_type = 2;   // PACK_V_HIGH
-                LOG_WARNING("BMS", "Warning: Voltaje pack alto");
+                LOG_WARN("BMS", "Warning: Voltaje pack alto");
             }
             break;
         case 5:
             if (value != 0) {
                 battery_state.alarm_level = 2;  // ALARMA
                 battery_state.alarm_type = 3;   // PACK_V_LOW
-                LOG_WARNING("BMS", "Alarma: Voltaje pack bajo");
+                LOG_WARN("BMS", "Alarma: Voltaje pack bajo");
             }
             break;
         case 6:
             if (value != 0) {
                 battery_state.alarm_level = 1;  // WARNING
                 battery_state.alarm_type = 3;   // PACK_V_LOW
-                LOG_WARNING("BMS", "Warning: Voltaje pack bajo");
+                LOG_WARN("BMS", "Warning: Voltaje pack bajo");
             }
             break;
         case 7:
             if (value != 0) {
                 battery_state.alarm_level = 2;  // ALARMA
                 battery_state.alarm_type = 4;   // PACK_I_HIGH
-                LOG_WARNING("BMS", "Alarma: Corriente pack alta");
+                LOG_WARN("BMS", "Alarma: Corriente pack alta");
             }
             break;
         case 8:
             if (value != 0) {
                 battery_state.alarm_level = 1;  // WARNING
                 battery_state.alarm_type = 4;   // PACK_I_HIGH
-                LOG_WARNING("BMS", "Warning: Corriente pack alta");
+                LOG_WARN("BMS", "Warning: Corriente pack alta");
             }
             break;
         case 9:
