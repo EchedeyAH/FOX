@@ -34,7 +34,12 @@ jobs:
       - name: Instalar en directorio de aplicación
         run: |
           Write-Host "Instalando ejecutable..."
-          ssh fox@193.147.165.236 "mkdir -p /home/fox/ecu_app/bin /home/fox/ecu_app/logs; cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/; cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/; chmod +x /home/fox/ecu_app/bin/setup_can.sh"
+          ssh fox@193.147.165.236 "mkdir -p /home/fox/ecu_app/bin /home/fox/ecu_app/logs"
+          ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/"
+          ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/"
+          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/setup_can.sh"
+          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/ecu_atx1610"
+          Write-Host "Instalación completada"
         shell: pwsh
 
       - name: Configurar interfaces CAN
