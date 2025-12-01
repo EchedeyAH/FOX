@@ -1,49 +1,88 @@
-name: CI-CD Windows -> ECU Linux
+name: Deploy to ECU
 
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:  # Permite ejecución manual
 
 jobs:
-  build:
-    runs-on: self-hosted   # tu PC Windows
+  deploy-to-ecu:
+    runs-on: self-hosted   # Tu PC Windows
+    
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Instalar dependencias
+      - name: Transferir código a ECU
         run: |
-          echo Instalando dependencias...
-          # comandos según tu proyecto
+          Write-Host "Transfiriendo código a la ECU..."
+          scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
+        shell: pwsh
 
-      - name: Ejecutar tests
+      - name: Compilar en ECU
         run: |
-          echo corriendo tests...
+          Write-Host "Compilando en la ECU..."
+          ssh fox@193.147.165.236 @"
+            cd /home/fox/ecu_atx1610
+            mkdir -p build
+            cd build
+            cmake ..
+            make -j4
+          "@
+        shell: pwsh
 
-      - name: Empaquetar
+      - name: Verificar compilación
         run: |
-          echo Construyendo artefacto...
-          # crear carpeta build/
+          ssh fox@193.147.165.236 "test -f /home/fox/ecu_atx1610/build/ecu_atx1610 && echo 'Compilación exitosa' || exit 1"
+        shell: pwsh
 
-      - name: Subir artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: build/
-
-  deploy:
-    needs: build
-    runs-on: self-hosted   # también en tu PC
-    steps:
-      - name: Descargar build
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-
-      - name: Copiar a ECU Linux via SCP
+      - name: Instalar en directorio de aplicación
         run: |
-          scp -r build/* usuario@IP_ECU:/ruta/app/
+          Write-Host "Instalando ejecutable..."
+          ssh fox@193.147.165.236 @"
+            mkdir -p /home/fox/ecu_app/bin
+            cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/
+            cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/
+            chmod +x /home/fox/ecu_app/bin/setup_can.sh
+          "@
+        shell: pwsh
 
-      - name: Ejecutar comandos remotos
+      - name: Configurar interfaces CAN
         run: |
-          ssh usuario@IP_ECU "cd /ruta/app && ./restart.sh"
+          Write-Host "Configurando interfaces CAN..."
+          ssh fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
+        shell: pwsh
+
+      - name: Reiniciar ECU
+        run: |
+          Write-Host "Reiniciando ECU..."
+          ssh fox@193.147.165.236 @"
+            pkill -9 ecu_atx1610 || true
+            sleep 2
+            cd /home/fox/ecu_app/bin
+            nohup sudo ./ecu_atx1610 > ../logs/ecu_\$(date +%Y%m%d_%H%M%S).log 2>&1 &
+            echo 'ECU reiniciada'
+          "@
+        shell: pwsh
+
+      - name: Verificar estado
+        run: |
+          Write-Host "Verificando estado de la ECU..."
+          Start-Sleep -Seconds 5
+          ssh fox@193.147.165.236 @"
+            if pgrep -x ecu_atx1610 > /dev/null; then
+              echo '✅ ECU corriendo correctamente'
+              echo 'PID:' \$(pgrep -x ecu_atx1610)
+            else
+              echo '❌ ECU no está corriendo'
+              exit 1
+            fi
+          "@
+        shell: pwsh
+
+      - name: Mostrar logs recientes
+        if: always()
+        run: |
+          Write-Host "Últimos logs de la ECU:"
+          ssh fox@193.147.165.236 "tail -20 /home/fox/ecu_app/logs/ecu_*.log | tail -20"
+        shell: pwsh
