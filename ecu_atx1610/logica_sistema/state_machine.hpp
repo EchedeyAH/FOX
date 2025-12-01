@@ -27,7 +27,7 @@ public:
 private:
     EstadoEcu estado_{EstadoEcu::Inicializando};
     common::SystemSnapshot snapshot_{};
-    comunicacion_can::CanManager can_{"can0"};  // Hardware real EMUC-B2S3
+    comunicacion_can::CanManager can_{"emuccan0"};  // Hardware real EMUC-B2S3
     adquisicion_datos::SensorManager sensores_{};
     std::vector<std::unique_ptr<common::IController>> controllers_;
 
