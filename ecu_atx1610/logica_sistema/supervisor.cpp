@@ -7,8 +7,8 @@ namespace logica_sistema {
 
 void RunSupervisor(StateMachine &fsm)
 {
-    for (int i = 0; i < 5; ++i) {
-        LOG_INFO("Supervisor", "Iteración " + std::to_string(i));
+    while (true) {
+        // LOG_INFO("Supervisor", "Iteración..."); // Reducir log spam
         fsm.step();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
