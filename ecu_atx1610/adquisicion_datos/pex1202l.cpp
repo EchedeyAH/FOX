@@ -54,11 +54,11 @@ public:
             
             ixpci_reg reg;
             reg.id = IXPCI_AICR; // Channel Control
-            reg.value = channel.channel_id; // 0 to N
+            reg.value = channel.channel; // 0 to N
             reg.mode = IXPCI_RM_NORMAL;
             
             if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel_id << std::endl;
+                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << std::endl;
                 continue;
             }
 
@@ -85,7 +85,7 @@ public:
                 // Si falla RM_READY, intentamos lectura directa (quizás ya está listo)
                  reg.mode = IXPCI_RM_NORMAL;
                  if (ioctl(fd_, IXPCI_READ_REG, &reg) < 0) {
-                    std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel_id << std::endl;
+                    std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel << std::endl;
                     continue;
                  }
             }
