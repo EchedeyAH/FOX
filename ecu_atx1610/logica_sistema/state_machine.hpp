@@ -8,6 +8,9 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <thread>
+#include <chrono>
 
 namespace logica_sistema {
 
@@ -34,6 +37,18 @@ private:
     void transition_to(EstadoEcu nuevo_estado);
     void run_controllers();
     void refresh_sensors();
+    void send_motor_commands();
+    void request_motor_telemetry();
+    bool initialize_motors();
+    
+    // Helper para convertir torque a throttle
+    uint8_t torque_to_throttle(double torque_nm) const {
+        constexpr double MAX_TORQUE = 100.0; // Nm
+        double normalized = std::clamp(torque_nm / MAX_TORQUE, 0.0, 1.0);
+        return static_cast<uint8_t>(normalized * 255);
+    }
+    
+    int telemetry_counter_{0};
 };
 
 inline StateMachine::StateMachine()
@@ -55,6 +70,10 @@ inline void StateMachine::start()
     for (auto &ctrl : controllers_) {
         ctrl->start();
     }
+    
+    // Inicializar motores
+    initialize_motors();
+    
     transition_to(EstadoEcu::Operando);
 }
 
@@ -67,6 +86,8 @@ inline void StateMachine::step()
     case EstadoEcu::Operando:
         refresh_sensors();
         run_controllers();
+        send_motor_commands();        // NUEVO: Enviar comandos a motores
+        request_motor_telemetry();    // NUEVO: Solicitar telemetría
         can_.publish_heartbeat();
         can_.publish_battery(snapshot_.battery);
         can_.process_rx(snapshot_);
@@ -109,6 +130,65 @@ inline void StateMachine::refresh_sensors()
         else if (s.name == "suspension_rl") snapshot_.vehicle.suspension_mm[2] = s.value;
         else if (s.name == "suspension_rr") snapshot_.vehicle.suspension_mm[3] = s.value;
     }
+}
+
+inline void StateMachine::send_motor_commands()
+{
+    for (size_t i = 0; i < snapshot_.motors.size(); ++i) {
+        const auto& motor = snapshot_.motors[i];
+        uint8_t motor_id = static_cast<uint8_t>(i + 1); // 1-4
+        
+        if (motor.enabled) {
+            // Convertir torque_nm a throttle (0-255)
+            uint8_t throttle = torque_to_throttle(motor.torque_nm);
+            uint8_t brake = 0; // Por ahora sin freno regenerativo
+            
+            can_.send_motor_command(motor_id, throttle, brake);
+        } else {
+            // Motor deshabilitado: enviar throttle = 0
+            can_.send_motor_command(motor_id, 0, 0);
+        }
+    }
+}
+
+inline void StateMachine::request_motor_telemetry()
+{
+    using namespace comunicacion_can;
+    
+    // Solicitar telemetría cada 100 ciclos (~1 segundo a 10ms/ciclo)
+    if (++telemetry_counter_ >= 100) {
+        telemetry_counter_ = 0;
+        
+        for (uint8_t motor_id = 1; motor_id <= 4; ++motor_id) {
+            // Alternar entre MONITOR1 (temp) y MONITOR2 (RPM)
+            MotorMessageType msg_type = (motor_id % 2 == 0) ? 
+                MSG_TIPO_09 : MSG_TIPO_10;
+            
+            can_.request_motor_telemetry(motor_id, msg_type);
+        }
+    }
+}
+
+inline bool StateMachine::initialize_motors()
+{
+    using namespace comunicacion_can;
+    
+    LOG_INFO("StateMachine", "Inicializando motores...");
+    
+    // Solicitar información básica de cada motor
+    for (uint8_t motor_id = 1; motor_id <= 4; ++motor_id) {
+        // Leer modelo del controlador (MSG_TIPO_01)
+        if (!can_.request_motor_telemetry(motor_id, MSG_TIPO_01)) {
+            LOG_WARN("StateMachine", "No se pudo contactar motor " + 
+                    std::to_string(motor_id));
+        }
+        
+        // Pequeña pausa entre solicitudes
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    
+    LOG_INFO("StateMachine", "Inicialización de motores completada");
+    return true;
 }
 
 } // namespace logica_sistema

@@ -142,16 +142,92 @@ private:
     {
         // Determinar qué motor envió la respuesta
         uint8_t motor_idx = frame.id - ID_MOTOR_1_RESP;
-        if (motor_idx >= 4) {
+        if (motor_idx >= 4 || frame.payload.empty()) {
             return;
         }
 
-        // TODO: Implementar decodificación completa de respuestas de motores
-        // Por ahora, solo registrar que se recibió
-        LOG_DEBUG("CanManager", "Respuesta de motor " + std::to_string(motor_idx + 1));
+        auto& motor = snapshot.motors[motor_idx];
+        uint8_t cmd = frame.payload[0];
+
+        // Decodificar según tipo de respuesta CCP
+        switch (cmd) {
+            case CCP_FLASH_READ: // Respuesta a lectura de flash
+                if (frame.payload.size() >= 3) {
+                    uint8_t addr = frame.payload[1];
+                    if (addr == INFO_MODULE_NAME) {
+                        // Modelo del controlador (8 bytes ASCII)
+                        LOG_INFO("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                                " modelo detectado");
+                    } else if (addr == INFO_SOFTWARE_VER) {
+                        // Versión de software
+                        LOG_INFO("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                                " versión SW detectada");
+                    }
+                }
+                break;
+                
+            case CCP_MONITOR1: // PWM, temperaturas
+                if (frame.payload.size() >= 5) {
+                    motor.motor_temp_c = static_cast<double>(frame.payload[1]);
+                    motor.inverter_temp_c = static_cast<double>(frame.payload[2]);
+                    // PWM duty cycle en payload[3-4] si es necesario
+                    LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                             " temp: motor=" + std::to_string(motor.motor_temp_c) + 
+                             "°C, inverter=" + std::to_string(motor.inverter_temp_c) + "°C");
+                }
+                break;
+                
+            case CCP_MONITOR2: // RPM, corriente %
+                if (frame.payload.size() >= 5) {
+                    // RPM en bytes 1-2 (big endian)
+                    uint16_t rpm = (static_cast<uint16_t>(frame.payload[1]) << 8) | 
+                                   frame.payload[2];
+                    motor.rpm = static_cast<double>(rpm);
+                    
+                    // Corriente en porcentaje (byte 3)
+                    motor.current_a = static_cast<double>(frame.payload[3]);
+                    
+                    LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                             " RPM=" + std::to_string(motor.rpm) + 
+                             ", I=" + std::to_string(motor.current_a) + "%");
+                }
+                break;
+                
+            case CCP_A2D_BATCH_READ1: // Batch 1: freno, acel, voltajes
+                if (frame.payload.size() >= 8) {
+                    // Decodificar valores A/D si es necesario
+                    LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                             " A/D batch 1 recibido");
+                }
+                break;
+                
+            case CCP_A2D_BATCH_READ2: // Batch 2: corrientes y voltajes fases
+                if (frame.payload.size() >= 8) {
+                    // Decodificar valores A/D si es necesario
+                    LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                             " A/D batch 2 recibido");
+                }
+                break;
+                
+            case COM_SW_ACC: // Estado switch acelerador
+            case COM_SW_BRK: // Estado switch freno
+            case COM_SW_REV: // Estado switch reversa
+                if (frame.payload.size() >= 2) {
+                    bool switch_state = (frame.payload[1] != 0);
+                    LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                             " switch cmd=0x" + std::to_string(cmd) + 
+                             " state=" + std::to_string(switch_state));
+                }
+                break;
+                
+            default:
+                LOG_DEBUG("CanManager", "Motor " + std::to_string(motor_idx + 1) + 
+                         " respuesta desconocida: cmd=0x" + std::to_string(cmd));
+                break;
+        }
         
-        // Actualizar estado básico del motor
-        snapshot.motors[motor_idx].enabled = true;
+        // Motor respondió, está activo
+        motor.enabled = true;
     }
 
     void process_supervisor_message(const common::CanFrame& frame, common::SystemSnapshot& snapshot)
