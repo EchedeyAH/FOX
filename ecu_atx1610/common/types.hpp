@@ -62,6 +62,7 @@ struct MotorState {
     std::string label;
     double rpm{0.0};
     double torque_nm{0.0};
+    double current_a{0.0};
     double inverter_temp_c{0.0};
     double motor_temp_c{0.0};
     bool enabled{false};

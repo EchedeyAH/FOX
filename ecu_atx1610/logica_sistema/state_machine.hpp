@@ -3,6 +3,7 @@
 #include "../common/logging.hpp"
 #include "../common/types.hpp"
 #include "../comunicacion_can/can_manager.hpp"
+#include "../comunicacion_can/can_initializer.hpp"
 #include "../control_vehiculo/controllers.hpp"
 #include "../adquisicion_datos/sensor_manager.hpp"
 
@@ -71,8 +72,10 @@ inline void StateMachine::start()
         ctrl->start();
     }
     
-    // Inicializar motores
-    initialize_motors();
+    // Inicializar motores y supervisor con secuencia de activación
+    if (!initialize_motors()) {
+        LOG_WARN("StateMachine", "Algunos motores no respondieron durante la inicialización");
+    }
     
     transition_to(EstadoEcu::Operando);
 }
@@ -173,22 +176,31 @@ inline bool StateMachine::initialize_motors()
 {
     using namespace comunicacion_can;
     
-    LOG_INFO("StateMachine", "Inicializando motores...");
+    LOG_INFO("StateMachine", "Iniciando secuencia de activación CAN...");
     
-    // Solicitar información básica de cada motor
-    for (uint8_t motor_id = 1; motor_id <= 4; ++motor_id) {
-        // Leer modelo del controlador (MSG_TIPO_01)
-        if (!can_.request_motor_telemetry(motor_id, MSG_TIPO_01)) {
-            LOG_WARN("StateMachine", "No se pudo contactar motor " + 
-                    std::to_string(motor_id));
-        }
+    // Crear inicializador CAN
+    CanInitializer initializer(can_);
+    
+    // Ejecutar secuencia completa de inicialización
+    // Esto activará tanto motores como supervisor
+    bool success = initializer.initialize_all();
+    
+    if (success) {
+        LOG_INFO("StateMachine", "Motores y supervisor activados correctamente");
         
-        // Pequeña pausa entre solicitudes
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        // Habilitar todos los motores por defecto
+        for (auto& motor : snapshot_.motors) {
+            motor.enabled = true;
+        }
+    } else {
+        LOG_ERROR("StateMachine", "Error en la activación de motores/supervisor");
+        LOG_ERROR("StateMachine", "Verifique que:");
+        LOG_ERROR("StateMachine", "  1. Las interfaces CAN están configuradas (can0, can1)");
+        LOG_ERROR("StateMachine", "  2. Los controladores de motor están conectados");
+        LOG_ERROR("StateMachine", "  3. El supervisor está en línea");
     }
     
-    LOG_INFO("StateMachine", "Inicialización de motores completada");
-    return true;
+    return success;
 }
 
 } // namespace logica_sistema
