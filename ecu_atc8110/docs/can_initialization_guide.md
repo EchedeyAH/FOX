@@ -10,7 +10,7 @@
 
 ### 1. Clase `CanInitializer`
 
-Se ha creado [`can_initializer.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_initializer.hpp) que implementa la secuencia de activación correcta:
+Se ha creado [`can_initializer.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_initializer.hpp) que implementa la secuencia de activación correcta:
 
 **Secuencia para Motores** (cada uno de los 4 motores):
 1. Enviar comando inicial con throttle=0 (despertar controlador)
@@ -44,7 +44,7 @@ bool StateMachine::initialize_motors() {
 ### Paso 1: Configurar Interfaces CAN
 
 ```bash
-cd /c/Users/ahech/Desktop/FOX/ecu_atx1610
+cd /c/Users/ahech/Desktop/FOX/ecu_atc8110
 sudo ./scripts/setup_can.sh --real
 ```
 
@@ -81,7 +81,7 @@ candump emuccan1
 ### Paso 4: Ejecutar ECU
 
 ```bash
-./build/ecu_atx1610
+./build/ecu_atc8110
 ```
 
 **Salida esperada en logs**:
@@ -204,7 +204,7 @@ canplayer -I candump-2025-11-27.log
 
 ## Referencias
 
-- Protocolo CAN: [`can_protocol.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_protocol.hpp)
-- Gestor CAN: [`can_manager.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_manager.hpp)
-- Inicializador: [`can_initializer.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_initializer.hpp)
-- Máquina de estados: [`state_machine.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atx1610/logica_sistema/state_machine.hpp)
+- Protocolo CAN: [`can_protocol.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_protocol.hpp)
+- Gestor CAN: [`can_manager.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_manager.hpp)
+- Inicializador: [`can_initializer.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_initializer.hpp)
+- Máquina de estados: [`state_machine.hpp`](file:///C:/Users/ahech/Desktop/FOX/ecu_atc8110/logica_sistema/state_machine.hpp)

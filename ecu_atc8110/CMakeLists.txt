@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(ecu_atx1610 LANGUAGES CXX)
+project(ecu_atc8110 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

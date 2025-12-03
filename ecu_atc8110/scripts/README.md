@@ -38,7 +38,7 @@ Script para reiniciar la ECU de forma segura.
 # Ubicación: /home/fox/ecu_app/restart.sh
 
 # Detener proceso anterior
-pkill -9 ecu_atx1610 || true
+pkill -9 ecu_atc8110 || true
 sleep 2
 
 # Configurar CAN
@@ -46,7 +46,7 @@ sudo /home/fox/ecu_app/bin/setup_can.sh --real
 
 # Iniciar ECU
 cd /home/fox/ecu_app/bin
-nohup sudo ./ecu_atx1610 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 &
+nohup sudo ./ecu_atc8110 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 &
 
 echo "ECU reiniciada. PID: $!"
 ```
@@ -64,8 +64,8 @@ echo "  Estado de la ECU ATX-1610"
 echo "========================================="
 
 # Verificar proceso
-if pgrep -x ecu_atx1610 > /dev/null; then
-    echo "✅ ECU corriendo (PID: $(pgrep -x ecu_atx1610))"
+if pgrep -x ecu_atc8110 > /dev/null; then
+    echo "✅ ECU corriendo (PID: $(pgrep -x ecu_atc8110))"
 else
     echo "❌ ECU NO está corriendo"
 fi
@@ -155,7 +155,7 @@ sudo visudo -f /etc/sudoers.d/ecu
 
 # Añadir estas líneas:
 fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/setup_can.sh
-fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/ecu_atx1610
+fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/ecu_atc8110
 fox ALL=(ALL) NOPASSWD: /sbin/ip
 fox ALL=(ALL) NOPASSWD: /sbin/modprobe
 
@@ -172,13 +172,13 @@ sudo chmod 0440 /etc/sudoers.d/ecu
 
 ```bash
 # 1. Transferir código
-scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
+scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
 
 # 2. Compilar
-ssh fox@193.147.165.236 "cd /home/fox/ecu_atx1610/build && cmake .. && make"
+ssh fox@193.147.165.236 "cd /home/fox/ecu_atc8110/build && cmake .. && make"
 
 # 3. Instalar
-ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/"
+ssh fox@193.147.165.236 "cp /home/fox/ecu_atc8110/build/ecu_atc8110 /home/fox/ecu_app/bin/"
 
 # 4. Reiniciar
 ssh fox@193.147.165.236 "/home/fox/ecu_app/restart.sh"

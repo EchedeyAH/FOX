@@ -8,7 +8,7 @@ Se ha implementado exitosamente el sistema completo de comunicación CAN para la
 
 ### 1. Driver SocketCAN Real
 
-#### [socketcan_interface.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/socketcan_interface.cpp)
+#### [socketcan_interface.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/socketcan_interface.cpp)
 
 **Implementación completa del driver SocketCAN** reemplazando la simulación anterior:
 
@@ -39,7 +39,7 @@ read(socket_fd_, &can_msg, sizeof(can_msg));
 
 ### 2. Protocolo CAN Completo
 
-#### [can_protocol.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_protocol.hpp)
+#### [can_protocol.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_protocol.hpp)
 
 **Definiciones completas del protocolo CAN** basadas en el código legacy:
 
@@ -65,7 +65,7 @@ read(socket_fd_, &can_msg, sizeof(can_msg));
 
 ### 3. Handler BMS
 
-#### [can_bms_handler.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_bms_handler.cpp)
+#### [can_bms_handler.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_bms_handler.cpp)
 
 **Decodificador completo de mensajes BMS** basado en `can2_fox.c` del código legacy:
 
@@ -87,7 +87,7 @@ read(socket_fd_, &can_msg, sizeof(can_msg));
 
 ### 4. Tipos de Datos Expandidos
 
-#### [types.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/common/types.hpp)
+#### [types.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/common/types.hpp)
 
 **Estructura `BatteryState` expandida** con datos completos de BMS:
 
@@ -125,7 +125,7 @@ struct BatteryState {
 
 ### 5. CAN Manager Mejorado
 
-#### [can_manager.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_manager.hpp)
+#### [can_manager.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_manager.hpp)
 
 **Gestor CAN con soporte multi-dispositivo**:
 
@@ -155,7 +155,7 @@ can_mgr.process_rx(snapshot);  // Actualiza automáticamente snapshot.battery
 
 ### 6. Script de Configuración
 
-#### [setup_can.sh](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/scripts/setup_can.sh)
+#### [setup_can.sh](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/scripts/setup_can.sh)
 
 **Script completo de configuración** con dos modos de operación:
 
@@ -236,7 +236,7 @@ lsmod | grep can
 ### Compilación
 
 ```bash
-cd /path/to/FOX/ecu_atx1610
+cd /path/to/FOX/ecu_atc8110
 
 # Crear directorio de build
 mkdir -p build && cd build
@@ -247,7 +247,7 @@ cmake ..
 # Compilar
 make
 
-# El ejecutable se genera en: build/ecu_atx1610
+# El ejecutable se genera en: build/ecu_atc8110
 ```
 
 ### Configuración de Interfaces CAN
@@ -268,7 +268,7 @@ ip link show can1
 
 ```bash
 # Ejecutar la ECU
-sudo ./build/ecu_atx1610
+sudo ./build/ecu_atc8110
 
 # En otra terminal, monitorear mensajes CAN
 candump can0
@@ -314,7 +314,7 @@ candump can1
 
 3. **Ejecutar ECU**:
    ```bash
-   sudo ./build/ecu_atx1610
+   sudo ./build/ecu_atc8110
    ```
 
 4. **Verificar comunicación**:
@@ -344,7 +344,7 @@ sudo ./scripts/setup_can.sh --virtual
 candump vcan0
 
 # Terminal 3: Ejecutar ECU (modificar código para usar vcan0)
-./build/ecu_atx1610
+./build/ecu_atc8110
 
 # Terminal 4: Simular mensajes BMS
 # Mensaje de voltaje celda 1 = 3500 mV

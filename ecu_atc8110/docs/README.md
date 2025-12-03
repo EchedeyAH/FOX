@@ -25,7 +25,7 @@ Guía completa de la implementación realizada. Documenta:
 ## Estructura del Proyecto
 
 ```
-ecu_atx1610/
+ecu_atc8110/
 ├── docs/                      # Documentación (este directorio)
 ├── common/                    # Tipos, interfaces y utilidades comunes
 ├── comunicacion_can/          # Sistema de comunicación CAN
@@ -69,7 +69,7 @@ ecu_atx1610/
 ### Compilación
 
 ```bash
-cd ecu_atx1610
+cd ecu_atc8110
 mkdir -p build && cd build
 cmake ..
 make
@@ -88,7 +88,7 @@ sudo ./scripts/setup_can.sh --virtual
 ### Ejecución
 
 ```bash
-sudo ./build/ecu_atx1610
+sudo ./build/ecu_atc8110
 ```
 
 ## Contribución

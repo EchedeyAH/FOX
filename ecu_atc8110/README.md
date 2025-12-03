@@ -8,13 +8,13 @@ Sistema embebido de control en tiempo real para el vehículo experimental FOX, d
 
 ```bash
 # 1. Transferir código a la ECU
-scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
+scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
 
 # 2. Conectar a la ECU
 ssh fox@193.147.165.236
 
 # 3. Compilar
-cd /home/fox/ecu_atx1610
+cd /home/fox/ecu_atc8110
 mkdir build && cd build
 cmake .. && make
 
@@ -22,7 +22,7 @@ cmake .. && make
 sudo ../scripts/setup_can.sh --real
 
 # 5. Ejecutar
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 ```
 
 📖 **Guía completa**: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
@@ -47,7 +47,7 @@ sudo ./ecu_atx1610
 ## 🏗️ Arquitectura
 
 ```
-ecu_atx1610/
+ecu_atc8110/
 ├── comunicacion_can/      # Sistema CAN (SocketCAN)
 │   ├── can_protocol.hpp   # Definiciones del protocolo
 │   ├── can_bms_handler.*  # Handler BMS (24 celdas)
@@ -102,7 +102,7 @@ make
 sudo ../scripts/setup_can.sh --virtual
 
 # Ejecutar
-./ecu_atx1610
+./ecu_atc8110
 ```
 
 ### Monitoreo CAN
@@ -174,7 +174,7 @@ sudo modprobe can can_raw
 
 ```bash
 # Ejecutar con sudo
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 ```
 
 ### No se reciben mensajes

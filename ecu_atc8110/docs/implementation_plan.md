@@ -18,7 +18,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 
 ### Componente: Comunicación CAN
 
-#### [MODIFY] [socketcan_interface.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/socketcan_interface.cpp)
+#### [MODIFY] [socketcan_interface.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/socketcan_interface.cpp)
 
 **Cambios**:
 - Reemplazar implementación simulada con driver SocketCAN real
@@ -29,7 +29,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 - Añadir manejo de errores de bus CAN
 - Implementar modo no-bloqueante para recepción
 
-#### [MODIFY] [socketcan_interface.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/socketcan_interface.hpp)
+#### [MODIFY] [socketcan_interface.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/socketcan_interface.hpp)
 
 **Cambios**:
 - Añadir miembro `int socket_fd_` para el file descriptor del socket
@@ -38,7 +38,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 - Eliminar `std::queue` de loopback (ya no es simulación)
 - Añadir includes de Linux: `<linux/can.h>`, `<linux/can/raw.h>`, `<sys/socket.h>`, `<net/if.h>`
 
-#### [MODIFY] [can_manager.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_manager.hpp)
+#### [MODIFY] [can_manager.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_manager.hpp)
 
 **Cambios**:
 - Expandir protocolo de mensajes basado en el código legacy
@@ -48,7 +48,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 - Añadir decodificación de mensajes CAN recibidos según protocolo legacy
 - Implementar tabla de IDs CAN para diferentes componentes
 
-#### [NEW] [can_protocol.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_protocol.hpp)
+#### [NEW] [can_protocol.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_protocol.hpp)
 
 **Propósito**: Definir el protocolo CAN completo del sistema
 
@@ -59,7 +59,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 - Estructuras para codificación/decodificación de mensajes
 - Funciones helper para construir y parsear mensajes CAN
 
-#### [NEW] [can_bms_handler.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_bms_handler.hpp)
+#### [NEW] [can_bms_handler.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_bms_handler.hpp)
 
 **Propósito**: Handler especializado para comunicación con BMS
 
@@ -69,7 +69,7 @@ El código original (`ECU_FOX_rc30-operativo`) implementa:
 - Gestión de timeout y detección de pérdida de comunicación
 - Actualización de estructura `BatteryState` con datos completos (24 celdas)
 
-#### [NEW] [can_bms_handler.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/comunicacion_can/can_bms_handler.cpp)
+#### [NEW] [can_bms_handler.cpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/comunicacion_can/can_bms_handler.cpp)
 
 Implementación del handler BMS basado en `can2_fox.c` del código legacy.
 
@@ -77,7 +77,7 @@ Implementación del handler BMS basado en `can2_fox.c` del código legacy.
 
 ### Componente: Tipos Comunes
 
-#### [MODIFY] [types.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/common/types.hpp)
+#### [MODIFY] [types.hpp](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/common/types.hpp)
 
 **Cambios**:
 - Expandir `BatteryState` con campos adicionales del legacy:
@@ -94,7 +94,7 @@ Implementación del handler BMS basado en `can2_fox.c` del código legacy.
 
 ### Componente: Scripts de Configuración
 
-#### [MODIFY] [setup_can.sh](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/scripts/setup_can.sh)
+#### [MODIFY] [setup_can.sh](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/scripts/setup_can.sh)
 
 **Cambios**:
 - Añadir configuración de dos interfaces CAN (`can0` a 1 Mbps, `can1` a 500 Kbps)
@@ -107,7 +107,7 @@ Implementación del handler BMS basado en `can2_fox.c` del código legacy.
 
 ### Componente: Build System
 
-#### [MODIFY] [CMakeLists.txt](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/CMakeLists.txt)
+#### [MODIFY] [CMakeLists.txt](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/CMakeLists.txt)
 
 **Cambios**:
 - No se requieren cambios significativos
@@ -121,7 +121,7 @@ Implementación del handler BMS basado en `can2_fox.c` del código legacy.
 
 **Comando**:
 ```bash
-cd /c/Users/ahech/Desktop/FOX/ecu_atx1610
+cd /c/Users/ahech/Desktop/FOX/ecu_atc8110
 # Configurar interfaz virtual CAN (requiere permisos)
 sudo modprobe vcan
 sudo ip link add dev vcan0 type vcan
@@ -133,7 +133,7 @@ cmake ..
 make
 
 # Ejecutar con interfaz virtual
-./ecu_atx1610
+./ecu_atc8110
 ```
 
 **Validación**:
@@ -146,7 +146,7 @@ make
 **Comando**:
 ```bash
 # En terminal 1: Ejecutar la ECU
-./ecu_atx1610
+./ecu_atc8110
 
 # En terminal 2: Enviar mensaje CAN simulado de BMS
 cansend vcan0 180#AA55010203
@@ -168,7 +168,7 @@ cansend vcan0 180#AA55010203
 2. Verificar que aparecen interfaces `can0` y `can1`: `ip link show`
 3. Ejecutar script de configuración: `sudo ./scripts/setup_can.sh`
 4. Conectar BMS al bus CAN2 (can1)
-5. Ejecutar ECU: `./ecu_atx1610`
+5. Ejecutar ECU: `./ecu_atc8110`
 6. Verificar en logs que se reciben mensajes del BMS con ID correcta
 
 **Resultado esperado**:

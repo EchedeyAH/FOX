@@ -628,7 +628,7 @@ lsmod | grep can
 
 - [ ] **Compilar proyecto**
   ```bash
-  cd ecu_atx1610
+  cd ecu_atc8110
   mkdir build && cd build
   cmake ..
   make
@@ -636,7 +636,7 @@ lsmod | grep can
 
 - [ ] **Ejecutar con interfaz virtual**
   ```bash
-  ./ecu_atx1610
+  ./ecu_atc8110
   ```
 
 - [ ] **Verificar logs de inicialización**
@@ -652,7 +652,7 @@ lsmod | grep can
 - [ ] **Enviar mensaje de prueba BMS**
   ```bash
   # Terminal 1: Ejecutar ECU
-  ./ecu_atx1610
+  ./ecu_atc8110
   
   # Terminal 2: Enviar mensaje simulado
   cansend vcan0 180#5601AA55  # Voltaje celda 1
@@ -685,7 +685,7 @@ lsmod | grep can
 
 - [ ] **Ejecutar ECU**
   ```bash
-  sudo ./ecu_atx1610
+  sudo ./ecu_atc8110
   ```
 
 - [ ] **Verificar recepción de datos**
@@ -755,7 +755,7 @@ lsmod | grep can
 
 - [ ] **Ejecutar sistema completo**
   ```bash
-  sudo ./ecu_atx1610
+  sudo ./ecu_atc8110
   ```
 
 - [ ] **Verificar inicialización**
@@ -814,7 +814,7 @@ lsmod | grep can
 #### Tareas:
 - [ ] **Transferir código a ECU**
   ```bash
-  scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
+  scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
   ```
 
 - [ ] **Conectar a ECU**
@@ -824,7 +824,7 @@ lsmod | grep can
 
 - [ ] **Compilar en modo Release**
   ```bash
-  cd /home/fox/ecu_atx1610
+  cd /home/fox/ecu_atc8110
   mkdir build && cd build
   cmake -DCMAKE_BUILD_TYPE=Release ..
   make -j4
@@ -832,8 +832,8 @@ lsmod | grep can
 
 - [ ] **Verificar binario**
   ```bash
-  ls -lh ecu_atx1610
-  file ecu_atx1610
+  ls -lh ecu_atc8110
+  file ecu_atc8110
   ```
 
 ### 6.2 Configuración de Hardware Real
@@ -843,7 +843,7 @@ lsmod | grep can
 #### Tareas:
 - [ ] **Ejecutar script de configuración**
   ```bash
-  sudo /home/fox/ecu_atx1610/scripts/setup_can.sh --real
+  sudo /home/fox/ecu_atc8110/scripts/setup_can.sh --real
   ```
 
 - [ ] **Verificar interfaces CAN**
@@ -872,13 +872,13 @@ lsmod | grep can
 #### Tareas:
 - [ ] **Ejecutar ECU**
   ```bash
-  sudo /home/fox/ecu_atx1610/build/ecu_atx1610
+  sudo /home/fox/ecu_atc8110/build/ecu_atc8110
   ```
 
 - [ ] **Monitorear logs en tiempo real**
   ```bash
   # En otra terminal
-  tail -f /var/log/ecu_atx1610.log
+  tail -f /var/log/ecu_atc8110.log
   ```
 
 - [ ] **Verificar estado del sistema**
@@ -1069,9 +1069,9 @@ lsmod | grep can
 ## 📞 Contactos y Recursos
 
 ### Documentación Técnica
-- [Implementation Plan](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/docs/implementation_plan.md)
+- [Implementation Plan](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/docs/implementation_plan.md)
 - [README Principal](file:///c:/Users/ahech/Desktop/FOX/README.md)
-- [README ECU](file:///c:/Users/ahech/Desktop/FOX/ecu_atx1610/README.md)
+- [README ECU](file:///c:/Users/ahech/Desktop/FOX/ecu_atc8110/README.md)
 
 ### Hardware
 - **ECU**: ATC-8110 @ 193.147.165.236

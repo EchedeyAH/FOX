@@ -17,7 +17,7 @@ ssh root@192.168.1.100
 Una vez conectado a la ECU por SSH:
 
 ```bash
-cd /path/to/ecu_atx1610
+cd /path/to/ecu_atc8110
 sudo ./scripts/setup_can.sh --real
 ```
 
@@ -82,12 +82,12 @@ dmesg | grep -i can | tail -20
 PS> ssh root@192.168.1.100
 
 # 2. En la ECU
-root@ecu:~# cd /root/ecu_atx1610
-root@ecu:~/ecu_atx1610# sudo ./scripts/setup_can.sh --real
-root@ecu:~/ecu_atx1610# sudo ./scripts/diagnose_can.sh
+root@ecu:~# cd /root/ecu_atc8110
+root@ecu:~/ecu_atc8110# sudo ./scripts/setup_can.sh --real
+root@ecu:~/ecu_atc8110# sudo ./scripts/diagnose_can.sh
 
 # 3. Si todo OK, ejecutar ECU principal
-root@ecu:~/ecu_atx1610# ./build/ecu_atx1610
+root@ecu:~/ecu_atc8110# ./build/ecu_atc8110
 
 # 4. En otra terminal SSH (para monitorear)
 PS> ssh root@192.168.1.100
@@ -112,7 +112,7 @@ systemctl status ssh
 ```bash
 # Dar permisos de ejecución
 chmod +x ./scripts/*.sh
-chmod +x ./build/ecu_atx1610
+chmod +x ./build/ecu_atc8110
 ```
 
 ### Scripts no se encuentran
@@ -123,19 +123,19 @@ pwd
 ls -la scripts/
 
 # Navegar al directorio correcto
-cd /root/ecu_atx1610
+cd /root/ecu_atc8110
 # o
-cd /home/usuario/ecu_atx1610
+cd /home/usuario/ecu_atc8110
 ```
 
 ## Transferir Archivos a la ECU (si es necesario)
 
 ```bash
 # Desde Windows, copiar archivos a la ECU
-scp C:\Users\ahech\Desktop\FOX\ecu_atx1610\scripts\diagnose_can.sh root@192.168.1.100:/root/ecu_atx1610/scripts/
+scp C:\Users\ahech\Desktop\FOX\ecu_atc8110\scripts\diagnose_can.sh fox@193.147.165.236:/home/fox/ecu_atc8110/scripts/
 
 # Copiar directorio completo
-scp -r C:\Users\ahech\Desktop\FOX\ecu_atx1610\build root@192.168.1.100:/root/ecu_atx1610/
+scp -r C:\Users\ahech\Desktop\FOX\ecu_atc8110\build fox@193.147.165.236:/home/fox/ecu_atc8110/
 ```
 
 ## IP de la ECU

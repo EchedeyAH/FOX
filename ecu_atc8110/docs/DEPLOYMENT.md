@@ -31,17 +31,17 @@ sudo apt-get install -y build-essential cmake git can-utils
 # En la ECU
 cd /home/fox
 git clone <URL_DEL_REPOSITORIO> FOX
-cd FOX/ecu_atx1610
+cd FOX/ecu_atc8110
 ```
 
 ### Opción B: Transferencia directa vía SSH
 ```bash
 # Desde tu PC Windows (PowerShell)
-scp -r C:\Users\ahech\Desktop\FOX\ecu_atx1610 fox@193.147.165.236:/home/fox/
+scp -r C:\Users\ahech\Desktop\FOX\ecu_atc8110 fox@193.147.165.236:/home/fox/
 
 # Conectar a la ECU
 ssh fox@193.147.165.236
-cd /home/fox/ecu_atx1610
+cd /home/fox/ecu_atc8110
 ```
 
 ---
@@ -60,12 +60,12 @@ cmake ..
 make -j$(nproc)
 
 # Verificar que se generó el ejecutable
-ls -lh ecu_atx1610
+ls -lh ecu_atc8110
 ```
 
 **Salida esperada**:
 ```
--rwxr-xr-x 1 fox fox 2.5M Nov 27 15:30 ecu_atx1610
+-rwxr-xr-x 1 fox fox 2.5M Nov 27 15:30 ecu_atc8110
 ```
 
 ---
@@ -74,7 +74,7 @@ ls -lh ecu_atx1610
 
 ```bash
 # Volver al directorio raíz del proyecto
-cd /home/fox/ecu_atx1610
+cd /home/fox/ecu_atc8110
 
 # Dar permisos de ejecución al script
 chmod +x scripts/setup_can.sh
@@ -154,10 +154,10 @@ candump can0
 ### Ejecución Normal
 
 ```bash
-cd /home/fox/ecu_atx1610/build
+cd /home/fox/ecu_atc8110/build
 
 # Ejecutar con permisos de root (necesario para CAN)
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 ```
 
 **Salida esperada**:
@@ -177,26 +177,26 @@ ECU ATX1610 skeleton running
 
 ```bash
 # Ejecutar como servicio en background
-sudo nohup ./ecu_atx1610 > /var/log/ecu_atx1610.log 2>&1 &
+sudo nohup ./ecu_atc8110 > /var/log/ecu_atc8110.log 2>&1 &
 
 # Ver el PID del proceso
 echo $!
 
 # Ver logs en tiempo real
-tail -f /var/log/ecu_atx1610.log
+tail -f /var/log/ecu_atc8110.log
 ```
 
 ### Detener la ECU
 
 ```bash
 # Encontrar el proceso
-ps aux | grep ecu_atx1610
+ps aux | grep ecu_atc8110
 
 # Detener (reemplazar <PID> con el número del proceso)
 sudo kill <PID>
 
-# O detener todos los procesos ecu_atx1610
-sudo pkill ecu_atx1610
+# O detener todos los procesos ecu_atc8110
+sudo pkill ecu_atc8110
 ```
 
 ---
@@ -205,7 +205,7 @@ sudo pkill ecu_atx1610
 
 ### Terminal 1: Ejecutar ECU
 ```bash
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 ```
 
 ### Terminal 2: Monitorear CAN0 (Motores)
@@ -244,9 +244,9 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/fox/ecu_atx1610/build
-ExecStartPre=/home/fox/ecu_atx1610/scripts/setup_can.sh --real
-ExecStart=/home/fox/ecu_atx1610/build/ecu_atx1610
+WorkingDirectory=/home/fox/ecu_atc8110/build
+ExecStartPre=/home/fox/ecu_atc8110/scripts/setup_can.sh --real
+ExecStart=/home/fox/ecu_atc8110/build/ecu_atc8110
 Restart=on-failure
 RestartSec=5s
 StandardOutput=journal
@@ -305,7 +305,7 @@ lsmod | grep can
 **Solución**:
 ```bash
 # Ejecutar con sudo
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 
 # O añadir usuario al grupo can (requiere reinicio)
 sudo usermod -a -G can fox
@@ -370,7 +370,7 @@ ip link show can0 | grep -E "can0|state"
 ip link show can1 | grep -E "can1|state"
 echo ""
 echo "2. Proceso ECU:"
-ps aux | grep ecu_atx1610 | grep -v grep
+ps aux | grep ecu_atc8110 | grep -v grep
 echo ""
 echo "3. Estadísticas CAN0:"
 ip -s link show can0 | grep -A 2 "RX:"
@@ -397,7 +397,7 @@ Para actualizar el código después del despliegue inicial:
 sudo systemctl stop ecu-atx1610
 
 # Actualizar código
-cd /home/fox/ecu_atx1610
+cd /home/fox/ecu_atc8110
 git pull  # Si usas Git
 
 # Recompilar
@@ -417,5 +417,5 @@ sudo systemctl start ecu-atx1610
 Para problemas o preguntas sobre el despliegue, consultar:
 - [Documentación técnica](README.md)
 - [Walkthrough de implementación](walkthrough.md)
-- Logs del sistema: `/var/log/ecu_atx1610.log`
+- Logs del sistema: `/var/log/ecu_atc8110.log`
 - Logs de systemd: `sudo journalctl -u ecu-atx1610`

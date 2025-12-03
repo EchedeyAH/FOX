@@ -10,7 +10,7 @@ Script bash que verifica el estado completo del sistema CAN.
 
 **Uso**:
 ```bash
-cd /c/Users/ahech/Desktop/FOX/ecu_atx1610
+cd /c/Users/ahech/Desktop/FOX/ecu_atc8110
 sudo ./scripts/diagnose_can.sh
 ```
 
@@ -47,7 +47,7 @@ Programa C++ que monitorea y clasifica el tráfico CAN en tiempo real.
 
 **Compilación**:
 ```bash
-cd /c/Users/ahech/Desktop/FOX/ecu_atx1610/build
+cd /c/Users/ahech/Desktop/FOX/ecu_atc8110/build
 cmake ..
 make can_diagnostic
 ```
@@ -136,7 +136,7 @@ sudo usermod -a -G dialout $USER
 
 **Solución**: Ejecutar la ECU principal que incluye el `CanInitializer`:
 ```bash
-./build/ecu_atx1610
+./build/ecu_atc8110
 ```
 
 El inicializador enviará la secuencia de activación automáticamente.

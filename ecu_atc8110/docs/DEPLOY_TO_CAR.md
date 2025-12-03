@@ -60,7 +60,7 @@ cat > /home/fox/ecu_app/restart.sh << 'EOF'
 # Script de reinicio de la ECU
 
 # Detener proceso anterior si existe
-pkill -9 ecu_atx1610 || true
+pkill -9 ecu_atc8110 || true
 
 # Esperar un momento
 sleep 2
@@ -70,7 +70,7 @@ sudo /home/fox/ecu_app/bin/setup_can.sh --real
 
 # Iniciar nueva versión
 cd /home/fox/ecu_app/bin
-nohup sudo ./ecu_atx1610 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 &
+nohup sudo ./ecu_atc8110 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 &
 
 echo "ECU reiniciada. PID: $!"
 EOF
@@ -79,7 +79,7 @@ chmod +x /home/fox/ecu_app/restart.sh
 
 # Dar permisos sudo sin contraseña para comandos específicos
 echo "fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/setup_can.sh" | sudo tee -a /etc/sudoers.d/ecu
-echo "fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/ecu_atx1610" | sudo tee -a /etc/sudoers.d/ecu
+echo "fox ALL=(ALL) NOPASSWD: /home/fox/ecu_app/bin/ecu_atc8110" | sudo tee -a /etc/sudoers.d/ecu
 sudo chmod 0440 /etc/sudoers.d/ecu
 ```
 
@@ -91,34 +91,34 @@ sudo chmod 0440 /etc/sudoers.d/ecu
 
 ```bash
 # Desde tu PC, transferir código
-scp -r C:\Users\ahech\Desktop\FOX\ecu_atx1610 fox@193.147.165.236:/home/fox/
+scp -r C:\Users\ahech\Desktop\FOX\ecu_atc8110 fox@193.147.165.236:/home/fox/
 
 # Conectar a la ECU
 ssh fox@193.147.165.236
 
 # Compilar
-cd /home/fox/ecu_atx1610
+cd /home/fox/ecu_atc8110
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 
 # Verificar que compiló correctamente
-ls -lh ecu_atx1610
+ls -lh ecu_atc8110
 ```
 
 **Salida esperada**:
 ```
--rwxr-xr-x 1 fox fox 2.5M Dec 01 09:45 ecu_atx1610
+-rwxr-xr-x 1 fox fox 2.5M Dec 01 09:45 ecu_atc8110
 ```
 
 ### Paso 2: Instalar en Directorio de Aplicación
 
 ```bash
 # Copiar ejecutable
-cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/
+cp /home/fox/ecu_atc8110/build/ecu_atc8110 /home/fox/ecu_app/bin/
 
 # Copiar script de configuración CAN
-cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/
+cp /home/fox/ecu_atc8110/scripts/setup_can.sh /home/fox/ecu_app/bin/
 chmod +x /home/fox/ecu_app/bin/setup_can.sh
 ```
 
@@ -157,7 +157,7 @@ candump can0
 
 # Terminal 3: Ejecutar ECU en modo debug
 cd /home/fox/ecu_app/bin
-sudo ./ecu_atx1610
+sudo ./ecu_atc8110
 ```
 
 **Verificaciones**:
@@ -171,7 +171,7 @@ sudo ./ecu_atx1610
 ```bash
 # En la Terminal 3, presionar Ctrl+C para detener la ECU
 # Verificar que se detuvo correctamente
-ps aux | grep ecu_atx1610
+ps aux | grep ecu_atc8110
 ```
 
 ---
@@ -198,15 +198,15 @@ jobs:
 
       - name: Transferir a ECU
         run: |
-          scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
+          scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
 
       - name: Compilar en ECU
         run: |
-          ssh fox@193.147.165.236 "cd /home/fox/ecu_atx1610 && mkdir -p build && cd build && cmake .. && make -j4"
+          ssh fox@193.147.165.236 "cd /home/fox/ecu_atc8110 && mkdir -p build && cd build && cmake .. && make -j4"
 
       - name: Instalar en directorio de aplicación
         run: |
-          ssh fox@193.147.165.236 "cp /home/fox/ecu_atx1610/build/ecu_atx1610 /home/fox/ecu_app/bin/ && cp /home/fox/ecu_atx1610/scripts/setup_can.sh /home/fox/ecu_app/bin/"
+          ssh fox@193.147.165.236 "cp /home/fox/ecu_atc8110/build/ecu_atc8110 /home/fox/ecu_app/bin/ && cp /home/fox/ecu_atc8110/scripts/setup_can.sh /home/fox/ecu_app/bin/"
 
       - name: Reiniciar ECU
         run: |
@@ -215,7 +215,7 @@ jobs:
       - name: Verificar estado
         run: |
           sleep 5
-          ssh fox@193.147.165.236 "ps aux | grep ecu_atx1610 | grep -v grep"
+          ssh fox@193.147.165.236 "ps aux | grep ecu_atc8110 | grep -v grep"
 ```
 
 ### Desplegar con Git
@@ -255,8 +255,8 @@ echo ""
 
 # 1. Verificar proceso
 echo "1. Proceso ECU:"
-if pgrep -x ecu_atx1610 > /dev/null; then
-    echo "   ✅ ECU corriendo (PID: $(pgrep -x ecu_atx1610))"
+if pgrep -x ecu_atc8110 > /dev/null; then
+    echo "   ✅ ECU corriendo (PID: $(pgrep -x ecu_atc8110))"
 else
     echo "   ❌ ECU NO está corriendo"
 fi
@@ -342,10 +342,10 @@ tail -f /home/fox/ecu_app/logs/ecu_*.log
 
 ```bash
 # DETENER INMEDIATAMENTE
-ssh fox@193.147.165.236 "sudo pkill -9 ecu_atx1610"
+ssh fox@193.147.165.236 "sudo pkill -9 ecu_atc8110"
 
 # Verificar que se detuvo
-ssh fox@193.147.165.236 "ps aux | grep ecu_atx1610"
+ssh fox@193.147.165.236 "ps aux | grep ecu_atc8110"
 ```
 
 ---
@@ -390,7 +390,7 @@ Si solo cambias configuración:
 
 ```bash
 # Detener ECU
-ssh fox@193.147.165.236 "sudo pkill ecu_atx1610"
+ssh fox@193.147.165.236 "sudo pkill ecu_atc8110"
 
 # Copiar nuevo archivo de configuración
 scp config/nuevo_config.yaml fox@193.147.165.236:/home/fox/ecu_app/config/
@@ -410,8 +410,8 @@ git push origin main
 # GitHub Actions desplegará automáticamente
 
 # O método manual
-scp -r ecu_atx1610 fox@193.147.165.236:/home/fox/
-ssh fox@193.147.165.236 "cd /home/fox/ecu_atx1610/build && make && cp ecu_atx1610 /home/fox/ecu_app/bin/"
+scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
+ssh fox@193.147.165.236 "cd /home/fox/ecu_atc8110/build && make && cp ecu_atc8110 /home/fox/ecu_app/bin/"
 ssh fox@193.147.165.236 "/home/fox/ecu_app/restart.sh"
 ```
 
@@ -426,10 +426,10 @@ ssh fox@193.147.165.236 "/home/fox/ecu_app/restart.sh"
 ssh fox@193.147.165.236 "tail -50 /home/fox/ecu_app/logs/ecu_*.log"
 
 # Verificar permisos
-ssh fox@193.147.165.236 "ls -l /home/fox/ecu_app/bin/ecu_atx1610"
+ssh fox@193.147.165.236 "ls -l /home/fox/ecu_app/bin/ecu_atc8110"
 
 # Probar manualmente
-ssh fox@193.147.165.236 "cd /home/fox/ecu_app/bin && sudo ./ecu_atx1610"
+ssh fox@193.147.165.236 "cd /home/fox/ecu_app/bin && sudo ./ecu_atc8110"
 ```
 
 ### Problema: Interfaces CAN no aparecen
