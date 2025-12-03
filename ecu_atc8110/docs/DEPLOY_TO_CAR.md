@@ -1,4 +1,4 @@
-# 🚗 Guía de Despliegue en el Coche - ECU ATX-1610
+# 🚗 Guía de Despliegue en el Coche - ECU ATC-8110
 
 Esta guía te llevará paso a paso para desplegar el código de la ECU en el vehículo FOX de forma segura y eficiente.
 
@@ -249,7 +249,7 @@ cat > /home/fox/ecu_app/check_status.sh << 'EOF'
 #!/bin/bash
 
 echo "========================================="
-echo "  Estado de la ECU ATX-1610"
+echo "  Estado de la ECU ATC-8110"
 echo "========================================="
 echo ""
 
@@ -495,3 +495,4 @@ Antes de cada despliegue en el coche:
 
 **Última actualización**: 2025-12-01  
 **Versión del documento**: 1.0
+

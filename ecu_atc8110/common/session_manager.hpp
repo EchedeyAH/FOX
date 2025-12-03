@@ -26,7 +26,7 @@ struct SessionInfo {
 
 class SessionManager {
 public:
-    SessionManager(const std::string& base_directory = "/var/log/ecu_atx1610");
+    SessionManager(const std::string& base_directory = "/var/log/ecu_atc8110");
     ~SessionManager();
     
     // Crea una nueva sesión con el nombre del piloto

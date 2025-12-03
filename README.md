@@ -18,7 +18,7 @@ El proyecto tiene una finalidad académica y profesional dentro del marco de un 
 ## 📁 Estructura del Proyecto
 
 ```
-ecu_atx1610/
+ecu_atc8110/
 ├── common/             # Tipos, logs, interfaces base (Sensor, Bus, Controlador)
 ├── comunicacion_can/   # Comunicación CAN vía SocketCAN y EMUC-B2S3
 ├── adquisicion_datos/  # Lectura desde tarjetas PEX-1202L y PEX-DA16

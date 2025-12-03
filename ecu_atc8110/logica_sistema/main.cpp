@@ -9,7 +9,7 @@ int main()
 {
     logica_sistema::StateMachine fsm;
     fsm.start();
-    std::cout << "ECU ATX1610 skeleton running" << std::endl;
+    std::cout << "ECU ATC8110 skeleton running" << std::endl;
     logica_sistema::RunSupervisor(fsm);
     return 0;
 }

@@ -1,4 +1,4 @@
-# Guía de Despliegue - ECU ATX-1610
+# Guía de Despliegue - ECU ATC-8110
 
 ## Requisitos Previos
 
@@ -87,7 +87,7 @@ sudo ./scripts/setup_can.sh --real
 ```
 =========================================
   Configuración de Interfaces CAN
-  ECU ATX-1610
+  ECU ATC-8110
 =========================================
 
 Modo seleccionado: real
@@ -165,7 +165,7 @@ sudo ./ecu_atc8110
 [INFO] [SocketCAN] Interfaz can0 inicializada correctamente
 [INFO] [SensorManager] Sensores inicializados
 [INFO] [FSM] Transición a estado 1
-ECU ATX1610 skeleton running
+ECU ATC8110 skeleton running
 [INFO] [Supervisor] Iteración 0
 [DEBUG] [SocketCAN] TX id=0x100 dlc=3
 [DEBUG] [SocketCAN] TX id=0x180 dlc=3
@@ -232,13 +232,13 @@ Para que la ECU arranque automáticamente al iniciar el sistema:
 ### 1. Crear archivo de servicio
 
 ```bash
-sudo nano /etc/systemd/system/ecu-atx1610.service
+sudo nano /etc/systemd/system/ecu-atc8110.service
 ```
 
 **Contenido**:
 ```ini
 [Unit]
-Description=ECU ATX-1610 Control System
+Description=ECU ATC-8110 Control System
 After=network.target
 
 [Service]
@@ -263,16 +263,16 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 
 # Habilitar inicio automático
-sudo systemctl enable ecu-atx1610
+sudo systemctl enable ecu-atc8110
 
 # Iniciar el servicio
-sudo systemctl start ecu-atx1610
+sudo systemctl start ecu-atc8110
 
 # Ver estado
-sudo systemctl status ecu-atx1610
+sudo systemctl status ecu-atc8110
 
 # Ver logs
-sudo journalctl -u ecu-atx1610 -f
+sudo journalctl -u ecu-atc8110 -f
 ```
 
 ---
@@ -363,7 +363,7 @@ ip -s link show can0
 # Script de verificación completa
 cat << 'EOF' > /tmp/verify_ecu.sh
 #!/bin/bash
-echo "=== Verificación ECU ATX-1610 ==="
+echo "=== Verificación ECU ATC-8110 ==="
 echo ""
 echo "1. Interfaces CAN:"
 ip link show can0 | grep -E "can0|state"
@@ -379,7 +379,7 @@ echo "4. Estadísticas CAN1:"
 ip -s link show can1 | grep -A 2 "RX:"
 echo ""
 echo "5. Últimos logs:"
-sudo journalctl -u ecu-atx1610 -n 10 --no-pager
+sudo journalctl -u ecu-atc8110 -n 10 --no-pager
 EOF
 
 chmod +x /tmp/verify_ecu.sh
@@ -394,7 +394,7 @@ Para actualizar el código después del despliegue inicial:
 
 ```bash
 # Detener servicio si está corriendo
-sudo systemctl stop ecu-atx1610
+sudo systemctl stop ecu-atc8110
 
 # Actualizar código
 cd /home/fox/ecu_atc8110
@@ -407,7 +407,7 @@ cmake ..
 make -j$(nproc)
 
 # Reiniciar servicio
-sudo systemctl start ecu-atx1610
+sudo systemctl start ecu-atc8110
 ```
 
 ---
@@ -418,4 +418,5 @@ Para problemas o preguntas sobre el despliegue, consultar:
 - [Documentación técnica](README.md)
 - [Walkthrough de implementación](walkthrough.md)
 - Logs del sistema: `/var/log/ecu_atc8110.log`
-- Logs de systemd: `sudo journalctl -u ecu-atx1610`
+- Logs de systemd: `sudo journalctl -u ecu-atc8110`
+

@@ -1,3 +1,3 @@
 # Pruebas unitarias
 
-Coloca aqu? las suites unitarias de los m?dulos de la ECU ATX1610.
+Coloca aqu? las suites unitarias de los m?dulos de la ECU ATC8110.
