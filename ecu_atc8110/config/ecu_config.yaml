@@ -2,18 +2,37 @@ can:
   interface: vcan0
   heartbeat_id: 0x100
   battery_status_id: 0x180
+  # Placeholders for motor IDs based on legacy code structure (4 motors)
+  # Actual IDs need to be verified with 'constantes_fox.h' or sniffing
+  motor_ids:
+    rear_left: 0x201  # Motor 1
+    front_left: 0x202 # Motor 2
+    rear_right: 0x203 # Motor 3
+    front_right: 0x204 # Motor 4
 
 sensors:
   adc: pex1202l
   channels:
     - { name: acelerador, channel: 0, scale: 1.0, offset: 0.0 }
     - { name: freno, channel: 1, scale: 1.0, offset: 0.0 }
-    - { name: volante, channel: 2, scale: 1.0, offset: 0.0 }
+    - { name: volante, channel: 2, scale: 0.9280, offset: -3.8254 } # From legacy code
 
 controllers:
   traction_control:
     enable: true
     torque_limit_nm: 120.0
+    # Constants from legacy code (Asfalto)
+    slip_coeff_c1: 1.1973
+    slip_coeff_c2: 25.168
+    slip_coeff_c3: 0.5373
+    # Vehicle parameters (TODO: Verify these values)
+    mass_kg: 1000.0 
+    wheel_diameter_front_m: 0.5
+    wheel_diameter_rear_m: 0.5
+    wheelbase_m: 2.5
+    track_width_front_m: 1.5
+    track_width_rear_m: 1.5
+    
   suspension:
     target_mm: 50
   battery_manager:

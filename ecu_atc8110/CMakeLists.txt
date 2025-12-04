@@ -1,21 +1,23 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(ecu_atc8110 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Buscar soporte para threads (requerido por std::thread en supervisor.cpp)
+# Buscar soporte para threads
 find_package(Threads REQUIRED)
 
-file(GLOB ECU_SOURCES
-    logica_sistema/*.cpp
+# Sources excluding main
+file(GLOB ECU_LIB_SOURCES
     comunicacion_can/*.cpp
     adquisicion_datos/*.cpp
     control_vehiculo/*.cpp
     interfaces/cli_interface.cpp
+    common/*.cpp
 )
 
-add_executable(${PROJECT_NAME} ${ECU_SOURCES})
+# Main executable
+add_executable(${PROJECT_NAME} logica_sistema/main.cpp ${ECU_LIB_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -27,7 +29,27 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/logica_sistema
 )
 
-target_sources(${PROJECT_NAME} PRIVATE common/types.hpp common/interfaces.hpp common/logging.hpp)
-
-# Enlazar con pthread para soporte de threading
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+
+# Testing
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(test_traction_control tests/test_traction_control.cpp ${ECU_LIB_SOURCES})
+target_link_libraries(test_traction_control PRIVATE GTest::gtest_main Threads::Threads)
+target_include_directories(test_traction_control PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/control_vehiculo
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+)
+
+include(GoogleTest)
+gtest_discover_tests(test_traction_control)
