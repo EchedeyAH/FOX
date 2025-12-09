@@ -3,7 +3,7 @@
 
 namespace common {
 
-CanTrafficLogger::CanTrafficLogger(const std::filesystem::path& session_directory)
+CanTrafficLogger::CanTrafficLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "can", 5000, 100, 60}) {
     // Buffer más grande para CAN (5000) ya que hay mucho tráfico
 }

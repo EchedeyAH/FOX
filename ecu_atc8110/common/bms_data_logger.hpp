@@ -12,7 +12,7 @@ namespace common {
  */
 class BmsDataLogger : public CsvLoggerBase {
 public:
-    explicit BmsDataLogger(const std::filesystem::path& session_directory);
+    explicit BmsDataLogger(const fs::path& session_directory);
     
     // Registra el estado completo de la batería
     void log_battery_state(const BatteryState& state);

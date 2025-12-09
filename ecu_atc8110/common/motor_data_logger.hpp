@@ -12,7 +12,7 @@ namespace common {
  */
 class MotorDataLogger : public CsvLoggerBase {
 public:
-    explicit MotorDataLogger(const std::filesystem::path& session_directory);
+    explicit MotorDataLogger(const fs::path& session_directory);
     
     // Registra el estado de un motor específico
     void log_motor_state(int motor_id, const MotorState& state);

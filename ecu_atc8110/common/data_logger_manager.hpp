@@ -37,7 +37,7 @@ public:
      * Configura el directorio de sesión para todos los loggers
      * Debe llamarse antes de start()
      */
-    void set_session_directory(const std::filesystem::path& session_dir);
+    void set_session_directory(const fs::path& session_dir);
     
     /**
      * Inicia todos los loggers
@@ -73,7 +73,7 @@ public:
 
 private:
     Config config_;
-    std::filesystem::path session_directory_;
+    fs::path session_directory_;
     bool is_active_{false};
     std::mutex mutex_;
     

@@ -12,7 +12,7 @@ namespace common {
  */
 class SensorDataLogger : public CsvLoggerBase {
 public:
-    explicit SensorDataLogger(const std::filesystem::path& session_directory);
+    explicit SensorDataLogger(const fs::path& session_directory);
     
     // Registra el estado del vehículo (sensores)
     void log_vehicle_state(const VehicleState& state);

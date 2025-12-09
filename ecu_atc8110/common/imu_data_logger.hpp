@@ -12,7 +12,7 @@ namespace common {
  */
 class ImuDataLogger : public CsvLoggerBase {
 public:
-    explicit ImuDataLogger(const std::filesystem::path& session_directory);
+    explicit ImuDataLogger(const fs::path& session_directory);
     
     // Registra datos de IMU
     void log_imu_data(const ImuData& data);

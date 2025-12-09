@@ -2,7 +2,7 @@
 
 namespace common {
 
-ErrorLogger::ErrorLogger(const std::filesystem::path& session_directory)
+ErrorLogger::ErrorLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "errors", 500, 50, 30}) {
     // Rotación más frecuente (30 min) y archivos más pequeños (50 MB)
     // para no perder eventos críticos

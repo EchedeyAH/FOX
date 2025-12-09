@@ -2,7 +2,7 @@
 
 namespace common {
 
-ImuDataLogger::ImuDataLogger(const std::filesystem::path& session_directory)
+ImuDataLogger::ImuDataLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "imu", 1000, 100, 60}) {
 }
 

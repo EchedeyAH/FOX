@@ -2,7 +2,7 @@
 
 namespace common {
 
-SensorDataLogger::SensorDataLogger(const std::filesystem::path& session_directory)
+SensorDataLogger::SensorDataLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "sensors", 1000, 100, 60}) {
 }
 

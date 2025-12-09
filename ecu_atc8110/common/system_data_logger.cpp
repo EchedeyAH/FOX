@@ -2,7 +2,7 @@
 
 namespace common {
 
-SystemDataLogger::SystemDataLogger(const std::filesystem::path& session_directory)
+SystemDataLogger::SystemDataLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "system", 500, 100, 60}) {
 }
 

@@ -2,7 +2,7 @@
 
 namespace common {
 
-MotorDataLogger::MotorDataLogger(const std::filesystem::path& session_directory)
+MotorDataLogger::MotorDataLogger(const fs::path& session_directory)
     : CsvLoggerBase({session_directory, "motors", 1000, 100, 60}) {
 }
 

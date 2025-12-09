@@ -11,7 +11,7 @@ DataLoggerManager::~DataLoggerManager() {
     stop();
 }
 
-void DataLoggerManager::set_session_directory(const std::filesystem::path& session_dir) {
+void DataLoggerManager::set_session_directory(const fs::path& session_dir) {
     std::lock_guard<std::mutex> lock(mutex_);
     
     if (is_active_) {

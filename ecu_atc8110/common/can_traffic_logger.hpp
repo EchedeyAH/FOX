@@ -12,7 +12,7 @@ namespace common {
  */
 class CanTrafficLogger : public CsvLoggerBase {
 public:
-    explicit CanTrafficLogger(const std::filesystem::path& session_directory);
+    explicit CanTrafficLogger(const fs::path& session_directory);
     
     // Registra un mensaje CAN
     void log_can_frame(const std::string& direction,  // "TX" o "RX"

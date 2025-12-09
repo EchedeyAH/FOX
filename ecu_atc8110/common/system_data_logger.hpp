@@ -12,7 +12,7 @@ namespace common {
  */
 class SystemDataLogger : public CsvLoggerBase {
 public:
-    explicit SystemDataLogger(const std::filesystem::path& session_directory);
+    explicit SystemDataLogger(const fs::path& session_directory);
     
     // Registra presupuesto de potencia y fallos
     void log_system_snapshot(const PowerBudget& power, const FaultFlags& faults);

@@ -19,7 +19,7 @@ public:
         CRITICAL
     };
     
-    explicit ErrorLogger(const std::filesystem::path& session_directory);
+    explicit ErrorLogger(const fs::path& session_directory);
     
     // Registra un error o evento
     void log_error(Severity severity,

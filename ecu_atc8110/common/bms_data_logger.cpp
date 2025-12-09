@@ -2,7 +2,7 @@
 
 namespace common {
 
-BmsDataLogger::BmsDataLogger(const std::filesystem::path& session_directory) 
+BmsDataLogger::BmsDataLogger(const fs::path& session_directory) 
     : CsvLoggerBase({session_directory, "bms", 1000, 100, 60}) {
 }
 
