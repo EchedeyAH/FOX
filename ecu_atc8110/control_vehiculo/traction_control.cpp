@@ -21,6 +21,10 @@ void TractionControl::update(const VehicleData& vehicle_data, std::array<MotorDa
     if (!config_.enable) {
         return;
     }
+    // Skip torque processing if accelerator pedal is not pressed
+    if (vehicle_data.accelerator_pedal <= 0.0f) {
+        return;
+    }
 
     // Update wheel speed history
     updateWheelSpeeds(motors);
