@@ -26,7 +26,7 @@ public:
         bool auto_start{true};          // Iniciar logging automáticamente
     };
     
-    explicit DataLoggerManager(const Config& config = Config{});
+    explicit DataLoggerManager(const Config& config);
     ~DataLoggerManager();
     
     // Deshabilitar copia
