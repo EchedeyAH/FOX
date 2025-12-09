@@ -52,7 +52,7 @@ std::string SessionInfo::to_json() const {
 SessionManager::SessionManager(const std::string& base_directory)
     : base_directory_(base_directory) {
     // Crear directorio base si no existe
-    std::filesystem::create_directories(base_directory_);
+    fs::create_directories(base_directory_);
 }
 
 SessionManager::~SessionManager() {
@@ -88,7 +88,7 @@ bool SessionManager::start_session(const std::string& pilot_name,
     
     // Si el directorio ya existe (misma fecha), lo reutilizamos
     // Los archivos CSV se rotarán automáticamente por hora
-    if (!std::filesystem::exists(session.session_directory)) {
+    if (!fs::exists(session.session_directory)) {
         if (!create_session_directories(session.session_directory)) {
             std::cerr << "Error: No se pudo crear la estructura de directorios.\n";
             return false;
@@ -132,7 +132,7 @@ bool SessionManager::is_session_active() const {
     return current_session_.has_value();
 }
 
-std::filesystem::path SessionManager::get_session_directory() const {
+fs::path SessionManager::get_session_directory() const {
     if (current_session_.has_value()) {
         return current_session_->session_directory;
     }
@@ -142,17 +142,17 @@ std::filesystem::path SessionManager::get_session_directory() const {
 std::vector<SessionInfo> SessionManager::list_pilot_sessions(const std::string& pilot_name) const {
     std::vector<SessionInfo> sessions;
     std::string pilot_folder = "pilot_" + sanitize_pilot_name(pilot_name);
-    std::filesystem::path pilot_path = base_directory_ / pilot_folder;
+    fs::path pilot_path = base_directory_ / pilot_folder;
     
-    if (!std::filesystem::exists(pilot_path)) {
+    if (!fs::exists(pilot_path)) {
         return sessions;
     }
     
-    for (const auto& entry : std::filesystem::directory_iterator(pilot_path)) {
+    for (const auto& entry : fs::directory_iterator(pilot_path)) {
         if (entry.is_directory()) {
             // Intentar cargar session_info.json
-            std::filesystem::path metadata_file = entry.path() / "session_info.json";
-            if (std::filesystem::exists(metadata_file)) {
+            fs::path metadata_file = entry.path() / "session_info.json";
+            if (fs::exists(metadata_file)) {
                 // Aquí se podría implementar parseo JSON completo
                 // Por ahora solo agregamos info básica
                 SessionInfo info;
@@ -166,10 +166,10 @@ std::vector<SessionInfo> SessionManager::list_pilot_sessions(const std::string& 
     return sessions;
 }
 
-bool SessionManager::create_session_directories(const std::filesystem::path& session_path) {
+bool SessionManager::create_session_directories(const fs::path& session_path) {
     try {
         // Crear directorio principal de sesión
-        std::filesystem::create_directories(session_path);
+        fs::create_directories(session_path);
         
         // Crear subdirectorios para cada subsistema
         std::vector<std::string> subsystems = {
@@ -177,11 +177,11 @@ bool SessionManager::create_session_directories(const std::filesystem::path& ses
         };
         
         for (const auto& subsystem : subsystems) {
-            std::filesystem::create_directories(session_path / subsystem);
+            fs::create_directories(session_path / subsystem);
         }
         
         return true;
-    } catch (const std::filesystem::filesystem_error& e) {
+    } catch (const fs::filesystem_error& e) {
         std::cerr << "Error al crear directorios: " << e.what() << "\n";
         return false;
     }
@@ -189,7 +189,7 @@ bool SessionManager::create_session_directories(const std::filesystem::path& ses
 
 bool SessionManager::save_session_metadata(const SessionInfo& session) {
     try {
-        std::filesystem::path metadata_file = session.session_directory / "session_info.json";
+        fs::path metadata_file = session.session_directory / "session_info.json";
         std::ofstream file(metadata_file);
         
         if (!file.is_open()) {
