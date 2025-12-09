@@ -95,11 +95,11 @@ void CsvLoggerBase::flush() {
 
 bool CsvLoggerBase::open_new_file() {
     // Crear directorio del subsistema si no existe
-    std::filesystem::path subsystem_dir = config_.session_directory / config_.subsystem_name;
+    fs::path subsystem_dir = config_.session_directory / config_.subsystem_name;
     
     try {
-        std::filesystem::create_directories(subsystem_dir);
-    } catch (const std::filesystem::filesystem_error& e) {
+        fs::create_directories(subsystem_dir);
+    } catch (const fs::filesystem_error& e) {
         std::cerr << "Error al crear directorio " << subsystem_dir << ": " << e.what() << "\n";
         return false;
     }
@@ -136,11 +136,11 @@ bool CsvLoggerBase::should_rotate() const {
     
     // Verificar tamaño del archivo
     try {
-        auto file_size = std::filesystem::file_size(current_file_path_);
+        auto file_size = fs::file_size(current_file_path_);
         if (file_size >= config_.max_file_size_mb * 1024 * 1024) {
             return true;
         }
-    } catch (const std::filesystem::filesystem_error&) {
+    } catch (const fs::filesystem_error&) {
         // Ignorar errores al obtener tamaño
     }
     

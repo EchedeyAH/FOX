@@ -1,11 +1,14 @@
 #pragma once
 
-#include <filesystem>
+// GCC 7.5 (Ubuntu 18.04) requires experimental/filesystem
+#include <experimental/filesystem>
 #include <fstream>
 #include <mutex>
 #include <string>
 #include <vector>
 #include <chrono>
+
+namespace fs = std::experimental::filesystem;
 
 namespace common {
 
@@ -16,7 +19,7 @@ namespace common {
 class CsvLoggerBase {
 public:
     struct Config {
-        std::filesystem::path session_directory;
+        fs::path session_directory;
         std::string subsystem_name;  // "bms", "motors", etc.
         size_t buffer_size{1000};    // Número de líneas antes de flush
         size_t max_file_size_mb{100}; // Tamaño máximo antes de rotar
@@ -59,7 +62,7 @@ private:
     std::mutex mutex_;
     bool is_active_{false};
     std::chrono::system_clock::time_point file_creation_time_;
-    std::filesystem::path current_file_path_;
+    fs::path current_file_path_;
     
     // Abre un nuevo archivo CSV
     bool open_new_file();

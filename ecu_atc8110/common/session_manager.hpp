@@ -1,9 +1,12 @@
 #pragma once
 
 #include <chrono>
-#include <filesystem>
+// GCC 7.5 (Ubuntu 18.04) requires experimental/filesystem
+#include <experimental/filesystem>
 #include <optional>
 #include <string>
+
+namespace fs = std::experimental::filesystem;
 
 namespace common {
 
@@ -12,7 +15,7 @@ struct SessionInfo {
     std::string session_id;
     std::chrono::system_clock::time_point start_time;
     std::optional<std::chrono::system_clock::time_point> end_time;
-    std::filesystem::path session_directory;
+    fs::path session_directory;
     std::string notes;
     std::string conditions;
     std::string vehicle_id{"FOX-001"};
@@ -44,17 +47,17 @@ public:
     bool is_session_active() const;
     
     // Obtiene el directorio de la sesión actual
-    std::filesystem::path get_session_directory() const;
+    fs::path get_session_directory() const;
     
     // Lista todas las sesiones de un piloto
     std::vector<SessionInfo> list_pilot_sessions(const std::string& pilot_name) const;
 
 private:
-    std::filesystem::path base_directory_;
+    fs::path base_directory_;
     std::optional<SessionInfo> current_session_;
     
     // Crea la estructura de directorios para la sesión
-    bool create_session_directories(const std::filesystem::path& session_path);
+    bool create_session_directories(const fs::path& session_path);
     
     // Guarda el archivo session_info.json
     bool save_session_metadata(const SessionInfo& session);
