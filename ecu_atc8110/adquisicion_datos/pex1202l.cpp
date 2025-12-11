@@ -58,7 +58,7 @@ public:
             reg.mode = IXPCI_RM_NORMAL;
             
             if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << std::endl;
+                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << ": " << strerror(errno) << std::endl;
                 continue;
             }
 
