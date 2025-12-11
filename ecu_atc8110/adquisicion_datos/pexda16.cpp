@@ -1,5 +1,6 @@
 #include "../common/interfaces.hpp"
 #include "../common/logging.hpp"
+#include "pexda16.hpp"
 #include "pex1202_driver.hpp"
 
 #include <fcntl.h>
@@ -89,7 +90,9 @@ private:
     std::map<std::string, double> outputs_;
 };
 
-} // namespace adquisicion_datos
+std::unique_ptr<common::IActuatorWriter> CreatePexDa16()
+{
+    return std::make_unique<PexDa16>();
+}
 
-// Función de factoría para instanciar (debe coincidir con la firma esperada si existe)
-// Si no existe factoría separada, este archivo se incluye directamente o se enlaza.
+} // namespace adquisicion_datos

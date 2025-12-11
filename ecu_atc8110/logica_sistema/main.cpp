@@ -1,5 +1,6 @@
 #include "state_machine.hpp"
 #include <iostream>
+#include "../adquisicion_datos/pexda16.hpp"
 
 namespace logica_sistema {
 void RunSupervisor(StateMachine &fsm);

@@ -44,6 +44,7 @@ public:
         // Convert SystemSnapshot to VehicleData
         fox::control::VehicleData vehicle_data;
         vehicle_data.brake_pedal = static_cast<float>(snapshot.vehicle.brake);
+        vehicle_data.accelerator_pedal = static_cast<float>(snapshot.vehicle.accelerator); // [FIX] Added assignment
         vehicle_data.steering_angle = static_cast<float>(snapshot.vehicle.steering);
 
         // Estimate vehicle speed from motor RPMs (average of all wheels)
