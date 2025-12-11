@@ -2,6 +2,7 @@
 #include "../common/logging.hpp"
 #include "pexda16.hpp"
 #include "pex1202_driver.hpp"
+#include "pex_device.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -24,42 +25,27 @@ public:
 
     bool start() override
     {
-        LOG_INFO("PexDa16", "Inicializando salidas analógicas/digitales (PEX-DA16)");
-        
-        // Intentar abrir el dispositivo. Generalmente comparten /dev/ixpci1 con PEX1202L
-        // Si falló Pex1202L en ixpci1, probamos ixpci1 aquí también o ixpci0.
-        // Asumimos que la tarjeta multifunción es ixpci1
-        fd_ = open("/dev/ixpci1", O_RDWR);
-        
-        if (fd_ < 0) {
-            LOG_WARN("PexDa16", "Fallo al abrir /dev/ixpci1, intentando /dev/ixpci0...");
-            fd_ = open("/dev/ixpci0", O_RDWR);
-        }
-
-        if (fd_ < 0) {
-            LOG_ERROR("PexDa16", "Error critico abriendo dispositivo DAQ: " + std::string(strerror(errno)));
-            LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada.");
+        // Get shared FD
+        int fd = PexDevice::GetInstance().GetFd();
+        if (fd < 0) {
+            LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada (FD Invalido).");
             return false;
         }
-
-        LOG_INFO("PexDa16", "Dispositivo abierto correctamente. Fd: " + std::to_string(fd_));
+        LOG_INFO("PexDa16", "Inicializando salidas analógicas/digitales (PEX-DA16)");
         return true;
     }
 
     void stop() override
     {
-        if (fd_ >= 0) {
-            close(fd_);
-            fd_ = -1;
-            LOG_INFO("PexDa16", "Dispositivo cerrado");
-        }
+        // PexDevice::GetInstance().Close();
     }
 
     void write_output(const std::string &channel, double value) override
     {
         outputs_[channel] = value;
+        int fd = PexDevice::GetInstance().GetFd();
         
-        if (fd_ < 0) return;
+        if (fd < 0) return;
 
         // Mapeo específico para ENABLE (Motores Delanteros SKAI)
         // Asumimos que ENABLE está conectado al Bit 0 del Puerto Digital de Salida
@@ -71,8 +57,8 @@ public:
             reg.value = enable ? 1 : 0; // Bit 0 activo
             reg.mode = IXPCI_RM_NORMAL;
             
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                 // Throttle logs
+            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
+                // Throttle logs
                 static int err_count = 0;
                 if (err_count++ % 50 == 0) {
                      LOG_ERROR("PexDa16", "Error escribiendo salida digital ENABLE");
@@ -104,17 +90,7 @@ public:
             double v_clamped = std::max(0.0, std::min(value, 5.0));
             
             // Scaled to 12-bit (Assuming 10V range, so 5V is half scale)
-            // 4095 = 10V => 5V = 2047
-            // If hardware is +/-10V (Bipolar), 0V = 2048 (+/- offset).
-            // Legacy tadAO_fox.c checks BIPOLAR/UNIPOLAR settings.
-            // "dscdasettings.polarity = BIPOLAR;" (line 157 in tadAO_fox.c)
-            // "cda_wr ... BIPOLAR"
-            // Case BIPOLAR: if (volt < -Range) ... output = (volt * 2048 / Range + 2048)
-            // RANGO_CDA in legacy header? Likely 5 or 10.
-            // If Range=10, 0V = 2048. 5V = (5 * 2048 / 10) + 2048 = 1024 + 2048 = 3072.
-            // If Range=5, 0V = 2048. 5V = 4096.
-
-            // Let's assume BIPOLAR +/- 10V for safety on standard industrial PCs.
+            // 4095 = 10V => 5V = 2047 
             // 0V = 2048 (Midscale)
             // 5V = 2048 + (5/10 * 2048) = 3072.
             
@@ -127,24 +103,16 @@ public:
             else if (ch == 1) reg.id = 223; // IXPCI_AO1
             else if (ch == 2) reg.id = 224; // IXPCI_AO2
             else {
-                 // For Ch3+, try writing to Port 220 using packed (Channel << ? | Value)
-                 // This is a guess for generic PEX cards.
-                 // Alternatively, map AO3 to 226? No.
-                 // Let's try 220 (IXPCI_AO) with simple value write, assuming separate selection??
-                 // Or just fail for now?
-                 // Let's try: IXPCI_AO (220) and assume it maps to 3?? No.
-                 // Fallback: Write using generic Port logic if supported, 
-                 // otherwise Log warning for Ch3+.
-                 reg.id = 220; // IXPCI_AO (Port)
-                 // Some cards use bits 12-15 for channel.
+                 // Fallback for AO3
+                 reg.id = 220; 
                  reg.value = (ch << 12) | dac_val; 
             }
 
-            if (ch <= 2) reg.value = dac_val; // Direct registers take value directly usually
+            if (ch <= 2) reg.value = dac_val;
 
             reg.mode = IXPCI_RM_NORMAL;
             
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
+            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
                  static int ao_err = 0;
                  if (ao_err++ % 50 == 0) LOG_ERROR("PexDa16", "Error writing AO" + std::to_string(ch));
             }

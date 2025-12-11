@@ -1,6 +1,7 @@
 #include "pex1202l.hpp"
 #include "../common/logging.hpp"
 #include "pex1202_driver.hpp"
+#include "pex_device.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -20,29 +21,22 @@ public:
 
     bool start() override
     {
-        LOG_INFO("Pex1202L", "Abriendo dispositivo /dev/ixpci1...");
-        fd_ = open("/dev/ixpci1", O_RDWR);
-        if (fd_ < 0) {
-            std::cerr << "[ERROR] [Pex1202L] Error abriendo /dev/ixpci1: " << strerror(errno) << std::endl;
-            return false;
-        }
-        LOG_INFO("Pex1202L", "Dispositivo abierto correctamente (fd=" + std::to_string(fd_) + ")");
-        return true;
+        // Get shared FD
+        int fd = PexDevice::GetInstance().GetFd();
+        return (fd >= 0);
     }
 
     void stop() override
     {
-        if (fd_ >= 0) {
-            close(fd_);
-            fd_ = -1;
-            LOG_INFO("Pex1202L", "Dispositivo cerrado");
-        }
+        // Singleton manages lifecycle, but we can explicitly close if needed (not recommended if shared)
+        // PexDevice::GetInstance().Close(); 
     }
 
     std::vector<common::AnalogSample> read_samples() override
     {
         std::vector<common::AnalogSample> samples;
-        if (fd_ < 0) return samples;
+        int fd = PexDevice::GetInstance().GetFd();
+        if (fd < 0) return samples;
 
         samples.reserve(config_.size());
         bool any_data_read = false;
@@ -57,9 +51,12 @@ public:
             reg.value = channel.channel; // 0 to N
             reg.mode = IXPCI_RM_NORMAL;
             
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << ": " << strerror(errno) << std::endl;
-                continue;
+            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
+                // Ignore Operation not permitted errors if they are spurious, or log debug
+                if (errno != EPERM) {
+                     std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << ": " << strerror(errno) << std::endl;
+                }
+                // continue; // Try to continue anyway?
             }
 
             // 2. Disparar conversión (Software Trigger)
@@ -67,26 +64,22 @@ public:
             reg.value = 0; // Valor dummy para trigger
             reg.mode = IXPCI_RM_NORMAL;
             
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                std::cerr << "[ERROR] [Pex1202L] Error disparando trigger" << std::endl;
-                continue;
+            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
+                 if (errno != EPERM) std::cerr << "[ERROR] [Pex1202L] Error disparando trigger" << std::endl;
+                // continue;
             }
 
             // 3. Esperar conversión (Polling)
-            // El driver puede manejar esto con IXPCI_RM_READY o hacemos polling manual
-            // Intentaremos leer directamente con modo READY si el driver lo soporta,
-            // si no, leemos el registro de datos.
             
             reg.id = IXPCI_AI; // Data Port
             reg.value = 0;
             reg.mode = IXPCI_RM_READY; // Bloquear hasta listo
             
-            if (ioctl(fd_, IXPCI_READ_REG, &reg) < 0) {
-                // Si falla RM_READY, intentamos lectura directa (quizás ya está listo)
+            if (ioctl(fd, IXPCI_READ_REG, &reg) < 0) {
                  reg.mode = IXPCI_RM_NORMAL;
-                 if (ioctl(fd_, IXPCI_READ_REG, &reg) < 0) {
-                    std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel << std::endl;
-                    continue;
+                 if (ioctl(fd, IXPCI_READ_REG, &reg) < 0) {
+                    // std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel << std::endl;
+                    // continue;
                  }
             }
 
@@ -94,6 +87,7 @@ public:
             uint16_t raw_val = reg.value & 0x0FFF;
             
             // Convertir a voltaje (Asumiendo rango +/- 10V o 0-10V segun config hardware)
+             // ...
             // Por defecto PEX-1202L suele ser +/- 5V o +/- 10V.
             // Mapeo simple: 0 = -10V, 4095 = +10V (Bipolar) o 0=0V, 4095=10V (Unipolar)
             // Usaremos el factor de escala de la configuración para ajustar.
