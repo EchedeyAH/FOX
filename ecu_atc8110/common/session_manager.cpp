@@ -149,7 +149,7 @@ std::vector<SessionInfo> SessionManager::list_pilot_sessions(const std::string& 
     }
     
     for (const auto& entry : fs::directory_iterator(pilot_path)) {
-        if (entry.is_directory()) {
+        if (fs::is_directory(entry)) {
             // Intentar cargar session_info.json
             fs::path metadata_file = entry.path() / "session_info.json";
             if (fs::exists(metadata_file)) {

@@ -12,6 +12,7 @@ file(GLOB ECU_LIB_SOURCES
     comunicacion_can/*.cpp
     adquisicion_datos/*.cpp
     control_vehiculo/*.cpp
+    logica_sistema/supervisor.cpp
     interfaces/cli_interface.cpp
     common/*.cpp
 )
