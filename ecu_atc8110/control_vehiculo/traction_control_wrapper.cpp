@@ -90,7 +90,7 @@ public:
         
         // Log debug info periodically
         static int log_counter = 0;
-        if (++log_counter >= 100) { // Every ~5 seconds at 50ms cycle
+        if (++log_counter >= 10) { // Every ~0.5 seconds at 50ms cycle
             log_counter = 0;
             LOG_INFO("TractionControl", 
                 "Accel: " + std::to_string(vehicle_data.accelerator_pedal) + 
