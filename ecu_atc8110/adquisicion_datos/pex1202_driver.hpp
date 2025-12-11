@@ -41,6 +41,17 @@ struct ixpci_reg {
 #define IXPCI_ADGCR        231 // IXPCI_AD_GAIN_CONTROL_AND_MULTIPLEXER_CONTROL_REGISTER
 #define IXPCI_ADPR         232 // IXPCI_AD_POLLING_REGISTER
 
+// Analog Output
+#define IXPCI_AO           220 // IXPCI_ANALOG_OUTPUT_PORT
+#define IXPCI_AO0          222 // IXPCI_ANALOG_OUTPUT_CHANNEL_0
+#define IXPCI_AO1          223 // IXPCI_ANALOG_OUTPUT_CHANNEL_1
+#define IXPCI_AO2          224 // IXPCI_ANALOG_OUTPUT_CHANNEL_2
+// Assuming AO3 follows. Caution: IXPCI_ENABLE_DISABLE_DA_CHANNEL is 225 in ixpci.h
+// If PEX-DA16 is 16 channels, the driver method might be different (e.g. Channel Select + Data Write)
+// For now, we define up to AO3. If AO3 calls 225, it might toggle Enable.
+// Let's verify if we can use IXPCI_AO with channel selection instead.
+
+
 // Register Operation Modes
 enum {
     IXPCI_RM_RAW,
