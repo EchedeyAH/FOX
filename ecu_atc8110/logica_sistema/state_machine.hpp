@@ -165,31 +165,43 @@ inline void StateMachine::run_controllers()
 inline void StateMachine::refresh_sensors()
 {
     // [DEBUG] Desactivar poll real para evitar spam de errores Pex1202L mientras se arregla el driver
-    // const auto samples = sensores_.poll();
-    // for (const auto &s : samples) {
-    //     if (s.name == "acelerador") snapshot_.vehicle.accelerator = s.value;
-    //     else if (s.name == "freno") snapshot_.vehicle.brake = s.value;
-    //     else if (s.name == "volante") snapshot_.vehicle.steering = s.value;
-    //     else if (s.name == "suspension_fl") snapshot_.vehicle.suspension_mm[0] = s.value;
-    //     else if (s.name == "suspension_fr") snapshot_.vehicle.suspension_mm[1] = s.value;
-    //     else if (s.name == "suspension_rl") snapshot_.vehicle.suspension_mm[2] = s.value;
-    //     else if (s.name == "suspension_rr") snapshot_.vehicle.suspension_mm[3] = s.value;
-    // }
+    // Reactivamos polling ahora que Pex1202L debería estar funcional (o al menos intentarlo)
+    const auto samples = sensores_.poll();
     
-    // [FORCE] Override accelerator for testing (RAMP UP)
-    // Incrementa gradualmente para probar movimiento suave
+    // Valores por defecto si no hay sensores
+    snapshot_.vehicle.accelerator = 0.0; 
+    snapshot_.vehicle.brake = 0.0;
+
+    for (const auto &s : samples) {
+        if (s.name == "acelerador") snapshot_.vehicle.accelerator = s.value;
+        else if (s.name == "freno") snapshot_.vehicle.brake = s.value;
+        else if (s.name == "volante") snapshot_.vehicle.steering = s.value;
+        else if (s.name == "suspension_fl") snapshot_.vehicle.suspension_mm[0] = s.value;
+        else if (s.name == "suspension_fr") snapshot_.vehicle.suspension_mm[1] = s.value;
+        else if (s.name == "suspension_rl") snapshot_.vehicle.suspension_mm[2] = s.value;
+        else if (s.name == "suspension_rr") snapshot_.vehicle.suspension_mm[3] = s.value;
+    }
+    
+    // [FORCE] Override accelerator for testing (RAMP UP) - DISABLED
+    /*
     static float forced_accel = 0.0f;
     if (forced_accel < 1.0f) {
         forced_accel += 0.005f; // +0.5% cada ciclo (50ms) -> 100% en 10s
     }
-    
     snapshot_.vehicle.accelerator = static_cast<double>(forced_accel);
     snapshot_.vehicle.brake = 0.0; // [FORCE] Asegurar freno suelto
     
-    // Loguear para confirmar ramp-up
     static int log_cnt = 0;
-    if (log_cnt++ % 20 == 0) { // Log cada ~1s
+    if (log_cnt++ % 20 == 0) {
        LOG_INFO("StateMachine", "ACELERADOR (RAMP): " + std::to_string(forced_accel));
+    }
+    */
+    
+    // Log real accelerator value periodically
+    static int log_cnt = 0;
+    if (log_cnt++ % 20 == 0) { 
+        LOG_INFO("StateMachine", "Sensor Acelerador: " + std::to_string(snapshot_.vehicle.accelerator) + 
+                 " | Freno: " + std::to_string(snapshot_.vehicle.brake));
     }
 }
 
