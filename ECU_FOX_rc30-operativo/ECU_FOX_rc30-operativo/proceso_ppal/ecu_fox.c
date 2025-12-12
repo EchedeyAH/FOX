@@ -140,6 +140,11 @@ int main (int argc, char **argv)
 	memset(&errores, 0, sizeof(est_error_t));
 	memset(&potencias, 0, sizeof(est_pot_t));
 	memset(&tDatosImu, 0, sizeof(datosImu_t));
+	/* Si no hay Supervisor externo, la propia ECU levanta los motores */
+	supervisor.heartbeat = TRUE;
+	supervisor.on = TRUE;
+	for (i = 0; i < NUM_MOTORES; ++i)
+		supervisor.motor_on[i] = TRUE;
 	
 	/**************************************************
 	***	BLOQUEA SEGNALES DEL PROCESO		***
