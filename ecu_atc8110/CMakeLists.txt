@@ -32,6 +32,22 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads stdc++fs)
 
+# Crear bibliotecas para reusar en tools
+file(GLOB COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp)
+file(GLOB ADQ_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos/*.cpp)
+file(GLOB CAN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/comunicacion_can/*.cpp)
+
+add_library(ecu_common STATIC ${COMMON_SOURCES})
+add_library(ecu_adquisicion_datos STATIC ${ADQ_SOURCES})
+add_library(ecu_comunicacion_can STATIC ${CAN_SOURCES})
+
+target_include_directories(ecu_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ecu_adquisicion_datos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ecu_comunicacion_can PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Subdirectorios
+add_subdirectory(tools)
+
 # Note: Testing with GoogleTest requires CMake 3.14+
 # For now, tests are disabled for Ubuntu 18.04 compatibility
 # To run tests, use the standalone test executables in tests/
