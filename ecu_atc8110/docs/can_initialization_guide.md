@@ -44,7 +44,7 @@ bool StateMachine::initialize_motors() {
 ### Paso 1: Configurar Interfaces CAN
 
 ```bash
-cd /c/Users/ahech/Desktop/FOX/ecu_atc8110
+cd ecu_atc8110
 sudo ./scripts/setup_can.sh --real
 ```
 
