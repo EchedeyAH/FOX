@@ -148,6 +148,19 @@ public:
             if ((channel.name == "acelerador" || channel.name == "freno") && channel.scale > 0.5) {
                  value = value / 4095.0;
             }
+
+            // [DEBUG] Override Accelerator via file (Real Mode)
+            if (channel.name == "acelerador") {
+                FILE* f_acc = fopen("/tmp/force_accel", "r");
+                if (f_acc) {
+                    float force_val = 0.0f;
+                    if (fscanf(f_acc, "%f", &force_val) == 1) {
+                         // Assume input in file is normalized 0.0-1.0
+                         value = static_cast<double>(force_val);
+                    }
+                    fclose(f_acc);
+                }
+            }
             
             samples.push_back({channel.name, value});
             

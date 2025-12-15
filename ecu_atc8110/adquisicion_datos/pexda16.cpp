@@ -31,7 +31,37 @@ public:
             LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada (FD Invalido).");
             return false;
         }
-        LOG_INFO("PexDa16", "Inicializando salidas analógicas/digitales (PEX-DA16)");
+        
+        LOG_INFO("PexDa16", "Inicializando PEX-DA16 (Secuencia explícita)...");
+        
+        ixpci_reg reg;
+        
+        // 1. Configure Range (Attempt Unipolar 0-10V)
+        // ID 291 = IXPCI_AO_CONFIGURATION
+        // Value: 0 = 0-10V, 1 = +/-10V (Typical for some ICP cards, guessing 0 for Unipolar)
+        reg.id = 291; 
+        reg.value = 0; 
+        reg.mode = IXPCI_RM_NORMAL;
+        if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
+             LOG_WARN("PexDa16", "Fallo configurando rango AO (posiblemente no soportado)");
+        }
+
+        // 2. Enable Output Channels (0, 1, 2, 3 -> Mask 0x0F)
+        // ID 225 = IXPCI_ENABLE_DISABLE_DA_CHANNEL
+        reg.id = 225;
+        reg.value = 0x0F; 
+        reg.mode = IXPCI_RM_NORMAL;
+        if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
+             LOG_ERROR("PexDa16", "Fallo habilitando canales AO");
+        } else {
+             LOG_INFO("PexDa16", "Canales AO habilitados (Mask: 0x0F)");
+        }
+
+        // 3. Reset Outputs to 0V
+        for (int i = 0; i < 4; ++i) {
+             write_output("AO" + std::to_string(i), 0.0);
+        }
+        
         return true;
     }
 
