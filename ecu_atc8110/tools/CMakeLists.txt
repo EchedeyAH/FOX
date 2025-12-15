@@ -7,6 +7,8 @@ add_executable(can_diagnostic
 
 target_link_libraries(can_diagnostic
     PRIVATE
+    ecu_comunicacion_can
+    ecu_common
     pthread
 )
 

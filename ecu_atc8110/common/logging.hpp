@@ -20,6 +20,14 @@ inline std::string TimestampToString()
     return oss.str();
 }
 
+template<typename T>
+inline std::string to_hex_string(T value)
+{
+    std::stringstream ss;
+    ss << std::hex << std::uppercase << value;
+    return ss.str();
+}
+
 inline void Log(const std::string &level, const std::string &module, const std::string &message)
 {
     std::cerr << '[' << TimestampToString() << "] [" << level << "] [" << module << "] " << message << std::endl;

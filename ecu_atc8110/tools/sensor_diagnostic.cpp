@@ -26,11 +26,12 @@ public:
         // Verificar estado del dispositivo PEX
         int fd = PexDevice::GetInstance().GetFd();
         if (fd < 0) {
-            std::cerr << "ERROR: Dispositivo PEX no disponible (FD: " << fd << ")" << std::endl;
-            std::cerr << "Verifique que el driver esté cargado y tenga permisos." << std::endl;
-            return;
+            std::cout << "⚠️  Hardware PEX no disponible - MODO SIMULACIÓN ACTIVO" << std::endl;
+            std::cout << "    Para simular acelerador: echo <valor> > /tmp/force_accel" << std::endl;
+            std::cout << "    Ejemplo: echo 2.5 > /tmp/force_accel  (50% acelerador)" << std::endl << std::endl;
+        } else {
+            std::cout << "✓ Dispositivo PEX conectado (FD: " << fd << ")" << std::endl << std::endl;
         }
-        std::cout << "✓ Dispositivo PEX conectado (FD: " << fd << ")" << std::endl << std::endl;
 
         // Estadísticas de lectura
         std::map<std::string, SensorStats> stats;

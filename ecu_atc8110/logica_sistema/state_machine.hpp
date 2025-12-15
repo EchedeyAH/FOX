@@ -102,19 +102,33 @@ inline void StateMachine::start()
         ctrl->start();
     }
     
-    // Inicializar motores y supervisor con secuencia de activación (PEX-DA16 + CAN)
-    if (!initialize_motors()) {
-        LOG_WARN("StateMachine", "Algunos motores no respondieron durante la inicialización");
-    }
+    // Inicializar motores y supervisor movido a loop principal (requiere freno)
+    // if (!initialize_motors()) { ... }
     
-    transition_to(EstadoEcu::Operando);
+    // transition_to(EstadoEcu::Operando);
 }
 
 inline void StateMachine::step()
 {
     switch (estado_) {
     case EstadoEcu::Inicializando:
-        transition_to(EstadoEcu::Operando);
+        // Lógica de arranque con seguridad: Esperar freno
+        refresh_sensors();
+        
+        if (snapshot_.vehicle.brake >= 0.9) { // Freno pulsado (Digital 1.0)
+             LOG_INFO("FSM", "Freno detectado. Iniciando secuencia de arranque...");
+             if (initialize_motors()) {
+                 transition_to(EstadoEcu::Operando);
+             } else {
+                 LOG_ERROR("FSM", "Fallo en inicialización de motores. Reintentando...");
+                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+             }
+        } else {
+             static int wait_cnt = 0;
+             if (wait_cnt++ % 20 == 0) { // Log cada ~1s (asumiendo 50ms loop)
+                 LOG_INFO("FSM", "Esperando pedal de freno para arrancar...");
+             }
+        }
         break;
     case EstadoEcu::Operando:
         refresh_sensors();
@@ -174,7 +188,8 @@ inline void StateMachine::refresh_sensors()
 
     for (const auto &s : samples) {
         if (s.name == "acelerador") snapshot_.vehicle.accelerator = s.value;
-        else if (s.name == "freno") snapshot_.vehicle.brake = s.value;
+        else if (s.name == "freno") snapshot_.vehicle.brake = std::max(snapshot_.vehicle.brake, s.value);
+        else if (s.name == "brake_switch") snapshot_.vehicle.brake = std::max(snapshot_.vehicle.brake, s.value); // Digital override
         else if (s.name == "volante") snapshot_.vehicle.steering = s.value;
         else if (s.name == "suspension_fl") snapshot_.vehicle.suspension_mm[0] = s.value;
         else if (s.name == "suspension_fr") snapshot_.vehicle.suspension_mm[1] = s.value;

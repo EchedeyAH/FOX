@@ -78,23 +78,22 @@ public:
                 return;
             }
 
-            // Mapeo de valor (0-5V) a DAC Code (0-4095)
-            // Asumimos rango unipolar 0-10V o 0-5V hardware
-            // Legacy code: 10V Range. 0-5V output -> 0 - 2048 (aprox)
-            // Si el rango es 10V (común): 5V = 2047.
-            // Si el rango es 5V: 5V = 4095.
-            // Asumiremos Rango 10V para seguridad (para no sobrevoltar 5V inputs)
-            // TODO: Verificar RANGO exacto. Legacy dice "Entrada Throttle 0-5V".
+            // Mapeo valor (0-5V) a DAC Code.
+            // Asumiendo CONFIGURACIÓN UNIPOLAR 0-10V:
+            // 0V = 0
+            // 10V = 4095
+            // 5V = 2047
             
-            // Limit to 0-5V logic
             double v_clamped = std::max(0.0, std::min(value, 5.0));
-            
-            // Scaled to 12-bit (Assuming 10V range, so 5V is half scale)
-            // 4095 = 10V => 5V = 2047 
-            // 0V = 2048 (Midscale)
-            // 5V = 2048 + (5/10 * 2048) = 3072.
-            
-            uint32_t dac_val = 2048 + static_cast<uint32_t>((v_clamped / 10.0) * 2048.0);
+            uint32_t dac_val = static_cast<uint32_t>((v_clamped / 10.0) * 4095.0);
+
+            // [DEBUG] Log DAC write
+            static int dac_log = 0;
+            if (dac_log++ % 50 == 0) {
+                 LOG_DEBUG("PexDa16", "AO Write: " + channel + " V=" + std::to_string(value) + 
+                           " DAC=" + std::to_string(dac_val));
+            }
+
             if (dac_val > 4095) dac_val = 4095;
 
             ixpci_reg reg;

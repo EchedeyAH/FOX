@@ -21,6 +21,16 @@ void TractionControl::update(const VehicleData& vehicle_data, std::array<MotorDa
     if (!config_.enable) {
         return;
     }
+    // Safety: If brake is pressed, warn but allow for now (DEBUGGING)
+    if (vehicle_data.brake_pedal > 0.1f) {
+        static int warn_cnt = 0;
+        if (warn_cnt++ % 10 == 0) {
+             // std::cout << "WARN: Brake pressed (" << vehicle_data.brake_pedal << ") - Torque would be cut" << std::endl;
+        }
+        // for (auto& motor : motors) { motor.torque_cmd = 0.0f; }
+        // return; 
+    }
+
     // Skip torque processing if accelerator pedal is not pressed
     if (vehicle_data.accelerator_pedal <= 0.0f) {
         return;

@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
     std::cout << "Interfaz CAN: " << interface << "\n";
     std::cout << "Presione Ctrl+C para detener\n\n";
     
-    // Crear gestor CAN
-    comunicacion_can::CanManager can_manager(interface);
+    // Crear interfaz CAN
+    comunicacion_can::SocketCanInterface can_interface(interface);
     
     // Iniciar CAN
-    if (!can_manager.start()) {
+    if (!can_interface.start()) {
         std::cerr << "ERROR: No se pudo iniciar la interfaz CAN\n";
         std::cerr << "Verifique que:\n";
         std::cerr << "  1. La interfaz '" << interface << "' existe\n";
@@ -86,15 +86,10 @@ int main(int argc, char** argv) {
     std::cout << std::string(80, '-') << "\n";
     
     auto last_summary = std::chrono::steady_clock::now();
-    common::SystemSnapshot snapshot;
     
     while (running) {
-        // Procesar mensajes recibidos
-        can_manager.process_rx(snapshot);
-        
-        // Intentar recibir frame directamente para mostrar
-        // (esto es solo para diagnóstico, normalmente process_rx lo maneja)
-        auto frame_opt = can_manager.receive();
+        // Intentar recibir frame directamente
+        auto frame_opt = can_interface.receive();
         
         if (frame_opt.has_value()) {
             auto& frame = frame_opt.value();
@@ -143,7 +138,7 @@ int main(int argc, char** argv) {
         }
         
         // Pequeña pausa para no saturar CPU
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
     std::cout << "\n\n";
@@ -151,7 +146,7 @@ int main(int argc, char** argv) {
     std::cout << "║  DIAGNÓSTICO FINALIZADO               ║\n";
     std::cout << "╚════════════════════════════════════════╝\n";
     
-    can_manager.stop();
+    can_interface.stop();
     
     return 0;
 }

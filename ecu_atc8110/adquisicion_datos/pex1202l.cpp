@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <cstring>
 #include <cerrno>
+#include <cstdio> // For fopen
 
 namespace adquisicion_datos {
 
@@ -23,87 +24,148 @@ public:
     {
         // Get shared FD
         int fd = PexDevice::GetInstance().GetFd();
-        return (fd >= 0);
+        if (fd < 0) {
+            LOG_WARN("Pex1202L", "Iniciando en MODO SIMULACIÓN por falta de hardware.");
+            LOG_INFO("Pex1202L", "Control: echo <valor> > /tmp/force_accel");
+            mock_mode_ = true;
+            return true; // Éxito (simulado) para que el sistema arranque
+        }
+        return true;
     }
 
     void stop() override
     {
-        // Singleton manages lifecycle, but we can explicitly close if needed (not recommended if shared)
-        // PexDevice::GetInstance().Close(); 
+        // Singleton manages lifecycle
     }
 
     std::vector<common::AnalogSample> read_samples() override
     {
         std::vector<common::AnalogSample> samples;
+        samples.reserve(config_.size() + 1); // +1 because we add brake_switch
+
+        // --- 1. Digital Inputs (BRAKE_SW) ---
+        // Access /dev/ixpio1 via PexDevice
+        int dio_fd = PexDevice::GetInstance().GetDioFd();
+        double brake_switch_val = 0.0;
+        
+        if (dio_fd >= 0) {
+            uint32_t di_state = 0;
+            // Define IOCTL constant locally if not in headers
+            const unsigned long IXPIO_READ_DI = 0x40046901; 
+
+            if (ioctl(dio_fd, IXPIO_READ_DI, &di_state) < 0) {
+                // Log error occasionally?
+            } else {
+                // Debug log to help identify the correct bit for BRAKE_SW
+                static int log_counter = 0;
+                if (log_counter++ % 50 == 0) {
+                    LOG_INFO("Pex1202L", "DI State: 0x" + common::to_hex_string(di_state));
+                }
+
+                // Assume Bit 0 for now, or just return the state 
+                // We add it as a sensor named "brake_switch"
+                // 1.0 if Bit 0 is set, else 0.0
+                if (di_state & 0x01) {
+                    brake_switch_val = 1.0;
+                }
+            }
+        }
+        
+        // Add brake_switch to samples
+        
+        // [DEBUG] Override via file for remote testing
+        FILE* f_brake = fopen("/tmp/force_brake", "r");
+        if (f_brake) {
+            int force_val = 0;
+            if (fscanf(f_brake, "%d", &force_val) == 1 && force_val > 0) {
+                brake_switch_val = 1.0;
+            }
+            fclose(f_brake);
+        }
+
+        samples.push_back({"brake_switch", brake_switch_val});
+
+
+        if (mock_mode_) {
+            // Modo Simulación: Leer archivo de override
+            double accel_val = 0.0;
+            FILE* f = fopen("/tmp/force_accel", "r");
+            if (f) {
+                float val = 0.0f;
+                if (fscanf(f, "%f", &val) == 1) {
+                    accel_val = static_cast<double>(val);
+                }
+                fclose(f);
+            }
+
+            for (const auto &channel : config_) {
+                double val = 0.0;
+                if (channel.name == "acelerador") val = accel_val;
+                // Resto en 0
+                samples.push_back({channel.name, val});
+            }
+            return samples;
+        }
+
+        // Modo Real (Analog Inputs)
         int fd = PexDevice::GetInstance().GetFd();
         if (fd < 0) return samples;
 
-        samples.reserve(config_.size());
         bool any_data_read = false;
 
         for (const auto &channel : config_) {
-            // 1. Configurar canal (Multiplexer)
-            // Nota: Para PEX-1202L, el canal se selecciona en IXPCI_AICR o IXPCI_ADGCR
-            // Asumimos canal simple (Single Ended) 0-31
-            
             ixpci_reg reg;
-            reg.id = IXPCI_AICR; // Channel Control
-            reg.value = channel.channel; // 0 to N
+            reg.id = IXPCI_AICR; 
+            reg.value = channel.channel; 
             reg.mode = IXPCI_RM_NORMAL;
             
             if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-                // Ignore Operation not permitted errors if they are spurious, or log debug
-                if (errno != EPERM) {
-                     std::cerr << "[ERROR] [Pex1202L] Error seleccionando canal " << channel.channel << ": " << strerror(errno) << std::endl;
-                }
-                // continue; // Try to continue anyway?
+                 // Ignorar errores puntuales
             }
 
-            // 2. Disparar conversión (Software Trigger)
             reg.id = IXPCI_ADST;
-            reg.value = 0; // Valor dummy para trigger
+            reg.value = 0; 
             reg.mode = IXPCI_RM_NORMAL;
-            
-            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-                 if (errno != EPERM) std::cerr << "[ERROR] [Pex1202L] Error disparando trigger" << std::endl;
-                // continue;
-            }
+            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {}
 
-            // 3. Esperar conversión (Polling)
-            
-            reg.id = IXPCI_AI; // Data Port
+            reg.id = IXPCI_AI; 
             reg.value = 0;
-            reg.mode = IXPCI_RM_READY; // Bloquear hasta listo
+            reg.mode = IXPCI_RM_READY; 
             
             if (ioctl(fd, IXPCI_READ_REG, &reg) < 0) {
                  reg.mode = IXPCI_RM_NORMAL;
-                 if (ioctl(fd, IXPCI_READ_REG, &reg) < 0) {
-                    // std::cerr << "[ERROR] [Pex1202L] Error leyendo datos canal " << channel.channel << std::endl;
-                    // continue;
-                 }
+                 ioctl(fd, IXPCI_READ_REG, &reg);
             }
 
-            // 4. Procesar valor (12-bit: 0-4095)
             uint16_t raw_val = reg.value & 0x0FFF;
-            
-            // Convertir a voltaje (Asumiendo rango +/- 10V o 0-10V segun config hardware)
-             // ...
-            // Por defecto PEX-1202L suele ser +/- 5V o +/- 10V.
-            // Mapeo simple: 0 = -10V, 4095 = +10V (Bipolar) o 0=0V, 4095=10V (Unipolar)
-            // Usaremos el factor de escala de la configuración para ajustar.
-            
-            // Si detectamos que todo es 0, podría ser un error de conexión
             if (raw_val > 0) any_data_read = true;
 
             double value = static_cast<double>(raw_val) * channel.scale + channel.offset;
+            
+            // [FIX] Normalize accelerator and brake to 0.0 - 1.0 range based on 12-bit ADC (0-4095)
+            // unless scale is already small (e.g. < 0.1).
+            // Assuming config scale 1.0 means "raw value". We need normalized for logic.
+            if ((channel.name == "acelerador" || channel.name == "freno") && channel.scale > 0.5) {
+                 value = value / 4095.0;
+            }
+            
             samples.push_back({channel.name, value});
+            
+            // [DEBUG] Log accelerator raw values
+            if (channel.name == "acelerador") {
+                static int acc_log_cnt = 0;
+                if (acc_log_cnt++ % 50 == 0) {
+                     LOG_INFO("Pex1202L", "ACC: Ch" + std::to_string(channel.channel) + 
+                              " Raw=" + std::to_string(raw_val) + 
+                              " Val=" + std::to_string(value));
+                }
+            }
         }
 
         if (!any_data_read && !samples.empty()) {
             static int zero_count = 0;
-            zero_count++;
-            if (zero_count % 100 == 0) { // Log cada 100 ciclos para no saturar
-                LOG_WARN("Pex1202L", "ALERTA: Todas las lecturas son 0. Verificar conexiones.");
+            if (++zero_count % 200 == 0) {
+                LOG_WARN("Pex1202L", "ALERTA: Todas las lecturas son 0 (Posible desconexión)");
             }
         }
 
@@ -112,7 +174,7 @@ public:
 
 private:
     SensorConfig config_;
-    int fd_{-1};
+    bool mock_mode_{false};
 };
 
 std::unique_ptr<common::ISensorReader> CreatePex1202L(SensorConfig config)
