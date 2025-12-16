@@ -25,8 +25,8 @@ public:
 
     bool start() override
     {
-        // Get shared FD
-        int fd = PexDevice::GetInstance().GetFd();
+        // Get shared FD for DIO (PEX-DA16 / DA4 / DA8)
+        int fd = PexDevice::GetInstance().GetDioFd();
         if (fd < 0) {
             LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada (FD Invalido).");
             return false;
@@ -73,7 +73,7 @@ public:
     void write_output(const std::string &channel, double value) override
     {
         outputs_[channel] = value;
-        int fd = PexDevice::GetInstance().GetFd();
+        int fd = PexDevice::GetInstance().GetDioFd();
         
         if (fd < 0) return;
 

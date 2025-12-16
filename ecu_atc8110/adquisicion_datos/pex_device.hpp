@@ -47,11 +47,11 @@ public:
         std::lock_guard<std::mutex> lock(dio_mutex_);
         if (dio_fd_ >= 0) return dio_fd_;
 
-        LOG_INFO("PexDevice", "Opening PEX DIO Device /dev/ixpio1...");
-        dio_fd_ = open("/dev/ixpio1", O_RDWR);
+        LOG_INFO("PexDevice", "Opening PEX DIO Device /dev/ixpio0...");
+        dio_fd_ = open("/dev/ixpio0", O_RDWR);
 
         if (dio_fd_ < 0) {
-            LOG_WARN("PexDevice", "Failed to open /dev/ixpio1 (DIO). Error: " + std::string(strerror(errno)));
+            LOG_WARN("PexDevice", "Failed to open /dev/ixpio0 (DIO). Error: " + std::string(strerror(errno)));
         } else {
             LOG_INFO("PexDevice", "DIO Device opened successfully. FD: " + std::to_string(dio_fd_));
         }

@@ -44,7 +44,7 @@ public:
         samples.reserve(config_.size() + 1); // +1 because we add brake_switch
 
         // --- 1. Digital Inputs (BRAKE_SW) ---
-        // Access /dev/ixpio1 via PexDevice
+        // Access /dev/ixpio0 via PexDevice
         int dio_fd = PexDevice::GetInstance().GetDioFd();
         double brake_switch_val = 0.0;
         
