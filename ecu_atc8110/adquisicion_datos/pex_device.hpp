@@ -50,26 +50,21 @@ public:
     std::lock_guard<std::mutex> lock(dio_mutex_);
     if (dio_fd_ >= 0) return dio_fd_;
 
-    const char* devs[] = { "/dev/ixpio1", "/dev/ixpio0" };
+    const char* dev = "/dev/ixpio1";   // <- CAMBIO: era ixpio0
 
-    for (const char* dev : devs) {
-        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_RDONLY)...");
-        int fd = open(dev, O_RDONLY);
+    LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_RDONLY)...");
+    dio_fd_ = open(dev, O_RDONLY);
 
-        if (fd >= 0) {
-            dio_fd_ = fd;
-            LOG_INFO("PexDevice", std::string("DIO Device opened successfully: ") + dev +
-                                 " | FD: " + std::to_string(dio_fd_));
-            return dio_fd_;
-        }
-
+    if (dio_fd_ < 0) {
         int e = errno;
         LOG_ERROR("PexDevice", std::string("Failed to open ") + dev +
                               " (DIO). errno=" + std::to_string(e) +
                               " (" + std::string(strerror(e)) + ")");
+        return -1;
     }
 
-    return -1;
+    LOG_INFO("PexDevice", "DIO Device opened successfully. FD: " + std::to_string(dio_fd_));
+    return dio_fd_;
 }
 
     // (Opcional) Si algún día necesitas escribir salidas digitales por el mismo driver,
