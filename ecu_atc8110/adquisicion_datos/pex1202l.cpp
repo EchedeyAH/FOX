@@ -58,7 +58,7 @@ public:
             } else {
                 // Debug log to help identify the correct bit for BRAKE_SW
                 static int log_counter = 0;
-                if (log_counter++ % 50 == 0) {
+                if (log_counter++ % 1 == 0) {
                     LOG_INFO("Pex1202L", "DI State: 0x" + common::to_hex_string(di_state));
                 }
 
