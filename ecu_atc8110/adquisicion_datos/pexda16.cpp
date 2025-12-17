@@ -25,125 +25,120 @@ public:
 
     bool start() override
     {
-        // Get shared FD for DIO (PEX-DA16 / DA4 / DA8)
-        int fd = PexDevice::GetInstance().GetDioFd();
-        if (fd < 0) {
-            LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada (FD Invalido).");
+        // Obtenemos los FD independientes:
+        //  - analog_fd_: para salidas analógicas (AO0-AO3) mediante /dev/ixpciX
+        //  - dio_fd_:    para salida digital ENABLE mediante /dev/ixpioX
+        analog_fd_ = PexDevice::GetInstance().GetFd();
+        dio_fd_    = PexDevice::GetInstance().GetDioFd();
+
+        if (dio_fd_ < 0) {
+            LOG_ERROR("PexDa16", "La señal ENABLE no podrá ser activada (FD digital inválido).");
             return false;
         }
-        
-        LOG_INFO("PexDa16", "Inicializando PEX-DA16 (Secuencia explícita)...");
-        
+        if (analog_fd_ < 0) {
+            LOG_ERROR("PexDa16", "Salidas analógicas no disponibles (FD analógico inválido).");
+            return false;
+        }
+
+        LOG_INFO("PexDa16", "Inicializando PEX‑DA16 (Secuencia explícita)…");
+
         ixpci_reg reg;
-        
-        // 1. Configure Range (Attempt Unipolar 0-10V)
-        // ID 291 = IXPCI_AO_CONFIGURATION
-        // Value: 0 = 0-10V, 1 = +/-10V (Typical for some ICP cards, guessing 0 for Unipolar)
-        reg.id = 291; 
-        reg.value = 0; 
+
+        // 1. Configurar rango (unipolar 0‑10 V)
+        reg.id = 291;      // IXPCI_AO_CONFIGURATION
+        reg.value = 0;     // 0 = 0‑10 V; 1 = ±10 V
         reg.mode = IXPCI_RM_NORMAL;
-        if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-             LOG_WARN("PexDa16", "Fallo configurando rango AO (posiblemente no soportado)");
+        if (ioctl(analog_fd_, IXPCI_WRITE_REG, &reg) < 0) {
+            LOG_WARN("PexDa16", "Fallo configurando rango AO (posiblemente no soportado)");
         }
 
-        // 2. Enable Output Channels (0, 1, 2, 3 -> Mask 0x0F)
-        // ID 225 = IXPCI_ENABLE_DISABLE_DA_CHANNEL
-        reg.id = 225;
-        reg.value = 0x0F; 
+        // 2. Habilitar canales AO (0‑3)
+        reg.id = 225;    // IXPCI_ENABLE_DISABLE_DA_CHANNEL
+        reg.value = 0x0F; // 0b00001111
         reg.mode = IXPCI_RM_NORMAL;
-        if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-             LOG_ERROR("PexDa16", "Fallo habilitando canales AO");
+        if (ioctl(analog_fd_, IXPCI_WRITE_REG, &reg) < 0) {
+            LOG_ERROR("PexDa16", "Fallo habilitando canales AO");
         } else {
-             LOG_INFO("PexDa16", "Canales AO habilitados (Mask: 0x0F)");
+            LOG_INFO("PexDa16", "Canales AO habilitados (Mask: 0x0F)");
         }
 
-        // 3. Reset Outputs to 0V
+        // 3. Poner salidas a 0 V
         for (int i = 0; i < 4; ++i) {
-             write_output("AO" + std::to_string(i), 0.0);
+            write_output("AO" + std::to_string(i), 0.0);
         }
-        
+
         return true;
     }
 
     void stop() override
     {
-        // PexDevice::GetInstance().Close();
+        // Aquí no cerramos los FD porque los gestiona PexDevice
     }
 
     void write_output(const std::string &channel, double value) override
     {
         outputs_[channel] = value;
-        int fd = PexDevice::GetInstance().GetDioFd();
-        
-        if (fd < 0) return;
 
-        // Mapeo específico para ENABLE (Motores Delanteros SKAI)
-        // Asumimos que ENABLE está conectado al Bit 0 del Puerto Digital de Salida
         if (channel == "ENABLE") {
-            bool enable = (value > 0.5); // Lógica booleana
-            
+            // Usamos el FD digital (DIO) para activar el relé ENABLE
+            if (dio_fd_ < 0) return;
+            bool enable = (value > 0.5);
+
             ixpci_reg reg;
-            reg.id = IXPCI_DO; 
-            reg.value = enable ? 1 : 0; // Bit 0 activo
+            reg.id = IXPCI_DO;
+            reg.value = enable ? 1 : 0; // Solo Bit 0
             reg.mode = IXPCI_RM_NORMAL;
-            
-            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-                // Throttle logs
+
+            if (ioctl(dio_fd_, IXPCI_WRITE_REG, &reg) < 0) {
                 static int err_count = 0;
                 if (err_count++ % 50 == 0) {
-                     LOG_ERROR("PexDa16", "Error escribiendo salida digital ENABLE");
+                    LOG_ERROR("PexDa16", "Error escribiendo salida digital ENABLE");
                 }
             }
             return;
         }
 
-        // Mapeo para Salidas Analógicas (AO0 - AO15)
-        // Formato esperado: "AO0", "AO1", ... "AO3"
+        // Salidas analógicas (AO0‑AO3)
         if (channel.rfind("AO", 0) == 0 && channel.length() > 2) {
+            if (analog_fd_ < 0) return; // No hay FD analógico válido
+
             int ch = 0;
             try {
                 ch = std::stoi(channel.substr(2));
             } catch (...) {
-                LOG_ERROR("PexDa16", "Canal invalido: " + channel);
+                LOG_ERROR("PexDa16", "Canal inválido: " + channel);
                 return;
             }
 
-            // Mapeo valor (0-5V) a DAC Code.
-            // Asumiendo CONFIGURACIÓN UNIPOLAR 0-10V:
-            // 0V = 0
-            // 10V = 4095
-            // 5V = 2047
-            
+            // Limitar valor entre 0 y 5 V (pensando en 0‑10 V unipolar)
             double v_clamped = std::max(0.0, std::min(value, 5.0));
             uint32_t dac_val = static_cast<uint32_t>((v_clamped / 10.0) * 4095.0);
-
-            // [DEBUG] Log DAC write
-            static int dac_log = 0;
-            if (dac_log++ % 50 == 0) {
-                 LOG_DEBUG("PexDa16", "AO Write: " + channel + " V=" + std::to_string(value) + 
-                           " DAC=" + std::to_string(dac_val));
-            }
-
             if (dac_val > 4095) dac_val = 4095;
 
-            ixpci_reg reg;
-            
-            if (ch == 0) reg.id = 222; // IXPCI_AO0
-            else if (ch == 1) reg.id = 223; // IXPCI_AO1
-            else if (ch == 2) reg.id = 224; // IXPCI_AO2
-            else {
-                 // Fallback for AO3
-                 reg.id = 220; 
-                 reg.value = (ch << 12) | dac_val; 
+            static int dac_log = 0;
+            if (dac_log++ % 50 == 0) {
+                LOG_DEBUG("PexDa16", "AO Write: " + channel + " V=" + std::to_string(value) +
+                          " DAC=" + std::to_string(dac_val));
             }
 
-            if (ch <= 2) reg.value = dac_val;
-
+            ixpci_reg reg;
+            switch (ch) {
+                case 0: reg.id = 222; reg.value = dac_val; break; // IXPCI_AO0
+                case 1: reg.id = 223; reg.value = dac_val; break; // IXPCI_AO1
+                case 2: reg.id = 224; reg.value = dac_val; break; // IXPCI_AO2
+                default:
+                    // Fallback para AO3 y superiores: se codifica canal << 12 | valor
+                    reg.id = 220;
+                    reg.value = (ch << 12) | dac_val;
+                    break;
+            }
             reg.mode = IXPCI_RM_NORMAL;
-            
-            if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-                 static int ao_err = 0;
-                 if (ao_err++ % 50 == 0) LOG_ERROR("PexDa16", "Error writing AO" + std::to_string(ch));
+
+            if (ioctl(analog_fd_, IXPCI_WRITE_REG, &reg) < 0) {
+                static int ao_err = 0;
+                if (ao_err++ % 50 == 0) {
+                    LOG_ERROR("PexDa16", "Error writing AO" + std::to_string(ch));
+                }
             }
         }
     }
@@ -151,7 +146,9 @@ public:
     const std::map<std::string, double> &outputs() const { return outputs_; }
 
 private:
-    int fd_ = -1;
+    // Descriptores para salidas digitales (ENABLE) y analógicas (AO)
+    int dio_fd_    = -1;
+    int analog_fd_ = -1;
     std::map<std::string, double> outputs_;
 };
 
