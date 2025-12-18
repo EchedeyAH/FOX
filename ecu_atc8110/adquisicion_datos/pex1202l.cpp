@@ -9,13 +9,8 @@
 #include <cstring>
 #include <cerrno>
 #include <cstdio>
-#include <cstdint>
-
-// Si el header del driver no lo define, lo calculamos
-#ifndef IXPIO_READ_DI
-#include <sys/ioctl.h>
-#define IXPIO_READ_DI _IOR('i', 1, unsigned int)
-#endif
+#include <sstream>
+#include <iomanip>
 
 namespace adquisicion_datos {
 
@@ -47,45 +42,43 @@ public:
 
         if (dio_fd >= 0) {
             uint32_t di_state = 0;
-            bool ok = false;
 
-            // 1) Intento por ioctl
-            if (ioctl(dio_fd, IXPIO_READ_DI, &di_state) >= 0) {
-                ok = true;
-            } else {
-                // 2) Fallback: intentar read() (algunos drivers lo implementan así)
-                uint32_t tmp = 0;
-                ssize_t n = ::read(dio_fd, &tmp, sizeof(tmp));
-                if (n == (ssize_t)sizeof(tmp)) {
-                    di_state = tmp;
-                    ok = true;
+            // OJO: antes estabas usando 0x40046901 (IOW). Para LEER debe ser IOR.
+            // Esto genera típicamente 0x80046901 en x86_64 con sizeof(uint32_t)=4.
+            constexpr unsigned long IXPIO_READ_DI_CORRECT = _IOR('i', 0x01, uint32_t);
+
+            int rc = ioctl(dio_fd, IXPIO_READ_DI_CORRECT, &di_state);
+            if (rc >= 0) {
+                // Log del di_state en hex (y cuando cambia) para deducir máscara correcta
+                static uint32_t last_di = 0;
+                static bool first = true;
+                static int log_cnt = 0;
+
+                if (first || di_state != last_di || (log_cnt++ % 20 == 0)) {
+                    std::ostringstream oss;
+                    oss << "DI ioctl OK. cmd=0x" << std::hex << std::setw(8) << std::setfill('0')
+                        << IXPIO_READ_DI_CORRECT
+                        << " | di_state=0x" << std::hex << std::setw(8) << std::setfill('0') << di_state;
+                    LOG_INFO("Pex1202L", oss.str());
+                    first = false;
+                    last_di = di_state;
                 }
 
-                static int di_err = 0;
-                if (di_err++ % 20 == 0) {
-                    LOG_WARN("Pex1202L",
-                             std::string("Fallo leyendo DI (ioctl IXPIO_READ_DI). errno=") +
-                             std::to_string(errno) + " (" + std::string(strerror(errno)) + ")" +
-                             " | read()=" + std::to_string((long long)n));
-                }
-            }
-
-            if (ok) {
-                // LOG estado DI (para calcular máscara)
-                static int di_log = 0;
-                if (di_log++ % 10 == 0) {
-                    char buf[64];
-                    std::snprintf(buf, sizeof(buf), "DI_STATE=0x%08X", di_state);
-                    LOG_INFO("Pex1202L", std::string("Lectura DI OK: ") + buf);
-                }
-
-                // Ajusta aquí máscara/polaridad. De momento: activo-alto.
+                // Por ahora: activo-alto
                 static constexpr uint32_t kBrakeMask = (1u << 0);
-                static constexpr bool kBrakeActiveLow = false;
-
                 bool brake_raw = (di_state & kBrakeMask) != 0;
-                if (kBrakeActiveLow) brake_raw = !brake_raw;
                 brake_switch_val = brake_raw ? 1.0 : 0.0;
+            } else {
+                // Throttle warnings para no spamear
+                static int warn_cnt = 0;
+                if (warn_cnt++ % 20 == 0) {
+                    int e = errno;
+                    std::ostringstream oss;
+                    oss << "Fallo leyendo DI (ioctl IXPIO_READ_DI). "
+                        << "cmd=0x" << std::hex << std::setw(8) << std::setfill('0') << IXPIO_READ_DI_CORRECT
+                        << " errno=" << std::dec << e << " (" << strerror(e) << ")";
+                    LOG_WARN("Pex1202L", oss.str());
+                }
             }
         }
 
@@ -149,12 +142,15 @@ public:
             uint16_t raw_val = reg.value & 0x0FFF;
             if (raw_val > 0) any_data_read = true;
 
+            // Escala y offset del YAML
             double value = static_cast<double>(raw_val) * channel.scale + channel.offset;
 
+            // Normaliza acelerador y freno a 0-1 si la escala es grande
             if ((channel.name == "acelerador" || channel.name == "freno") && channel.scale > 0.5) {
                 value = value / 4095.0;
             }
 
+            // Override de acelerador (modo real)
             if (channel.name == "acelerador") {
                 FILE* f_acc = fopen("/tmp/force_accel", "r");
                 if (f_acc) {
@@ -167,6 +163,7 @@ public:
             samples.push_back({channel.name, value});
         }
 
+        // Warning si todas las lecturas son cero
         if (!any_data_read && !samples.empty()) {
             static int zero_count = 0;
             if (++zero_count % 200 == 0) {
