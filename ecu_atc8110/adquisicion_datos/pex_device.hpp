@@ -21,6 +21,7 @@ public:
     PexDevice(const PexDevice&) = delete;
     PexDevice& operator=(const PexDevice&) = delete;
 
+    // FD principal para /dev/ixpciX (AI/AO del driver ixpci)
     int GetFd() {
         std::lock_guard<std::mutex> lock(mutex_);
         if (fd_ >= 0) return fd_;
@@ -45,38 +46,58 @@ public:
         return fd_;
     }
 
-    // DIO (BRAKE_SW, entradas): abrir SOLO lectura (driver-compatible)
+    // DIO (DI/DO): en tu proyecto este FD se usa tanto para leer DI (Pex1202L)
+    // como para escribir DO (ENABLE en PexDa16). Por eso debe ser O_RDWR.
     int GetDioFd() {
-    std::lock_guard<std::mutex> lock(dio_mutex_);
-    if (dio_fd_ >= 0) return dio_fd_;
+        std::lock_guard<std::mutex> lock(dio_mutex_);
+        if (dio_fd_ >= 0) return dio_fd_;
 
-    const char* dev = "/dev/ixpio1";   // <- CAMBIO: era ixpio0
+        const char* dev = "/dev/ixpio1";
 
-    LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_RDONLY)...");
-    dio_fd_ = open(dev, O_RDONLY);
+        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_RDWR)...");
+        dio_fd_ = open(dev, O_RDWR);
 
-    if (dio_fd_ < 0) {
-        int e = errno;
-        LOG_ERROR("PexDevice", std::string("Failed to open ") + dev +
-                              " (DIO). errno=" + std::to_string(e) +
-                              " (" + std::string(strerror(e)) + ")");
-        return -1;
+        if (dio_fd_ < 0) {
+            int e = errno;
+            LOG_WARN("PexDevice", std::string("Failed opening ") + dev +
+                                  " with O_RDWR. errno=" + std::to_string(e) +
+                                  " (" + std::string(strerror(e)) + "). Trying O_RDONLY...");
+
+            dio_fd_ = open(dev, O_RDONLY);
+        }
+
+        if (dio_fd_ < 0) {
+            int e = errno;
+            LOG_ERROR("PexDevice", std::string("Failed to open ") + dev +
+                                  " (DIO). errno=" + std::to_string(e) +
+                                  " (" + std::string(strerror(e)) + ")");
+            return -1;
+        }
+
+        LOG_INFO("PexDevice", "DIO Device opened successfully. FD: " + std::to_string(dio_fd_));
+        return dio_fd_;
     }
 
-    LOG_INFO("PexDevice", "DIO Device opened successfully. FD: " + std::to_string(dio_fd_));
-    return dio_fd_;
-}
-
-    // (Opcional) Si algún día necesitas escribir salidas digitales por el mismo driver,
-    // abre un FD separado con O_WRONLY (muchos drivers NO aceptan O_RDWR).
+    // Si quieres separar lectura y escritura, usa este FD para escritura.
+    // Lo alineamos a /dev/ixpio1 para que no haya incoherencias.
     int GetDioWriteFd() {
         std::lock_guard<std::mutex> lock(dio_wr_mutex_);
         if (dio_wr_fd_ >= 0) return dio_wr_fd_;
 
-        const char* dev = "/dev/ixpio0";
+        const char* dev = "/dev/ixpio1";
 
-        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_WRONLY)...");
-        dio_wr_fd_ = open(dev, O_WRONLY);
+        // Intento O_RDWR primero (algunos drivers requieren RW incluso para ciertos ioctls)
+        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (write, O_RDWR)...");
+        dio_wr_fd_ = open(dev, O_RDWR);
+
+        if (dio_wr_fd_ < 0) {
+            int e = errno;
+            LOG_WARN("PexDevice", std::string("Failed opening ") + dev +
+                                  " with O_RDWR for write. errno=" + std::to_string(e) +
+                                  " (" + std::string(strerror(e)) + "). Trying O_WRONLY...");
+
+            dio_wr_fd_ = open(dev, O_WRONLY);
+        }
 
         if (dio_wr_fd_ < 0) {
             int e = errno;
