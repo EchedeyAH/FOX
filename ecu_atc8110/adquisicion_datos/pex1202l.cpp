@@ -43,11 +43,8 @@ public:
         if (dio_fd >= 0) {
             uint32_t di_state = 0;
 
-            // OJO: antes estabas usando 0x40046901 (IOW). Para LEER debe ser IOR.
-            // Esto genera típicamente 0x80046901 en x86_64 con sizeof(uint32_t)=4.
-            constexpr unsigned long IXPIO_READ_DI_CORRECT = _IOR('i', 0x01, uint32_t);
-
-            int rc = ioctl(dio_fd, IXPIO_READ_DI_CORRECT, &di_state);
+            // Uso de la macro oficial definida en pex1202_driver.hpp
+            int rc = ioctl(dio_fd, IXPCI_IOCTL_DI, &di_state);
             if (rc >= 0) {
                 // Log del di_state en hex (y cuando cambia) para deducir máscara correcta
                 static uint32_t last_di = 0;
@@ -57,7 +54,7 @@ public:
                 if (first || di_state != last_di || (log_cnt++ % 20 == 0)) {
                     std::ostringstream oss;
                     oss << "DI ioctl OK. cmd=0x" << std::hex << std::setw(8) << std::setfill('0')
-                        << IXPIO_READ_DI_CORRECT
+                        << IXPCI_IOCTL_DI
                         << " | di_state=0x" << std::hex << std::setw(8) << std::setfill('0') << di_state;
                     LOG_INFO("Pex1202L", oss.str());
                     first = false;
@@ -75,7 +72,7 @@ public:
                     int e = errno;
                     std::ostringstream oss;
                     oss << "Fallo leyendo DI (ioctl IXPIO_READ_DI). "
-                        << "cmd=0x" << std::hex << std::setw(8) << std::setfill('0') << IXPIO_READ_DI_CORRECT
+                        << "cmd=0x" << std::hex << std::setw(8) << std::setfill('0') << IXPCI_IOCTL_DI
                         << " errno=" << std::dec << e << " (" << strerror(e) << ")";
                     LOG_WARN("Pex1202L", oss.str());
                 }

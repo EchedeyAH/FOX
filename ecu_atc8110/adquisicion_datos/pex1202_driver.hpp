@@ -14,8 +14,11 @@ enum {
     IXPCI_IOCTL_ID_SET_SIG,
     IXPCI_IOCTL_ID_READ_REG,
     IXPCI_IOCTL_ID_WRITE_REG,
-    IXPCI_IOCTL_ID_TIME_SPAN,
-    // ... otros no necesarios por ahora
+    IXPCI_IOCTL_ID_TIME_SPAN,    // 5
+    IXPCI_IOCTL_ID_DI,           // 6
+    IXPCI_IOCTL_ID_DO,           // 7
+    IXPCI_IOCTL_ID_IRQ_ENABLE,   // 8
+    IXPCI_IOCTL_ID_IRQ_DISABLE,  // 9
 };
 
 // Estructura para operaciones de registro
@@ -30,6 +33,8 @@ struct ixpci_reg {
 // Macros IOCTL
 #define IXPCI_READ_REG   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_READ_REG, ixpci_reg *)
 #define IXPCI_WRITE_REG  _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_WRITE_REG, ixpci_reg *)
+#define IXPCI_IOCTL_DI   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DI, uint32_t)
+#define IXPCI_IOCTL_DO   _IOW(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DO, uint32_t)
 
 // IDs de Registros (Mapping para PEX-1202L)
 // Basado en ixpci.h y _pci1202.h
