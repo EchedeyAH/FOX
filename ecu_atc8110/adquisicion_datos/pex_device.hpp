@@ -20,105 +20,66 @@ public:
     PexDevice(const PexDevice&) = delete;
     PexDevice& operator=(const PexDevice&) = delete;
 
-    int GetFd() {
+    // Obtener FD para una tarjeta específica (index: 0, 1, etc.)
+    int GetFd(int index = 1) {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (fd_ >= 0) return fd_;
+        if (fds_.count(index) && fds_[index] >= 0) return fds_[index];
 
-        LOG_INFO("PexDevice", "Opening PEX Device /dev/ixpci1 (O_RDWR)...");
-        fd_ = open("/dev/ixpci1", O_RDWR);
+        std::string dev_path = "/dev/ixpci" + std::to_string(index);
+        LOG_INFO("PexDevice", "Opening PEX Device " + dev_path + " (O_RDWR)...");
+        
+        int fd = open(dev_path.c_str(), O_RDWR);
 
-        if (fd_ < 0) {
-            LOG_WARN("PexDevice", "Failed to open /dev/ixpci1, trying /dev/ixpci0...");
-            fd_ = open("/dev/ixpci0", O_RDWR);
-        }
-
-        if (fd_ < 0) {
+        if (fd < 0) {
             int e = errno;
-            LOG_WARN("PexDevice", "Hardware no encontrado. Se usará MODO SIMULACIÓN.");
-            LOG_WARN("PexDevice", "Error original: errno=" + std::to_string(e) +
-                                  " (" + std::string(strerror(e)) + ")");
-        } else {
-            LOG_INFO("PexDevice", "Device opened successfully. FD: " + std::to_string(fd_));
+            LOG_WARN("PexDevice", "Fallo al abrir " + dev_path + ": errno=" + 
+                                  std::to_string(e) + " (" + std::string(strerror(e)) + ")");
+            // No hacemos fallback automático aquí para evitar confusiones entre tarjetas
+            return -1;
         }
 
-        return fd_;
+        LOG_INFO("PexDevice", "Tarjeta " + std::to_string(index) + " abierta. FD: " + std::to_string(fd));
+        fds_[index] = fd;
+        return fd;
     }
 
-    // DIO (entradas): algunos drivers requieren O_RDWR incluso para leer por ioctl
-    int GetDioFd() {
+    // DIO (entradas): /dev/ixpioX
+    int GetDioFd(int index = 1) {
         std::lock_guard<std::mutex> lock(dio_mutex_);
-        if (dio_fd_ >= 0) return dio_fd_;
+        if (dio_fds_.count(index) && dio_fds_[index] >= 0) return dio_fds_[index];
 
-        const char* dev1 = "/dev/ixpio1";
-        const char* dev0 = "/dev/ixpio0";
+        std::string dev_path = "/dev/ixpio" + std::to_string(index);
+        LOG_INFO("PexDevice", "Opening PEX DIO Device " + dev_path + " (O_RDWR)...");
+        
+        int fd = open(dev_path.c_str(), O_RDWR);
 
-        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev1 + " (O_RDWR)...");
-        dio_fd_ = open(dev1, O_RDWR);
-
-        if (dio_fd_ < 0) {
+        if (fd < 0) {
             int e = errno;
-            LOG_WARN("PexDevice", std::string("Failed to open ") + dev1 +
-                                 " errno=" + std::to_string(e) +
-                                 " (" + std::string(strerror(e)) + "). Trying " + dev0 + "...");
-            dio_fd_ = open(dev0, O_RDWR);
-        }
-
-        if (dio_fd_ < 0) {
-            int e = errno;
-            LOG_ERROR("PexDevice", std::string("Failed to open DIO device (") + dev1 + " or " + dev0 + "). "
-                                  "errno=" + std::to_string(e) +
-                                  " (" + std::string(strerror(e)) + ")");
+            LOG_WARN("PexDevice", "Fallo al abrir " + dev_path + ": errno=" + 
+                                  std::to_string(e) + " (" + std::string(strerror(e)) + ")");
             return -1;
         }
 
-        LOG_INFO("PexDevice", "DIO Device opened successfully. FD: " + std::to_string(dio_fd_));
-        return dio_fd_;
-    }
-
-    // (Opcional) FD separado para escribir DIO si lo necesitas en el futuro.
-    int GetDioWriteFd() {
-        std::lock_guard<std::mutex> lock(dio_wr_mutex_);
-        if (dio_wr_fd_ >= 0) return dio_wr_fd_;
-
-        const char* dev = "/dev/ixpio0";
-        LOG_INFO("PexDevice", std::string("Opening PEX DIO Device ") + dev + " (O_WRONLY)...");
-        dio_wr_fd_ = open(dev, O_WRONLY);
-
-        if (dio_wr_fd_ < 0) {
-            int e = errno;
-            LOG_ERROR("PexDevice", std::string("Failed to open ") + dev +
-                                  " (DIO-WR). errno=" + std::to_string(e) +
-                                  " (" + std::string(strerror(e)) + ")");
-            return -1;
-        }
-
-        LOG_INFO("PexDevice", "DIO Device (write) opened successfully. FD: " + std::to_string(dio_wr_fd_));
-        return dio_wr_fd_;
+        LOG_INFO("PexDevice", "DIO Tarjeta " + std::to_string(index) + " abierta. FD: " + std::to_string(fd));
+        dio_fds_[index] = fd;
+        return fd;
     }
 
     void Close() {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            if (fd_ >= 0) {
-                close(fd_);
-                fd_ = -1;
-                LOG_INFO("PexDevice", "Device closed.");
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto& pair : fds_) {
+            if (pair.second >= 0) {
+                close(pair.second);
+                LOG_INFO("PexDevice", "Closed ixpci" + std::to_string(pair.first));
+                pair.second = -1;
             }
         }
-        {
-            std::lock_guard<std::mutex> lock(dio_mutex_);
-            if (dio_fd_ >= 0) {
-                close(dio_fd_);
-                dio_fd_ = -1;
-                LOG_INFO("PexDevice", "DIO Device closed.");
-            }
-        }
-        {
-            std::lock_guard<std::mutex> lock(dio_wr_mutex_);
-            if (dio_wr_fd_ >= 0) {
-                close(dio_wr_fd_);
-                dio_wr_fd_ = -1;
-                LOG_INFO("PexDevice", "DIO Device (write) closed.");
+        std::lock_guard<std::mutex> lock2(dio_mutex_);
+        for (auto& pair : dio_fds_) {
+            if (pair.second >= 0) {
+                close(pair.second);
+                LOG_INFO("PexDevice", "Closed ixpio" + std::to_string(pair.first));
+                pair.second = -1;
             }
         }
     }
@@ -127,14 +88,11 @@ private:
     PexDevice() = default;
     ~PexDevice() { Close(); }
 
-    int fd_ = -1;
+    std::map<int, int> fds_;
     std::mutex mutex_;
 
-    int dio_fd_ = -1;
+    std::map<int, int> dio_fds_;
     std::mutex dio_mutex_;
-
-    int dio_wr_fd_ = -1;
-    std::mutex dio_wr_mutex_;
 };
 
 } // namespace adquisicion_datos

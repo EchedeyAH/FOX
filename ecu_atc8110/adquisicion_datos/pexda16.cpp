@@ -26,14 +26,22 @@ public:
 
     bool start() override
     {
-        // OJO: AO/DO son registros IXPCI_* => usar /dev/ixpciX
-        int fd = PexDevice::GetInstance().GetFd();
+        // PEX-DA16 suele estar en el index 0
+        int fd = PexDevice::GetInstance().GetFd(0); 
         if (fd < 0) {
-            LOG_ERROR("PexDa16", "No hay FD IXPCI válido. Salidas AO/ENABLE no disponibles.");
+            LOG_WARN("PexDa16", "No hay FD para /dev/ixpci0. Probando fallback a index 1...");
+            fd = PexDevice::GetInstance().GetFd(1);
+            if (fd >= 0) da_index_ = 1;
+        } else {
+            da_index_ = 0;
+        }
+        
+        if (fd < 0) {
+            LOG_ERROR("PexDa16", "No se encontró hardware PEX para salidas (ixpci0/1).");
             return false;
         }
 
-        LOG_INFO("PexDa16", "Inicializando PEX-DA16 (Secuencia explícita) ...");
+        LOG_INFO("PexDa16", "Inicializando PEX-DA16 en tarjeta " + std::to_string(da_index_) + ", FD: " + std::to_string(fd));
 
         ixpci_reg reg;
 
@@ -74,7 +82,7 @@ public:
         outputs_[channel] = value;
 
         // AO/DO => IXPCI => GetFd()
-        int fd = PexDevice::GetInstance().GetFd();
+        int fd = PexDevice::GetInstance().GetFd(da_index_);
         if (fd < 0) return;
 
         // ENABLE por salida digital (bit0) en IXPCI_DO (según tu implementación)
@@ -161,6 +169,7 @@ public:
 
 private:
     std::map<std::string, double> outputs_;
+    int da_index_ = 0;
 };
 
 std::unique_ptr<common::IActuatorWriter> CreatePexDa16()

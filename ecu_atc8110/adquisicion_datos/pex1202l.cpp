@@ -20,9 +20,9 @@ public:
     ~Pex1202L() override { stop(); }
 
     bool start() override {
-        int fd = PexDevice::GetInstance().GetFd();
+        int fd = PexDevice::GetInstance().GetFd(1); // Tarjeta 1 (Sensores)
         if (fd < 0) {
-            LOG_WARN("Pex1202L", "Iniciando en MODO SIMULACIÓN por falta de hardware.");
+            LOG_WARN("Pex1202L", "Iniciando en MODO SIMULACIÓN por falta de hardware en /dev/ixpci1.");
             LOG_INFO("Pex1202L", "Control: echo <valor> > /tmp/force_accel");
             mock_mode_ = true;
             return true;
@@ -37,7 +37,7 @@ public:
         samples.reserve(config_.size() + 1);
 
         /* --------- Lectura digital (interruptor de freno) ---------- */
-        int dio_fd = PexDevice::GetInstance().GetDioFd();
+        int dio_fd = PexDevice::GetInstance().GetDioFd(1); // Tarjeta 1
         double brake_switch_val = 0.0;
 
         if (dio_fd >= 0) {

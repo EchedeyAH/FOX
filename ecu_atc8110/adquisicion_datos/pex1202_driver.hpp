@@ -30,11 +30,12 @@ struct ixpci_reg {
     int mode;
 };
 
-// Macros IOCTL
-#define IXPCI_READ_REG   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_READ_REG, ixpci_reg *)
-#define IXPCI_WRITE_REG  _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_WRITE_REG, ixpci_reg *)
-#define IXPCI_IOCTL_DI   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DI, uint32_t)
-#define IXPCI_IOCTL_DO   _IOW(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DO, uint32_t)
+// Macros IOCTL (Basadas en ixpci.h)
+// Nota: Usamos void* para que la macro _IOR genere el tamaño de puntero (8 bytes en x64)
+#define IXPCI_READ_REG   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_READ_REG, void *)
+#define IXPCI_WRITE_REG  _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_WRITE_REG, void *)
+#define IXPCI_IOCTL_DI   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DI, void *)
+#define IXPCI_IOCTL_DO   _IOW(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_DO, void *)
 
 // IDs de Registros (Mapping para PEX-1202L)
 // Basado en ixpci.h y _pci1202.h
