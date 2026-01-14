@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <mutex>
+#include <map>
 #include <string>
 #include <cstring>
 #include <cerrno>
