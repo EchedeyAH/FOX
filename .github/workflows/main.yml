@@ -16,46 +16,46 @@ jobs:
       - name: Transferir código a ECU
         run: |
           Write-Host "Transfiriendo código a la ECU..."
-          scp -r ecu_atc8110 fox@193.147.165.236:/home/fox/
+          scp -o StrictHostKeyChecking=no -r ecu_atc8110 fox@193.147.165.236:/home/fox/
         shell: pwsh
 
       - name: Compilar en ECU
         run: |
           Write-Host "Compilando en la ECU..."
-          ssh fox@193.147.165.236 "cd /home/fox/ecu_atc8110; mkdir -p build; cd build; cmake ..; make -j4"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "cd /home/fox/ecu_atc8110; mkdir -p build; cd build; cmake ..; make -j4"
         shell: pwsh
 
       - name: Verificar compilación
         run: |
           Write-Host "Verificando compilación..."
-          ssh fox@193.147.165.236 "test -f /home/fox/ecu_atc8110/build/ecu_atc8110 && echo 'Compilación exitosa' || exit 1"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "test -f /home/fox/ecu_atc8110/build/ecu_atc8110 && echo 'Compilación exitosa' || exit 1"
         shell: pwsh
 
       - name: Instalar en directorio de aplicación
         run: |
           Write-Host "Instalando ejecutable..."
-          ssh fox@193.147.165.236 "mkdir -p /home/fox/ecu_app/bin /home/fox/ecu_app/logs"
-          ssh fox@193.147.165.236 "cp /home/fox/ecu_atc8110/build/ecu_atc8110 /home/fox/ecu_app/bin/"
-          ssh fox@193.147.165.236 "cp /home/fox/ecu_atc8110/scripts/setup_can.sh /home/fox/ecu_app/bin/"
-          ssh fox@193.147.165.236 "sed -i 's/\r$//' /home/fox/ecu_app/bin/setup_can.sh"
-          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/setup_can.sh"
-          ssh fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/ecu_atc8110"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "mkdir -p /home/fox/ecu_app/bin /home/fox/ecu_app/logs"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "cp /home/fox/ecu_atc8110/build/ecu_atc8110 /home/fox/ecu_app/bin/"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "cp /home/fox/ecu_atc8110/scripts/setup_can.sh /home/fox/ecu_app/bin/"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "sed -i 's/\r$//' /home/fox/ecu_app/bin/setup_can.sh"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/setup_can.sh"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "chmod +x /home/fox/ecu_app/bin/ecu_atc8110"
           Write-Host "Instalación completada"
         shell: pwsh
 
       - name: Configurar interfaces CAN
         run: |
           Write-Host "Configurando interfaces CAN..."
-          ssh fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
         shell: pwsh
 
       - name: Reiniciar ECU
         run: |
           Write-Host "Reiniciando ECU..."
-          ssh fox@193.147.165.236 "pkill -9 ecu_atc8110 || true"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "pkill -9 ecu_atc8110 || true"
           Start-Sleep -Seconds 2
           # Usar subshell y disown para asegurar que SSH no espere
-          ssh fox@193.147.165.236 "cd /home/fox/ecu_app/bin && (nohup sudo ./ecu_atc8110 > ../logs/ecu_`$(date +%Y%m%d_%H%M%S).log 2>&1 < /dev/null &) && sleep 1"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "cd /home/fox/ecu_app/bin && (nohup sudo ./ecu_atc8110 > ../logs/ecu_`$(date +%Y%m%d_%H%M%S).log 2>&1 < /dev/null &) && sleep 1"
           Write-Host "ECU iniciada en segundo plano"
         shell: pwsh
 
@@ -63,12 +63,12 @@ jobs:
         run: |
           Write-Host "Verificando estado de la ECU..."
           Start-Sleep -Seconds 3
-          ssh fox@193.147.165.236 "if pgrep -x ecu_atc8110 > /dev/null; then echo 'ECU corriendo correctamente'; echo 'PID:' `$(pgrep -x ecu_atc8110); else echo 'ECU no esta corriendo'; exit 1; fi"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "if pgrep -x ecu_atc8110 > /dev/null; then echo 'ECU corriendo correctamente'; echo 'PID:' `$(pgrep -x ecu_atc8110); else echo 'ECU no esta corriendo'; exit 1; fi"
         shell: pwsh
 
       - name: Mostrar logs recientes
         if: always()
         run: |
           Write-Host "Ultimos logs de la ECU:"
-          ssh fox@193.147.165.236 "tail -20 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -20 || echo 'No hay logs disponibles'"
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "tail -20 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -20 || echo 'No hay logs disponibles'"
         shell: pwsh
