@@ -5,9 +5,11 @@
 #include <unistd.h>
 #include <mutex>
 #include <map>
+#include <set>
 #include <string>
 #include <cstring>
 #include <cerrno>
+#include <chrono>
 
 namespace adquisicion_datos {
 
@@ -26,6 +28,14 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         if (fds_.count(index) && fds_[index] >= 0) return fds_[index];
 
+        // Evitar re-intentar abrir si falló hace menos de 5 segundos
+        auto now = std::chrono::steady_clock::now();
+        if (failed_fds_.count(index)) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - last_fail_pci_[index]).count() < 5) {
+                return -1;
+            }
+        }
+
         std::string dev_path = "/dev/ixpci" + std::to_string(index);
         LOG_INFO("PexDevice", "Opening PEX Device " + dev_path + " (O_RDWR)...");
         
@@ -33,14 +43,16 @@ public:
 
         if (fd < 0) {
             int e = errno;
+            failed_fds_.insert(index);
+            last_fail_pci_[index] = now;
             LOG_WARN("PexDevice", "Fallo al abrir " + dev_path + ": errno=" + 
                                   std::to_string(e) + " (" + std::string(strerror(e)) + ")");
-            // No hacemos fallback automático aquí para evitar confusiones entre tarjetas
             return -1;
         }
 
         LOG_INFO("PexDevice", "Tarjeta " + std::to_string(index) + " abierta. FD: " + std::to_string(fd));
         fds_[index] = fd;
+        failed_fds_.erase(index);
         return fd;
     }
 
@@ -49,6 +61,14 @@ public:
         std::lock_guard<std::mutex> lock(dio_mutex_);
         if (dio_fds_.count(index) && dio_fds_[index] >= 0) return dio_fds_[index];
 
+        // Evitar re-intentar abrir si falló hace menos de 5 segundos
+        auto now = std::chrono::steady_clock::now();
+        if (failed_dio_.count(index)) {
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - last_fail_dio_[index]).count() < 5) {
+                return -1;
+            }
+        }
+
         std::string dev_path = "/dev/ixpio" + std::to_string(index);
         LOG_INFO("PexDevice", "Opening PEX DIO Device " + dev_path + " (O_RDWR)...");
         
@@ -56,6 +76,8 @@ public:
 
         if (fd < 0) {
             int e = errno;
+            failed_dio_.insert(index);
+            last_fail_dio_[index] = now;
             LOG_WARN("PexDevice", "Fallo al abrir " + dev_path + ": errno=" + 
                                   std::to_string(e) + " (" + std::string(strerror(e)) + ")");
             return -1;
@@ -63,6 +85,7 @@ public:
 
         LOG_INFO("PexDevice", "DIO Tarjeta " + std::to_string(index) + " abierta. FD: " + std::to_string(fd));
         dio_fds_[index] = fd;
+        failed_dio_.erase(index);
         return fd;
     }
 
@@ -90,9 +113,13 @@ private:
     ~PexDevice() { Close(); }
 
     std::map<int, int> fds_;
+    std::set<int> failed_fds_;
+    std::map<int, std::chrono::steady_clock::time_point> last_fail_pci_;
     std::mutex mutex_;
 
     std::map<int, int> dio_fds_;
+    std::set<int> failed_dio_;
+    std::map<int, std::chrono::steady_clock::time_point> last_fail_dio_;
     std::mutex dio_mutex_;
 };
 
