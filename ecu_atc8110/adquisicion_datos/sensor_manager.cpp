@@ -14,7 +14,7 @@ public:
         SensorConfig base_config{
             {"acelerador", 0, 1.0, 0.0},
             {"freno", 1, 1.0, 0.0},
-            {"volante", 2, 1.0, 0.0},
+            {"volante", 2, 0.9280, -3.8254}, // Configuración calibrada (Legacy/YAML)
             {"suspension_fl", 3, 1.0, 0.0},
             {"suspension_fr", 4, 1.0, 0.0},
             {"suspension_rl", 5, 1.0, 0.0},

@@ -60,12 +60,16 @@ void BmsCanHandler::interpret_bms_message(const uint8_t* data, size_t length, co
     // Procesar según el tipo de parámetro
     switch (param) {
         case VOLTAJE_T:
+        case VOLTAJE_T_V2:
             process_voltage_message(index, value, battery_state);
             break;
         case TEMPERATURA_T:
+        case TEMPERATURA_T_V2:
             process_temperature_message(index, value, battery_state);
             break;
         case ESTADO_T:
+        case ESTADO_T_V2:
+        case STATUS_T_V2:
             process_state_message(index, value, battery_state);
             break;
         case ALARMA_T:

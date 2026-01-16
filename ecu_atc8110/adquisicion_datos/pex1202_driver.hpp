@@ -66,3 +66,18 @@ enum {
     IXPCI_RM_TRIGGER,
     IXPCI_RM_LAST_MODE
 };
+
+// Configuración de Gain (PEX-1202 Standard)
+// Bipolar +/- 5V suele ser el código 0 o 1 dependiendo del modelo H/L.
+// Asumiremos Gain 0 = +/- 5V, Gain 1 = +/- 10V para el modelo L (Low Gain).
+#define PEX_GAIN_BIP_5V   0x00
+#define PEX_GAIN_BIP_10V  0x01
+#define PEX_GAIN_UNI_5V   0x02 // Si soportado
+#define PEX_GAIN_UNI_10V  0x03 // Si soportado
+
+// Modo Single-Ended vs Differential
+// El modo se configura a menudo en el mismo registro o via jumpers en HW antiguos.
+// Si es por SW en ADGCR, suele ser bit 4 o similar, pero no está documentado.
+// Sin embargo, el informe dice "se configura en Modo single-ended".
+// Asumiremos que el default o la configuración de canal maneja la multiplexación.
+// Por ahora solo impondremos el GANANCIA en ADGCR.

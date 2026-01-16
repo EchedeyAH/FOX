@@ -10,7 +10,7 @@ namespace comunicacion_can {
 // ============================================================================
 
 // BMS (Battery Management System) - CAN2 @ 500 Kbps
-constexpr uint32_t ID_CAN_BMS = 0x180;
+constexpr uint32_t ID_CAN_BMS = 0x04D;
 
 // Motores - Comandos ECU → Motor (CAN1 @ 1 Mbps)
 constexpr uint32_t ID_MOTOR_1_CMD = 0x201;
@@ -36,6 +36,12 @@ constexpr char VOLTAJE_T = 'V';
 constexpr char TEMPERATURA_T = 'T';
 constexpr char ESTADO_T = 'E';
 constexpr char ALARMA_T = 'A';
+
+// V2 Protocol Characters
+constexpr char VOLTAJE_T_V2 = 'v';
+constexpr char TEMPERATURA_T_V2 = 't';
+constexpr char ESTADO_T_V2 = '%';
+constexpr char STATUS_T_V2 = 's';
 
 constexpr uint8_t NUM_CEL_BAT = 24;  // Número de celdas en el pack
 
