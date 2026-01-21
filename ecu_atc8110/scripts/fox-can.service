@@ -1,0 +1,16 @@
+[Unit]
+Description=FOX ECU CAN Interface Initialization
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/fox/ecu_atc8110/scripts/can_startup.sh
+StandardOutput=journal
+StandardError=journal
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
