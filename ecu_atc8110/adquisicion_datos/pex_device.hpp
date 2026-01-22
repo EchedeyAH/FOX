@@ -56,55 +56,53 @@ public:
         return fd;
     }
 
-    // DIO (entradas): /dev/ixpioX - Auto-detect working device
-    int GetDioFd(int index = 1) {
+    int GetDioFd(int /*index*/ = 1) {
         std::lock_guard<std::mutex> lock(dio_mutex_);
-        
-        // Si ya tenemos un FD válido, devolverlo
-        if (dio_fds_.count(index) && dio_fds_[index] >= 0) return dio_fds_[index];
 
-        // Si ya intentamos y falló permanentemente, no reintentar
-        if (dio_permanently_failed_) {
-            return -1;
+        // Usamos una única tarjeta DIO: key 0
+        if (dio_fds_.count(0) && dio_fds_[0] >= 0) return dio_fds_[0];
+
+        // Anti-spam: si falló hace <5s, no reintentar
+        auto now = std::chrono::steady_clock::now();
+        if (dio_last_fail_.time_since_epoch().count() != 0) {
+            auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - dio_last_fail_).count();
+            if (dt < 5) return -1;
         }
 
-        LOG_INFO("PexDevice", "Auto-detecting working DIO device...");
-        
-        // Intentar abrir /dev/ixpio0 hasta /dev/ixpio15
+        LOG_INFO("PexDevice", "Auto-detecting working DIO device (/dev/ixpio0..15)...");
+
         for (int i = 0; i <= 15; i++) {
             std::string dev_path = "/dev/ixpio" + std::to_string(i);
-            
-            // Intentar O_RDWR primero
+
             int fd = open(dev_path.c_str(), O_RDWR);
-            
             if (fd < 0) {
                 int e = errno;
-                // ENXIO (6) = dispositivo no existe o no es compatible
-                // ENOENT (2) = archivo no existe
-                if (e == ENXIO || e == ENOENT) {
-                    continue; // Probar siguiente
-                }
-                
-                // EBUSY (16) = dispositivo ocupado, intentar solo lectura
+
                 if (e == EBUSY) {
                     LOG_WARN("PexDevice", dev_path + " busy, trying O_RDONLY...");
                     fd = open(dev_path.c_str(), O_RDONLY);
-                    if (fd < 0) {
-                        continue;
+                    if (fd >= 0) {
+                        LOG_INFO("PexDevice", "DIO Device found: " + dev_path + " (FD: " + std::to_string(fd) + ")");
+                        dio_fds_[0] = fd;
+                        dio_detected_index_ = i;
+                        return fd;
                     }
                 }
+
+                // Cualquier fallo => siguiente
+                LOG_WARN("PexDevice", "Failed to open " + dev_path +
+                                     " errno=" + std::to_string(e) + " (" + std::string(strerror(e)) + ")");
+                continue;
             }
-            
-            // Si llegamos aquí, el dispositivo se abrió correctamente
+
             LOG_INFO("PexDevice", "DIO Device found: " + dev_path + " (FD: " + std::to_string(fd) + ")");
-            dio_fds_[index] = fd;
+            dio_fds_[0] = fd;
             dio_detected_index_ = i;
             return fd;
         }
 
-        // No se encontró ningún dispositivo funcional
         LOG_ERROR("PexDevice", "No working DIO device found in /dev/ixpio0-15");
-        dio_permanently_failed_ = true;
+        dio_last_fail_ = now;
         return -1;
     }
 
@@ -140,7 +138,7 @@ private:
     std::set<int> failed_dio_;
     std::map<int, std::chrono::steady_clock::time_point> last_fail_dio_;
     std::mutex dio_mutex_;
-    bool dio_permanently_failed_ = false;
+    std::chrono::steady_clock::time_point dio_last_fail_{};
     int dio_detected_index_ = -1;
 };
 

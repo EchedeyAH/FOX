@@ -1,4 +1,6 @@
 #include "pex1202l.hpp"
+#include "ixpio.h"
+
 #include "../common/logging.hpp"
 #include "pex1202_driver.hpp"
 #include "pex_device.hpp"
@@ -6,6 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+
 #include <cstring>
 #include <cerrno>
 #include <cstdio>
@@ -20,26 +23,26 @@ public:
     ~Pex1202L() override { stop(); }
 
     bool start() override {
-        int fd = PexDevice::GetInstance().GetFd(1); // Tarjeta 1 (Sensores)
+        int fd = PexDevice::GetInstance().GetFd(1); // Tarjeta 1 (Sensores / PEX-1202)
         if (fd < 0) {
             LOG_WARN("Pex1202L", "Iniciando en MODO SIMULACIÓN por falta de hardware en /dev/ixpci1.");
             LOG_INFO("Pex1202L", "Control: echo <valor> > /tmp/force_accel");
             mock_mode_ = true;
             return true;
         }
-        // Inicialización de Hardware: Configurar Rango +/- 5V
-        // Necesario según informe técnico para evitar lecturas flotantes o escala incorrecta (default +/-10V)
+
+        // Configurar rango +/-5V (si el driver lo soporta)
         ixpci_reg reg;
         reg.id = IXPCI_ADGCR;
         reg.value = PEX_GAIN_BIP_5V; // +/- 5V
         reg.mode = IXPCI_RM_NORMAL;
-        
+
         int rc = ioctl(fd, IXPCI_WRITE_REG, &reg);
         if (rc < 0) {
-             LOG_ERROR("Pex1202L", "Fallo configurando Gain +/-5V (ioctl IXPCI_WRITE_REG ADGCR)");
-             // No return false, intentamos seguir
+            LOG_ERROR("Pex1202L", "Fallo configurando Gain +/-5V (ioctl IXPCI_WRITE_REG ADGCR)");
+            // no return false: seguimos
         } else {
-             LOG_INFO("Pex1202L", "Configurado Rango +/- 5V (Gain Code: 0x00)");
+            LOG_INFO("Pex1202L", "Configurado Rango +/- 5V (Gain Code: 0x00)");
         }
 
         return true;
@@ -52,43 +55,43 @@ public:
         samples.reserve(config_.size() + 1);
 
         /* --------- Lectura digital (interruptor de freno) ---------- */
-        int dio_fd = PexDevice::GetInstance().GetDioFd(1); // Tarjeta 1
         double brake_switch_val = 0.0;
+        int dio_fd = PexDevice::GetInstance().GetDioFd(1); // DIO (IxPIO) asociado a tarjeta 1 (según tu lógica)
 
         if (dio_fd >= 0) {
-            uint32_t di_state = 0;
+            ixpio_digital_t di;
+            std::memset(&di, 0, sizeof(di));
 
-            // Uso de la macro oficial definida en pex1202_driver.hpp
-            int rc = ioctl(dio_fd, IXPCI_IOCTL_DI, &di_state);
+            int rc = ioctl(dio_fd, IXPIO_DIGITAL_IN, &di);
             if (rc >= 0) {
-                // Log del di_state en hex (y cuando cambia) para deducir máscara correcta
-                static uint32_t last_di = 0;
-                static bool first = true;
+                // El bitmap viene en di.data (union). Para no equivocarnos, logueamos u64.
+                const uint64_t di_state64 = di.data.u64;
+
+                static uint64_t last_di = ~0ull;
                 static int log_cnt = 0;
 
-                if (first || di_state != last_di || (log_cnt++ % 20 == 0)) {
+                if (di_state64 != last_di || (log_cnt++ % 20 == 0)) {
                     std::ostringstream oss;
-                    oss << "DI ioctl OK. cmd=0x" << std::hex << std::setw(8) << std::setfill('0')
-                        << IXPCI_IOCTL_DI
-                        << " | di_state=0x" << std::hex << std::setw(8) << std::setfill('0') << di_state;
+                    oss << "IXPIO_DIGITAL_IN OK | di.data.u64=0x"
+                        << std::hex << std::setw(16) << std::setfill('0') << di_state64
+                        << " (tambien u16=0x" << std::setw(4) << (di.data.u16 & 0xFFFFu)
+                        << " u32=0x" << std::setw(8) << (di.data.u32) << ")";
                     LOG_INFO("Pex1202L", oss.str());
-                    first = false;
-                    last_di = di_state;
+                    last_di = di_state64;
                 }
 
-                // Por ahora: activo-alto
-                static constexpr uint32_t kBrakeMask = (1u << 0);
-                bool brake_raw = (di_state & kBrakeMask) != 0;
+                // TODO: Ajustar máscara real del freno cuando veamos qué bit cambia.
+                // Por defecto: bit0
+                static constexpr uint64_t kBrakeMask = (1ull << 0);
+                const bool brake_raw = (di_state64 & kBrakeMask) != 0;
                 brake_switch_val = brake_raw ? 1.0 : 0.0;
             } else {
-                // Throttle warnings para no spamear
                 static int warn_cnt = 0;
                 if (warn_cnt++ % 20 == 0) {
                     int e = errno;
                     std::ostringstream oss;
-                    oss << "Fallo leyendo DI (ioctl IXPIO_READ_DI). "
-                        << "cmd=0x" << std::hex << std::setw(8) << std::setfill('0') << IXPCI_IOCTL_DI
-                        << " errno=" << std::dec << e << " (" << strerror(e) << ")";
+                    oss << "Fallo leyendo DI (ioctl IXPIO_DIGITAL_IN). errno="
+                        << e << " (" << strerror(e) << ")";
                     LOG_WARN("Pex1202L", oss.str());
                 }
             }
@@ -103,6 +106,7 @@ public:
             }
             fclose(f_brake);
         }
+
         samples.push_back({"brake_switch", brake_switch_val});
 
         /* --------- Modo simulación --------- */
@@ -114,6 +118,7 @@ public:
                 if (fscanf(f, "%f", &val) == 1) accel_val = static_cast<double>(val);
                 fclose(f);
             }
+
             for (const auto& channel : config_) {
                 double val = 0.0;
                 if (channel.name == "acelerador") val = accel_val;
@@ -123,10 +128,11 @@ public:
         }
 
         /* --------- Lectura analógica (PEX-1202) --------- */
-        int fd = PexDevice::GetInstance().GetFd();
+        int fd = PexDevice::GetInstance().GetFd(1);
         if (fd < 0) return samples;
 
         bool any_data_read = false;
+
         for (const auto& channel : config_) {
             ixpci_reg reg;
 
@@ -134,13 +140,13 @@ public:
             reg.id = IXPCI_AICR;
             reg.value = channel.channel;
             reg.mode = IXPCI_RM_NORMAL;
-            ioctl(fd, IXPCI_WRITE_REG, &reg);
+            (void)ioctl(fd, IXPCI_WRITE_REG, &reg);
 
             // Iniciar conversión
             reg.id = IXPCI_ADST;
             reg.value = 0;
             reg.mode = IXPCI_RM_NORMAL;
-            ioctl(fd, IXPCI_WRITE_REG, &reg);
+            (void)ioctl(fd, IXPCI_WRITE_REG, &reg);
 
             // Leer valor
             reg.id = IXPCI_AI;
@@ -148,49 +154,24 @@ public:
             reg.mode = IXPCI_RM_READY;
             if (ioctl(fd, IXPCI_READ_REG, &reg) < 0) {
                 reg.mode = IXPCI_RM_NORMAL;
-                ioctl(fd, IXPCI_READ_REG, &reg);
+                (void)ioctl(fd, IXPCI_READ_REG, &reg);
             }
 
-            uint16_t raw_val = reg.value & 0x0FFF;
+            const uint16_t raw_val = static_cast<uint16_t>(reg.value & 0x0FFF);
             if (raw_val > 0) any_data_read = true;
 
-            // Escala y offset del YAML
-            // Escala y offset del YAML
-            // NOTA: El driver devuelve 12-bit (0-4095).
-            // En modo Bipolar +/-5V:
-            // 0 counts = -5V
-            // 2048 counts = 0V
-            // 4095 counts = +5V
-            
-            // Para señales 0-5V (Pedales, Volante):
-            // Valor esperado: 2048 (0V) a 4095 (5V)
-            
-            double value_volts = 0.0;
-            
-            // Convertir raw a volts (Aprox para +/-5V)
+            // Conversión aproximada para +/-5V:
             // V = (raw - 2048) * (5.0 / 2048.0)
-            value_volts = (static_cast<double>(raw_val) - 2048.0) * (5.0 / 2048.0);
-            
-            // Si el valor es negativo (pequeño offset de masa), clipear a 0
+            double value_volts = (static_cast<double>(raw_val) - 2048.0) * (5.0 / 2048.0);
             if (value_volts < 0.0) value_volts = 0.0;
-            
-            // Aplicar transformación lineal del YAML (scale*V + offset)
-            // Si scale=1.0 y offset=0.0 (default), tenemos Volts.
-            // Para acelerador/freno queremos 0.0 - 1.0 (Normalizado)
-            
-            double final_value = value_volts;
 
+            double value = 0.0;
             if (channel.name == "acelerador" || channel.name == "freno") {
-                 // Normalizar 0-5V -> 0.0-1.0
-                 final_value = value_volts / 5.0;
-                 if (final_value > 1.0) final_value = 1.0;
+                value = value_volts / 5.0;
+                if (value > 1.0) value = 1.0;
             } else {
-                 // Otros sensores (volante, etc) usan config YAML
-                 final_value = value_volts * channel.scale + channel.offset;
+                value = value_volts * channel.scale + channel.offset;
             }
-            
-            // Asignar a variable de salida
-            double value = final_value;
 
             // Override de acelerador (modo real)
             if (channel.name == "acelerador") {
