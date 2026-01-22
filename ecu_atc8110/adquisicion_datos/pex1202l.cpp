@@ -1,5 +1,5 @@
 #include "pex1202l.hpp"
-#include "ixpio.h"
+#include <ixpio.h>
 
 #include "../common/logging.hpp"
 #include "pex1202_driver.hpp"
@@ -55,8 +55,8 @@ public:
         samples.reserve(config_.size() + 1);
 
         /* --------- Lectura digital (interruptor de freno) ---------- */
+        int dio_fd = PexDevice::GetInstance().GetDioFd(1); // Tarjeta 1
         double brake_switch_val = 0.0;
-        int dio_fd = PexDevice::GetInstance().GetDioFd(1); // DIO (IxPIO) asociado a tarjeta 1 (según tu lógica)
 
         if (dio_fd >= 0) {
             ixpio_digital_t di;
@@ -64,38 +64,38 @@ public:
 
             int rc = ioctl(dio_fd, IXPIO_DIGITAL_IN, &di);
             if (rc >= 0) {
-                // El bitmap viene en di.data (union). Para no equivocarnos, logueamos u64.
-                const uint64_t di_state64 = di.data.u64;
+                uint16_t di_state = di.data.u16; // <-- bitmap DI (típico 16 bits)
 
-                static uint64_t last_di = ~0ull;
-                static int log_cnt = 0;
+            // Log cuando cambie (o cada N)
+            static uint16_t last_di = 0;
+            static bool first = true;
+            static int log_cnt = 0;
 
-                if (di_state64 != last_di || (log_cnt++ % 20 == 0)) {
-                    std::ostringstream oss;
-                    oss << "IXPIO_DIGITAL_IN OK | di.data.u64=0x"
-                        << std::hex << std::setw(16) << std::setfill('0') << di_state64
-                        << " (tambien u16=0x" << std::setw(4) << (di.data.u16 & 0xFFFFu)
-                        << " u32=0x" << std::setw(8) << (di.data.u32) << ")";
-                    LOG_INFO("Pex1202L", oss.str());
-                    last_di = di_state64;
-                }
+            if (first || di_state != last_di || (log_cnt++ % 20 == 0)) {
+                std::ostringstream oss;
+                oss << "IXPIO_DIGITAL_IN OK | di_state=0x"
+                    << std::hex << std::setw(4) << std::setfill('0') << di_state;
+                LOG_INFO("Pex1202L", oss.str());
+                first = false;
+                last_di = di_state;
+            }
 
-                // TODO: Ajustar máscara real del freno cuando veamos qué bit cambia.
-                // Por defecto: bit0
-                static constexpr uint64_t kBrakeMask = (1ull << 0);
-                const bool brake_raw = (di_state64 & kBrakeMask) != 0;
-                brake_switch_val = brake_raw ? 1.0 : 0.0;
-            } else {
-                static int warn_cnt = 0;
-                if (warn_cnt++ % 20 == 0) {
-                    int e = errno;
-                    std::ostringstream oss;
-                    oss << "Fallo leyendo DI (ioctl IXPIO_DIGITAL_IN). errno="
-                        << e << " (" << strerror(e) << ")";
-                    LOG_WARN("Pex1202L", oss.str());
-                }
+            // Por ahora: DI0 como freno (luego lo descubrimos si no es)
+            static constexpr uint16_t kBrakeMask = (1u << 0);
+            bool brake_raw = (di_state & kBrakeMask) != 0;
+            brake_switch_val = brake_raw ? 1.0 : 0.0;
+        } else {
+            static int warn_cnt = 0;
+            if (warn_cnt++ % 20 == 0) {
+                int e = errno;
+                std::ostringstream oss;
+                oss << "Fallo leyendo DI (ioctl IXPIO_DIGITAL_IN). "
+                    << "errno=" << e << " (" << strerror(e) << ")";
+                LOG_WARN("Pex1202L", oss.str());
             }
         }
+    }
+  
 
         // Override de prueba (si existe /tmp/force_brake)
         FILE* f_brake = fopen("/tmp/force_brake", "r");

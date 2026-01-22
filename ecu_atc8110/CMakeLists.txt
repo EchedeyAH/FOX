@@ -21,6 +21,7 @@ file(GLOB ECU_LIB_SOURCES
 add_executable(${PROJECT_NAME} logica_sistema/main.cpp ${ECU_LIB_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+    /home/(fox/Drivers/PEX-DA16/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/common
     ${CMAKE_CURRENT_SOURCE_DIR}/comunicacion_can
@@ -42,7 +43,9 @@ add_library(ecu_adquisicion_datos STATIC ${ADQ_SOURCES})
 add_library(ecu_comunicacion_can STATIC ${CAN_SOURCES})
 
 target_include_directories(ecu_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(ecu_adquisicion_datos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ecu_adquisicion_datos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    /home/fox/Drivers/PEX-DA16/include
+)
 target_include_directories(ecu_comunicacion_can PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Subdirectorios
