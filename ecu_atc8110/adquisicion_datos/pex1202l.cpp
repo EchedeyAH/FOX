@@ -65,6 +65,38 @@ public:
             int rc = ioctl(dio_fd, IXPIO_DIGITAL_IN, &di);
             if (rc >= 0) {
                 uint16_t di_state = di.data.u16; // <-- bitmap DI (típico 16 bits)
+                int rc = ioctl(dio_fd, IXPIO_DIGITAL_IN, &di);
+                if (rc >= 0) {
+                    uint16_t di_state = di.data.u16;
+
+                    // ===== DEBUG CRÍTICO: ver TODOS los bits =====
+                    std::ostringstream oss;
+                    oss << "IXPIO_DI RAW = 0x"
+                        << std::hex << std::setw(4) << std::setfill('0') << di_state
+                        << " | bits activos: ";
+
+                    for (int i = 0; i < 16; ++i) {
+                        if (di_state & (1u << i)) {
+                            oss << i << " ";
+                        }
+                    }
+
+                    LOG_INFO("Pex1202L", oss.str());
+                    // ============================================
+
+                    // ❌ NO apliques aún ninguna máscara fija
+                    brake_switch_val = 0.0;   // lo forzamos a 0 mientras diagnosticamos
+                }
+
+                // Override de prueba (si existe /tmp/force_brake)
+                FILE* f_brake = fopen("/tmp/force_brake", "r");
+                if (f_brake) {
+                    int force_val = 0;
+                    if (fscanf(f_brake, "%d", &force_val) == 1 && force_val > 0) {
+                        di_state = (1u << 0); // Forzamos DI0
+                    }
+                    fclose(f_brake);
+                }
 
             // Log cuando cambie (o cada N)
             static uint16_t last_di = 0;
