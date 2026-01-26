@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 
-#include "../common/analog_sample.hpp"
-#include "../common/isensor_reader.hpp"
+#include "common/analog_sample.hpp"
+#include "common/isensor_reader.hpp"
 
 // =============================
 // DEFINICIÓN BRAKE SWITCH (IXPIO)
