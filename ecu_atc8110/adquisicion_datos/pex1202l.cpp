@@ -46,6 +46,40 @@ public:
     std::vector<common::AnalogSample> read_samples() override {
         std::vector<common::AnalogSample> samples;
         samples.reserve(config_.size() + 1);
+        // ===== DEBUG: ESCANEO DE TODOS LOS CANALES =====
+        static int scan_cnt = 0;
+        if (scan_cnt++ % 20 == 0) {   // cada ~1s
+            int fd = PexDevice::GetInstance().GetFd(1);
+            if (fd >= 0) {
+                for (int ch = 0; ch < 16; ++ch) {
+                    ixpci_reg reg{};
+
+                    // seleccionar canal
+                    reg.id = IXPCI_AICR;
+                    reg.value = ch;
+                    reg.mode = IXPCI_RM_NORMAL;
+                    ioctl(fd, IXPCI_WRITE_REG, &reg);
+
+                    // start conversion
+                    reg.id = IXPCI_ADST;
+                    reg.value = 0;
+                    ioctl(fd, IXPCI_WRITE_REG, &reg);
+
+                    // read
+                    reg.id = IXPCI_AI;
+                    reg.mode = IXPCI_RM_READY;
+                    ioctl(fd, IXPCI_READ_REG, &reg);
+
+                    uint16_t raw = reg.value & 0x0FFF;
+                    double volts = (raw - 2048.0) * (5.0 / 2048.0);
+
+                    LOG_INFO("ADC_SCAN",
+                        "CH" + std::to_string(ch) +
+                        " RAW=" + std::to_string(raw) +
+                        " V=" + std::to_string(volts));
+                }
+            }
+        }
 
         /* ===== MODO SIMULACIÓN ===== */
         if (mock_mode_) {
