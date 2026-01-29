@@ -47,33 +47,6 @@ public:
         std::vector<common::AnalogSample> samples;
         samples.reserve(config_.size() + 1);
 
-        /* ===== LECTURA FRENO DIGITAL ===== */
-        double brake_switch_val = 0.0;
-        int dio_fd = PexDevice::GetInstance().GetDioFd(1);
-
-        if (dio_fd >= 0) {
-            ixpio_digital_t di{};
-            if (ioctl(dio_fd, IXPIO_DIGITAL_IN, &di) >= 0) {
-                uint16_t di_state = di.data.u16;
-
-                // Debug completo de bits
-                std::ostringstream oss;
-                oss << "IXPIO_DI RAW = 0x"
-                    << std::hex << std::setw(4) << std::setfill('0') << di_state
-                    << " | bits activos: ";
-                for (int i = 0; i < 16; ++i) {
-                    if (di_state & (1u << i)) oss << i << " ";
-                }
-                LOG_INFO("Pex1202L", oss.str());
-
-                // DI0 = freno
-                static constexpr uint16_t BRAKE_MASK = (1u << 0);
-                brake_switch_val = (di_state & BRAKE_MASK) ? 1.0 : 0.0;
-            }
-        }
-
-        samples.push_back({"brake_switch", brake_switch_val});
-
         /* ===== MODO SIMULACIÓN ===== */
         if (mock_mode_) {
             for (const auto& channel : config_) {

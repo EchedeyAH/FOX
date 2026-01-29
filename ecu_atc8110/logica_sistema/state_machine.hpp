@@ -115,7 +115,7 @@ inline void StateMachine::step()
         // Lógica de arranque con seguridad: Esperar freno
         refresh_sensors();
         
-        if (snapshot_.vehicle.brake >= 0.9) { // Freno pulsado (Digital 1.0)
+        if (snapshot_.vehicle.brake >= 0.2) { // Freno analógico pisado
              LOG_INFO("FSM", "Freno detectado. Iniciando secuencia de arranque...");
              if (initialize_motors()) {
                  transition_to(EstadoEcu::Operando);
@@ -189,7 +189,6 @@ inline void StateMachine::refresh_sensors()
     for (const auto &s : samples) {
         if (s.name == "acelerador") snapshot_.vehicle.accelerator = s.value;
         else if (s.name == "freno") snapshot_.vehicle.brake = std::max(snapshot_.vehicle.brake, s.value);
-        else if (s.name == "brake_switch") snapshot_.vehicle.brake = std::max(snapshot_.vehicle.brake, s.value); // Digital override
         else if (s.name == "volante") snapshot_.vehicle.steering = s.value;
         else if (s.name == "suspension_fl") snapshot_.vehicle.suspension_mm[0] = s.value;
         else if (s.name == "suspension_fr") snapshot_.vehicle.suspension_mm[1] = s.value;
@@ -215,8 +214,9 @@ inline void StateMachine::refresh_sensors()
     // Log real accelerator value periodically
     static int log_cnt = 0;
     if (log_cnt++ % 20 == 0) { 
-        LOG_INFO("StateMachine", "Sensor Acelerador: " + std::to_string(snapshot_.vehicle.accelerator) + 
-                 " | Freno: " + std::to_string(snapshot_.vehicle.brake));
+        LOG_INFO("StateMachine",
+    "Sensor Acelerador: " + std::to_string(snapshot_.vehicle.accelerator) +
+    " | Freno (analógico): " + std::to_string(snapshot_.vehicle.brake));
     }
 }
 
