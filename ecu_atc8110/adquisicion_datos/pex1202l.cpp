@@ -31,11 +31,11 @@ public:
 
         ixpci_reg reg{};
         reg.id = IXPCI_ADGCR;
-        reg.value = PEX_GAIN_BIP_5V;
+        reg.value = PEX_GAIN_UNI_10V;  // Modo unipolar 0-10V
         reg.mode = IXPCI_RM_NORMAL;
 
         if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-            LOG_WARN("Pex1202L", "No se pudo configurar rango ±5V");
+            LOG_WARN("Pex1202L", "No se pudo configurar rango unipolar 0-10V");
         }
 
         return true;
@@ -71,7 +71,7 @@ public:
                     ioctl(fd, IXPCI_READ_REG, &reg);
 
                     uint16_t raw = reg.value & 0x0FFF;
-                    double volts = (raw - 2048.0) * (5.0 / 2048.0);
+                    double volts = raw * 10.0 / 4095.0;  // Unipolar 0-10V
 
                     LOG_INFO("ADC_SCAN",
                         "CH" + std::to_string(ch) +
@@ -110,12 +110,11 @@ public:
             ioctl(fd, IXPCI_READ_REG, &reg);
 
             uint16_t raw = reg.value & 0x0FFF;
-            double volts = (raw - 2048.0) * (5.0 / 2048.0);
-            if (volts < 0.0) volts = 0.0;
+            double volts = raw * 10.0 / 4095.0;  // Unipolar 0-10V
 
             double value = volts;
             if (channel.name == "acelerador" || channel.name == "freno") {
-                value = volts / 5.0;
+                value = volts / 10.0;  // Normalizar 0-10V a 0-1
                 if (value > 1.0) value = 1.0;
             } else {
                 value = volts * channel.scale + channel.offset;
