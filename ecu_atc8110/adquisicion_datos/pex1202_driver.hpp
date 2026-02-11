@@ -234,7 +234,7 @@ inline int read_adc(int fd)
         }
     } while (!(reg.value & 0x20));
 
-    rad.id = IXPCI_AD;
+    rad.id = IXPCI_AI;
     if (ioctl(fd, IXPCI_READ_REG, &rad) < 0) {
         return -1;
     }

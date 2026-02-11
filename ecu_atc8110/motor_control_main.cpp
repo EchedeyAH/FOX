@@ -1,7 +1,7 @@
 #include "logica_sistema/state_machine.hpp"
 #include "common/logging.hpp"
 #include <csignal>
-#antml:parameter name="chrono">
+#include <chrono>
 #include <thread>
 #include <iostream>
 
