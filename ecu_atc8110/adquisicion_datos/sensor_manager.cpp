@@ -11,14 +11,35 @@ class SensorManager::Impl {
 public:
     Impl()
     {
+        // Mapeo de canales exacto del código C funcional
+        // Ver read_channels.c para referencia de pines físicos
         SensorConfig base_config{
-            {"acelerador", 0, 1.0, 0.0},
-            {"freno", 1, 1.0, 0.0},
-            {"volante", 2, 0.9280, -3.8254}, // Configuración calibrada (Legacy/YAML)
-            {"suspension_fl", 3, 1.0, 0.0},
-            {"suspension_fr", 4, 1.0, 0.0},
-            {"suspension_rl", 5, 1.0, 0.0},
-            {"suspension_rr", 6, 1.0, 0.0},
+            // Canal AI_1 (pin 2) - Acelerador - Unipolar 0-5V
+            {"acelerador", 1, 1.0, 0.0},
+            
+            // Canal AI_3 (pin 4) - Freno - Unipolar 0-5V
+            {"freno", 3, 1.0, 0.0},
+            
+            // Canal AI_4 (pin 5) - Volante - Unipolar 0-5V
+            {"volante", 4, 0.9280, -3.8254}, // Calibración legacy
+            
+            // Canal AI_2 (pin 3) - Corriente Eje Delantero - Bipolar ±5V
+            {"corriente_eje_d", 2, 1.0, 0.0},
+            
+            // Canal AI_5 (pin 6) - Corriente Eje Trasero - Bipolar ±5V
+            {"corriente_eje_t", 5, 1.0, 0.0},
+            
+            // Canal AI_10 (pin 11) - Suspensión Delantera Izquierda - Unipolar 0-5V
+            {"suspension_fl", 10, 1.0, 0.0},
+            
+            // Canal AI_12 (pin 13) - Suspensión Delantera Derecha - Unipolar 0-5V
+            {"suspension_fr", 12, 1.0, 0.0},
+            
+            // Canal AI_6 (pin 7) - Suspensión Trasera Izquierda - Unipolar 0-5V
+            {"suspension_rl", 6, 1.0, 0.0},
+            
+            // Canal AI_8 (pin 9) - Suspensión Trasera Derecha - Unipolar 0-5V
+            {"suspension_rr", 8, 1.0, 0.0},
         };
         reader_ = CreatePex1202L(base_config);
     }

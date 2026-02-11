@@ -45,41 +45,7 @@ public:
 
     std::vector<common::AnalogSample> read_samples() override {
         std::vector<common::AnalogSample> samples;
-        samples.reserve(config_.size() + 1);
-        // ===== DEBUG: ESCANEO DE TODOS LOS CANALES =====
-        static int scan_cnt = 0;
-        if (scan_cnt++ % 20 == 0) {   // cada ~1s
-            int fd = PexDevice::GetInstance().GetFd(1);
-            if (fd >= 0) {
-                for (int ch = 0; ch < 16; ++ch) {
-                    ixpci_reg reg{};
-
-                    // seleccionar canal
-                    reg.id = IXPCI_AICR;
-                    reg.value = ch;
-                    reg.mode = IXPCI_RM_NORMAL;
-                    ioctl(fd, IXPCI_WRITE_REG, &reg);
-
-                    // start conversion
-                    reg.id = IXPCI_ADST;
-                    reg.value = 0;
-                    ioctl(fd, IXPCI_WRITE_REG, &reg);
-
-                    // read
-                    reg.id = IXPCI_AI;
-                    reg.mode = IXPCI_RM_READY;
-                    ioctl(fd, IXPCI_READ_REG, &reg);
-
-                    uint16_t raw = reg.value & 0x0FFF;
-                    double volts = raw * 10.0 / 4095.0;  // Unipolar 0-10V
-
-                    LOG_INFO("ADC_SCAN",
-                        "CH" + std::to_string(ch) +
-                        " RAW=" + std::to_string(raw) +
-                        " V=" + std::to_string(volts));
-                }
-            }
-        }
+        samples.reserve(config_.size());
 
         /* ===== MODO SIMULACIÓN ===== */
         if (mock_mode_) {
@@ -89,35 +55,63 @@ public:
             return samples;
         }
 
-        /* ===== LECTURA ANALÓGICA ===== */
+        /* ===== LECTURA ANALÓGICA CON HANDSHAKE MAGICSCAN ===== */
         int fd = PexDevice::GetInstance().GetFd(1);
         if (fd < 0) return samples;
 
+        // IMPORTANTE: Lectura dummy en AI_15 para estabilizar MUX
+        if (pex1202::select_channel(fd, AD_CHANNEL_DUMMY, AD_CONFIG_UNIPOLAR_5V) < 0) {
+            LOG_WARN("Pex1202L", "Error selec canal dummy");
+            return samples;
+        }
+        int dummy_val = pex1202::read_adc(fd);
+        if (dummy_val < 0) {
+            LOG_WARN("Pex1202L", "Error lectura dummy");
+            return samples;
+        }
+
+        // Leer los canales configurados
         for (const auto& channel : config_) {
-            ixpci_reg reg{};
+            // Determinar configuración bipolar/unipolar según canal
+            int config_code = AD_CONFIG_UNIPOLAR_5V;  // default
+            float v_max = 5.0f;
+            
+            if (channel.name == "corriente_eje_d" || channel.name == "corriente_eje_t") {
+                config_code = AD_CONFIG_BIPOLAR_5V;
+                v_max = 5.0f;
+            }
 
-            reg.id = IXPCI_AICR;
-            reg.value = channel.channel;
-            reg.mode = IXPCI_RM_NORMAL;
-            ioctl(fd, IXPCI_WRITE_REG, &reg);
+            // Seleccionar canal con handshake
+            if (pex1202::select_channel(fd, channel.channel, config_code) < 0) {
+                LOG_WARN("Pex1202L", "Error selec canal " + std::to_string(channel.channel));
+                samples.push_back({channel.name, 0.0});
+                continue;
+            }
 
-            reg.id = IXPCI_ADST;
-            reg.value = 0;
-            ioctl(fd, IXPCI_WRITE_REG, &reg);
+            // Leer ADC
+            int raw = pex1202::read_adc(fd);
+            if (raw < 0) {
+                LOG_WARN("Pex1202L", "Error lectura canal " + std::to_string(channel.channel));
+                samples.push_back({channel.name, 0.0});
+                continue;
+            }
 
-            reg.id = IXPCI_AI;
-            reg.mode = IXPCI_RM_READY;
-            ioctl(fd, IXPCI_READ_REG, &reg);
+            // Convertir a voltaje
+            float voltage = pex1202::compute_voltage(raw, config_code, v_max);
 
-            uint16_t raw = reg.value & 0x0FFF;
-            double volts = raw * 10.0 / 4095.0;  // Unipolar 0-10V
-
-            double value = volts;
+            // Aplicar escalado y normalización
+            double value = voltage;
             if (channel.name == "acelerador" || channel.name == "freno") {
-                value = volts / 10.0;  // Normalizar 0-10V a 0-1
+                // Normalizar 0-5V a 0-1
+                value = voltage / 5.0;
+                if (value < 0.0) value = 0.0;
                 if (value > 1.0) value = 1.0;
+            } else if (channel.name == "corriente_eje_d" || channel.name == "corriente_eje_t") {
+                // Currents are bipolar ±5V, scale/offset defined by SensorManager
+                value = voltage * channel.scale + channel.offset;
             } else {
-                value = volts * channel.scale + channel.offset;
+                // Other channels (suspensions, steering)
+                value = voltage * channel.scale + channel.offset;
             }
 
             samples.push_back({channel.name, value});

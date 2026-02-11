@@ -87,12 +87,13 @@ inline void StateMachine::start()
 
     sensores_.start();
     
-    // Inicializar PEX-DA16
+    // Inicializar PEX-DA16 (OPCIONAL - no requerida para control CAN)
     actuator_ = adquisicion_datos::CreatePexDa16();
-    if (actuator_->start()) {
-        LOG_INFO("StateMachine", "PEX-DA16 inicializada correctamente");
+    if (actuator_ && actuator_->start()) {
+        LOG_INFO("StateMachine", "PEX-DA16 disponible (salidas analógicas activas)");
     } else {
-        LOG_ERROR("StateMachine", "Fallo al inicializar PEX-DA16");
+        LOG_WARN("StateMachine", "PEX-DA16 no disponible (control solo por CAN)");
+        actuator_ = nullptr;  // Desactivar
     }
 
     controllers_.push_back(control_vehiculo::CreateBatteryManager());
@@ -257,11 +258,12 @@ inline void StateMachine::send_motor_commands()
             voltage_cmd = 0.0;
         }
 
-        // Write to DAQ
+        // Write to DAQ (Analog Outputs) - Solo si PEX-DA16 está disponible
         if (actuator_) {
              std::string ch = "AO" + std::to_string(i); // AO0, AO1, AO2, AO3
              actuator_->write_output(ch, voltage_cmd);
         }
+        // Si no hay PEX-DA16, el control es 100% por CAN (sin salidas analógicas)
     }
 }
 
@@ -290,11 +292,14 @@ inline bool StateMachine::initialize_motors()
     
     LOG_INFO("StateMachine", "Iniciando secuencia de activación...");
     
-    // 1. Activar señal hardware ENABLE (PEX-DA16)
+    // 1. Activar señal hardware ENABLE (PEX-DA16) - Solo si está disponible
     if (actuator_) {
         LOG_INFO("StateMachine", "Activando señal ENABLE (Hardware)...");
         actuator_->write_output("ENABLE", 1.0);
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Esperar relé
+    } else {
+        LOG_WARN("StateMachine", "PEX-DA16 no disponible - señal ENABLE no activada");
+        LOG_INFO("StateMachine", "Continuando solo con activación CAN...");
     }
     
     // 2. Secuencia CAN (usando can_motors_)

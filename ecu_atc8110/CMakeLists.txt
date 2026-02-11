@@ -42,6 +42,27 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE Threads::Threads stdc++fs
 )
 
+# Motor Control Program (simplified main for motor testing)
+add_executable(motor_control
+    motor_control_main.cpp
+    ${ECU_LIB_SOURCES}
+)
+
+target_include_directories(motor_control PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/comunicacion_can
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${CMAKE_CURRENT_SOURCE_DIR}/control_vehiculo
+    ${CMAKE_CURRENT_SOURCE_DIR}/interfaces
+    ${CMAKE_CURRENT_SOURCE_DIR}/logica_sistema
+    ${IXPIO_INCLUDE}
+)
+
+target_link_libraries(motor_control
+    PRIVATE Threads::Threads stdc++fs
+)
+
 # ===== LIBRERÍAS =====
 file(GLOB COMMON_SOURCES common/*.cpp)
 file(GLOB ADQ_SOURCES adquisicion_datos/*.cpp)
