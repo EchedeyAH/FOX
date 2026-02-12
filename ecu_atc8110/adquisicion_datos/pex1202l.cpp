@@ -57,18 +57,28 @@ public:
 
         /* ===== LECTURA ANALÓGICA CON HANDSHAKE MAGICSCAN ===== */
         int fd = PexDevice::GetInstance().GetFd(1);
-        if (fd < 0) return samples;
+        if (fd < 0) {
+            LOG_ERROR("Pex1202L", "FD inválido");
+            return samples;
+        }
+
+        // DEBUG: Logging detallado
+        static int debug_count = 0;
+        bool debug_this_cycle = (debug_count++ % 20 == 0);
 
         // IMPORTANTE: Lectura dummy en AI_15 para estabilizar MUX
+        if (debug_this_cycle) LOG_INFO("Pex1202L", "Seleccionando canal dummy AI_15...");
         if (pex1202::select_channel(fd, AD_CHANNEL_DUMMY, AD_CONFIG_UNIPOLAR_5V) < 0) {
-            LOG_WARN("Pex1202L", "Error selec canal dummy");
+            LOG_ERROR("Pex1202L", "FALLO: Handshake en canal dummy");
             return samples;
         }
+        
         int dummy_val = pex1202::read_adc(fd);
         if (dummy_val < 0) {
-            LOG_WARN("Pex1202L", "Error lectura dummy");
+            LOG_ERROR("Pex1202L", "FALLO: Lectura ADC dummy");
             return samples;
         }
+        if (debug_this_cycle) LOG_INFO("Pex1202L", "Dummy OK: raw=" + std::to_string(dummy_val));
 
         // Leer los canales configurados
         for (const auto& channel : config_) {
@@ -83,7 +93,7 @@ public:
 
             // Seleccionar canal con handshake
             if (pex1202::select_channel(fd, channel.channel, config_code) < 0) {
-                LOG_WARN("Pex1202L", "Error selec canal " + std::to_string(channel.channel));
+                LOG_ERROR("Pex1202L", "FALLO handshake CH" + std::to_string(channel.channel) + " (" + channel.name + ")");
                 samples.push_back({channel.name, 0.0});
                 continue;
             }
@@ -91,13 +101,19 @@ public:
             // Leer ADC
             int raw = pex1202::read_adc(fd);
             if (raw < 0) {
-                LOG_WARN("Pex1202L", "Error lectura canal " + std::to_string(channel.channel));
+                LOG_ERROR("Pex1202L", "FALLO ADC CH" + std::to_string(channel.channel) + " (" + channel.name + ")");
                 samples.push_back({channel.name, 0.0});
                 continue;
             }
 
             // Convertir a voltaje
             float voltage = pex1202::compute_voltage(raw, config_code, v_max);
+
+            if (debug_this_cycle) {
+                LOG_INFO("Pex1202L", 
+                    "CH" + std::to_string(channel.channel) + " (" + channel.name + "): " +
+                    "raw=" + std::to_string(raw) + " → " + std::to_string(voltage) + "V");
+            }
 
             // Aplicar escalado y normalización
             double value = voltage;
