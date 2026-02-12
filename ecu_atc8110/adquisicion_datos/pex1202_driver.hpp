@@ -30,6 +30,10 @@ struct ixpci_reg {
     int mode;
 };
 
+// Typedef para compatibilidad con código C
+typedef struct ixpci_reg ixpci_reg_t;
+
+
 // Macros IOCTL (Basadas en ixpci.h)
 // Nota: Usamos void* para que la macro _IOR genere el tamaño de puntero (8 bytes en x64)
 #define IXPCI_READ_REG   _IOR(IXPCI_MAGIC_NUM, IXPCI_IOCTL_ID_READ_REG, void *)
@@ -42,10 +46,12 @@ struct ixpci_reg {
 
 // Analog Input
 #define IXPCI_AI           219 // IXPCI_ANALOG_INPUT_PORT
+#define IXPCI_AD           219 // Alias para IXPCI_AI (usado en read_adc)
 #define IXPCI_AICR         217 // IXPCI_ANALOG_INPUT_CHANNEL_CONTROL_REG
 #define IXPCI_ADST         202 // IXPCI_AD_SOFTWARE_TRIGGER_REG
 #define IXPCI_ADGCR        231 // IXPCI_AD_GAIN_CONTROL_AND_MULTIPLEXER_CONTROL_REGISTER
 #define IXPCI_ADPR         232 // IXPCI_AD_POLLING_REGISTER
+
 
 // Analog Output
 #define IXPCI_AO           220 // IXPCI_ANALOG_OUTPUT_PORT
@@ -117,7 +123,7 @@ inline long elapsed_ns(const struct timespec *start, const struct timespec *end)
 // Handshake con el controlador MagicScan (PIC)
 inline int pic_control(int fd, int cmd)
 {
-    ixpci_reg reg{};
+    ixpci_reg_t reg;
     struct timespec t0, tn;
 
     // Recovery si handshake esta bajo
@@ -203,7 +209,7 @@ inline int select_channel(int fd, int channel, int config_code)
 // Leer valor ADC (retorna raw 0-4095, o -1 en error)
 inline int read_adc(int fd)
 {
-    ixpci_reg reg{}, rad{};
+    ixpci_reg_t reg, rad;
     struct timespec t0, tn;
 
     reg.id    = IXPCI_CR;
@@ -234,7 +240,7 @@ inline int read_adc(int fd)
         }
     } while (!(reg.value & 0x20));
 
-    rad.id = IXPCI_AI;
+    rad.id = IXPCI_AD;
     if (ioctl(fd, IXPCI_READ_REG, &rad) < 0) {
         return -1;
     }
