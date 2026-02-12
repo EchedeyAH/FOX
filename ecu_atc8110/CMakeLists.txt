@@ -63,6 +63,36 @@ target_link_libraries(motor_control
     PRIVATE Threads::Threads stdc++fs
 )
 
+# Test Analog Inputs (standalone test for PEX-1202L)
+add_executable(test_analog_inputs
+    test_analog_inputs.cpp
+    adquisicion_datos/pex1202l.cpp
+    adquisicion_datos/sensor_manager.cpp
+    adquisicion_datos/pexda16.cpp
+    common/bms_data_logger.cpp
+    common/can_traffic_logger.cpp
+    common/csv_logger_base.cpp
+    common/data_logger_manager.cpp
+    common/error_logger.cpp
+    common/imu_data_logger.cpp
+    common/motor_data_logger.cpp
+    common/sensor_data_logger.cpp
+    common/session_manager.cpp
+    common/system_data_logger.cpp
+)
+
+target_include_directories(test_analog_inputs PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${IXPIO_INCLUDE}
+)
+
+target_link_libraries(test_analog_inputs
+    PRIVATE Threads::Threads stdc++fs
+)
+
+
 # ===== LIBRERÍAS =====
 file(GLOB COMMON_SOURCES common/*.cpp)
 file(GLOB ADQ_SOURCES adquisicion_datos/*.cpp)
