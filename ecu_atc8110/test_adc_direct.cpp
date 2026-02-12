@@ -63,8 +63,9 @@ static long elapsed_ns(struct timespec *start, struct timespec *end)
  * -------------------------------------------------------------- */
 static int pic_control(int fd, int cmd)
 {
-    ixpci_reg_t reg;
+    ixpci_reg_t reg = {0}; // Inicializar a cero
     struct timespec t0, tn;
+// ... (resto igual)
 
     /* Recovery si handshake esta bajo */
     reg.id = IXPCI_SR;
@@ -163,7 +164,7 @@ static int select_channel(int fd, int channel, int config_code)
  * -------------------------------------------------------------- */
 static int read_adc(int fd)
 {
-    ixpci_reg_t reg, rad;
+    ixpci_reg_t reg = {0}, rad = {0}; // Inicializar a cero
     struct timespec t0, tn;
 
     reg.id    = IXPCI_CR;
@@ -199,7 +200,8 @@ static int read_adc(int fd)
         }
     } while (!(reg.value & 0x20));
 
-    rad.id = 219; // IXPCI_AD alias IXPCI_AI hardcoded 
+    rad.id = 219; // IXPCI_AD alias IXPCI_AI 
+    rad.mode = 0; // Modo RAW explícito (o el que use por defecto el driver)
     if (ioctl(fd, IXPCI_READ_REG, &rad) < 0) {
         perror("ioctl READ_REG AD");
         return -1;

@@ -123,7 +123,7 @@ inline long elapsed_ns(const struct timespec *start, const struct timespec *end)
 // Handshake con el controlador MagicScan (PIC)
 inline int pic_control(int fd, int cmd)
 {
-    ixpci_reg_t reg;
+    ixpci_reg_t reg = {0}; // Inicializar a cero importante
     struct timespec t0, tn;
 
     // Recovery si handshake esta bajo
@@ -209,7 +209,7 @@ inline int select_channel(int fd, int channel, int config_code)
 // Leer valor ADC (retorna raw 0-4095, o -1 en error)
 inline int read_adc(int fd)
 {
-    ixpci_reg_t reg, rad;
+    ixpci_reg_t reg = {0}, rad = {0}; // Inicializar a cero importante
     struct timespec t0, tn;
 
     reg.id    = IXPCI_CR;
