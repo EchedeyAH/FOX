@@ -13,6 +13,11 @@
 #include <string>
 #include <algorithm>
 
+// Incluir driver PEX
+extern "C" {
+    #include "ixpci.h"
+}
+
 // Definición para Digital Output Port si no está en el driver header
 #ifndef IXPCI_DO
 #define IXPCI_DO 212
@@ -43,7 +48,8 @@ public:
 
         LOG_INFO("PexDa16", "Inicializando PEX-DA16 en tarjeta " + std::to_string(da_index_) + ", FD: " + std::to_string(fd));
 
-        ixpci_reg reg;
+        ixpci_reg_t reg;
+        memset(&reg, 0, sizeof(reg));
 
         // 1) Configurar rango AO (si el driver lo soporta)
         // ID 291 = IXPCI_AO_CONFIGURATION (según tu comentario)
@@ -89,7 +95,9 @@ public:
         if (channel == "ENABLE") {
             bool enable = (value > 0.5);
 
-            ixpci_reg reg;
+            ixpci_reg_t reg;
+            memset(&reg, 0, sizeof(reg));
+            
             reg.id = IXPCI_DO;
             reg.value = enable ? 1 : 0;   // bit 0
             reg.mode = IXPCI_RM_NORMAL;
@@ -129,7 +137,9 @@ public:
                                     " DAC=" + std::to_string(dac_val));
             }
 
-            ixpci_reg reg;
+            ixpci_reg_t reg;
+            memset(&reg, 0, sizeof(reg));
+            
             if (ch == 0) reg.id = 222;       // IXPCI_AO0
             else if (ch == 1) reg.id = 223;  // IXPCI_AO1
             else if (ch == 2) reg.id = 224;  // IXPCI_AO2
