@@ -107,6 +107,22 @@ target_link_libraries(test_simple_adc
     PRIVATE
 )
 
+# Direct Copy Test (read_channels.c ported to C++)
+add_executable(test_adc_direct
+    test_adc_direct.cpp
+)
+
+target_include_directories(test_adc_direct PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${IXPIO_INCLUDE}
+)
+
+target_link_libraries(test_adc_direct
+    PRIVATE
+)
+
+
 
 
 # ===== LIBRERÍAS =====
