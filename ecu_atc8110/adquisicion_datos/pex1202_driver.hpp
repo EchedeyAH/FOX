@@ -1,12 +1,25 @@
 #ifndef PEX1202_DRIVER_HPP
 #define PEX1202_DRIVER_HPP
 
+#pragma message ("Compiling fixed pex1202_driver.hpp - VERSION FINAL")
+
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
 #include <cstring>
 #include <cstdio> // perror
+
+// Fix conflicts with ixpio.h (PEX-DA16)
+#ifdef FAMILY
+#undef FAMILY
+#endif
+#ifdef DEVICE_NAME
+#undef DEVICE_NAME
+#endif
+#ifdef CARD_NAME_LENGTH
+#undef CARD_NAME_LENGTH
+#endif
 
 // Include system driver header (C style)
 extern "C" {
@@ -19,6 +32,12 @@ extern "C" {
 #define AD_CONFIG_UNIPOLAR_5V    0x09   /* 0 ~ +5 V  */
 #define AD_CONFIG_BIPOLAR_5V     0x00   /* -5 ~ +5 V */
 #define AD_CHANNEL_DUMMY         15     /* AI_15 */
+
+// PEX Gain Codes (Restored)
+#define PEX_GAIN_BIP_5V   0x00
+#define PEX_GAIN_BIP_10V  0x01
+#define PEX_GAIN_UNI_5V   0x02
+#define PEX_GAIN_UNI_10V  0x03
 
 /* Timeouts */
 #define HANDSHAKE_TIMEOUT_NS     100000000L   /* 100 ms */
