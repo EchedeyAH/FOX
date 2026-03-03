@@ -39,7 +39,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE Threads::Threads stdc++fs
+    PRIVATE Threads::Threads stdc++fs rt
 )
 
 # Motor Control Program (simplified main for motor testing)
