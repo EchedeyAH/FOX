@@ -5,6 +5,9 @@
 #include <sstream>
 #include <iomanip>
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 namespace ecu {
 
