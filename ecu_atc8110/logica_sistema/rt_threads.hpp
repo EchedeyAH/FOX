@@ -140,7 +140,7 @@ inline void* thread_control(void* arg)
 
         if (estado == EstadoEcu::Inicializando) {
             // ── Espera pedal de freno (igual que el legacy: freno > 0.5 / 5.1 normalizado) ──
-            auto snap =V = 0 ctx->read_snapshot();
+            auto snap = ctx->read_snapshot();
             if (snap.vehicle.brake >= 0.2) {
                 LOG_INFO("CTRL", "Freno detectado → iniciando secuencia de arranque...");
 

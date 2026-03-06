@@ -36,12 +36,12 @@ enum class ErrorCode : uint16_t {
 struct ErrorCatalogEntry {
     ErrorCode code; ErrorLevel level; ErrorGroup group; const char* origin;
     const char* description; const char* trigger_condition; const char* resolve_condition;
-    ErrorAction action; uint32_t timeout_ms; int16_t threshold_value; const char* threshold_unit;
+    ErrorAction action; uint32_t timeout_ms; int32_t threshold_value; const char* threshold_unit;
 };
 
 // Funciones helper para crear entradas
 inline ErrorCatalogEntry make_err(uint16_t code, uint8_t level, uint8_t group, const char* orig, const char* desc, 
-    const char* trig, const char* res, uint8_t action, uint32_t to, int16_t thresh, const char* unit) {
+    const char* trig, const char* res, uint8_t action, uint32_t to, int32_t thresh, const char* unit) {
     return {(ErrorCode)code, (ErrorLevel)level, (ErrorGroup)group, orig, desc, trig, res, (ErrorAction)action, to, thresh, unit};
 }
 

@@ -267,7 +267,6 @@ inline void VoltageProtection::update_state(VoltageState new_state, int32_t volt
     evt.origin = "VBAT";
     evt.description = desc;
     evt.count = 1;
-    evt.threshold_value = static_cast<int16_t>(voltage_mv / 1000); // Voltios
     
     ecu::g_error_publisher.publish_event(evt);
     

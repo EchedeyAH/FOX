@@ -403,7 +403,9 @@ inline void SystemModeManager::publish_mode_event(SystemMode old_mode, SystemMod
     evt.group = ecu::ErrorGroup::CONTROL;
     evt.status = ecu::ErrorStatus::ACTIVO;
     evt.origin = "MODE_MGR";
-    evt.description = std::string("Mode: ") + old_str + " -> " + new_str;
+    static thread_local std::string mode_desc;
+    mode_desc = std::string("Mode: ") + old_str + " -> " + new_str;
+    evt.description = mode_desc.c_str();
     evt.count = 1;
     
     ecu::g_error_publisher.publish_event(evt);

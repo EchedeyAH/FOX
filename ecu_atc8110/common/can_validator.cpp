@@ -186,7 +186,7 @@ void CanValidator::update_message_rate() {
     auto now = std::chrono::steady_clock::now();
     uint16_t total_msgs = 0;
     
-    for (const auto& peer : peers_) {
+    for (auto& peer : peers_) {
         total_msgs += peer.msgs_last_second;
         
         // Reset counter if 1 second passed
