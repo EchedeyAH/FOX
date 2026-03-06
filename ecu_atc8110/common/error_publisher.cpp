@@ -4,6 +4,7 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <fcntl.h>
 
 namespace ecu {
 
