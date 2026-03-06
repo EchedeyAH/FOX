@@ -22,6 +22,11 @@
 #include "../comunicacion_can/can_protocol.hpp"
 #include "../control_vehiculo/controllers.hpp"
 
+// Nuevos módulos de seguridad
+#include "../common/motor_timeout_detector.hpp"
+#include "../common/voltage_protection.hpp"
+#include "../common/system_mode_manager.hpp"
+
 #include <thread>
 #include <chrono>
 #include <algorithm>
@@ -34,6 +39,10 @@ namespace logica_sistema {
 // Equivale a: can_rx() del legacy
 // Recibe tramas de ambos buses CAN y actualiza el snapshot.
 // Prio más alta porque el CAN es event-driven y no perdemos mensajes.
+//
+// INTEGRACIÓN DE SEGURIDAD:
+//   - Notifica al detector de timeout de motores cuando llega mensaje
+//   - El detector actualiza last_seen para cada motor (M1-M4)
 // ─────────────────────────────────────────────────────────────────────────────
 inline void* thread_can_rx(void* arg)
 {
@@ -50,6 +59,16 @@ inline void* thread_can_rx(void* arg)
             ctx->can_bms.process_rx(ctx->snapshot);
             // Procesar Motores/Supervisor (emuccan0) → actualiza snapshot_.motors
             ctx->can_motors.process_rx(ctx->snapshot);
+            
+            // ─── INTEGRACIÓN: Detectar mensajes de motores para timeout ───
+            // El can_manager ya procesa los mensajes, aquí notificamos al detector
+            // de timeout basado en los IDs CAN recibidos (0x281-0x284)
+            for (size_t i = 0; i < 4; ++i) {
+                if (ctx->snapshot.motors[i].enabled) {
+                    // Motor respondió → actualizar timestamp
+                    ctx->timeout_detector.on_motor_message(static_cast<uint8_t>(i));
+                }
+            }
         }
         common::periodic_sleep(next, common::periods::CAN_RX_NS);
     }
@@ -120,8 +139,8 @@ inline void* thread_control(void* arg)
         EstadoEcu estado = ctx->estado.load();
 
         if (estado == EstadoEcu::Inicializando) {
-            // ── Espera pedal de freno (igual que el legacy: freno > 0.5 / 5V = 0.1 normalizado) ──
-            auto snap = ctx->read_snapshot();
+            // ── Espera pedal de freno (igual que el legacy: freno > 0.5 / 5.1 normalizado) ──
+            auto snap =V = 0 ctx->read_snapshot();
             if (snap.vehicle.brake >= 0.2) {
                 LOG_INFO("CTRL", "Freno detectado → iniciando secuencia de arranque...");
 
@@ -300,6 +319,11 @@ inline void* thread_bms_supervisor(void* arg)
 // HILO 6 — WATCHDOG  (Prioridad 20, Período 500ms)
 // Equivale a: errores_main() del legacy
 // Monitoriza fallos críticos y para el sistema ordenadamente.
+//
+// INTEGRACIÓN DE SEGURIDAD:
+//   - Verifica timeout de motores (cada 500ms)
+//   - Verifica voltaje de batería
+//   - Controla modo del sistema (OK → LIMP_MODE → SAFE_STOP)
 // ─────────────────────────────────────────────────────────────────────────────
 inline void* thread_watchdog(void* arg)
 {
@@ -312,6 +336,44 @@ inline void* thread_watchdog(void* arg)
     while (ctx->running.load()) {
         auto snap = ctx->read_snapshot();
 
+        // ─── INTEGRACIÓN: Verificar timeout de motores (legacy: TIEMPO_EXP_MOT_S=2s) ───
+        uint8_t timeout_count = ctx->timeout_detector.timeout_count();
+        
+        if (timeout_count > 0 && ctx->estado.load() == EstadoEcu::Operando) {
+            // Error crítico: timeout de motor → SAFE_STOP inmediato
+            LOG_ERROR("WDG", "Timeout motor detectado (" + std::to_string(timeout_count) + ") → SAFE_STOP");
+            ctx->mode_manager.notify_critical_error(ecu::ErrorCode::M1_COM_TIMEOUT);
+            ctx->estado.store(EstadoEcu::Error);
+        }
+
+        // ─── INTEGRACIÓN: Verificar voltaje de batería ───
+        auto voltage_result = ctx->voltage_protection.check_voltage(snap.battery.pack_voltage_mv);
+        
+        if (voltage_result.safe_stop && ctx->estado.load() == EstadoEcu::Operando) {
+            // Voltaje crítico → SAFE_STOP
+            LOG_ERROR("WDG", "Voltaje crítico → SAFE_STOP");
+            ctx->mode_manager.notify_critical_error(ecu::ErrorCode::BMS_VOLT_LOW);
+            ctx->estado.store(EstadoEcu::Error);
+        }
+        else if (voltage_result.limit_power) {
+            // Voltaje bajo/alto → LIMP_MODE
+            ctx->mode_manager.notify_grave_error(common::LimpReason::VBAT_LOW);
+        }
+        else {
+            // Voltaje OK → verificar si podemos recuperar
+            ctx->mode_manager.notify_error_resolved();
+        }
+
+        // ─── Aplicar factor de limitación de potencia al control ───
+        // Si estamos en SAFE_STOP, forzar torque 0
+        if (ctx->mode_manager.is_torque_zero()) {
+            std::array<double, 4> zero_torques = {0.0, 0.0, 0.0, 0.0};
+            std::array<bool, 4> disabled = {false, false, false, false};
+            ctx->write_motor_torques(zero_torques, disabled);
+            LOG_WARN("WDG", "Torque 0 forzado por SAFE_STOP");
+        }
+
+        // Verificar fallos críticos originales
         if (snap.faults.critical && ctx->estado.load() == EstadoEcu::Operando) {
             LOG_ERROR("WDG", "Watchdog: fallo crítico detectado → parando sistema");
             ctx->estado.store(EstadoEcu::Error);

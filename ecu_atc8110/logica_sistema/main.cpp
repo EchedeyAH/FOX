@@ -24,6 +24,7 @@
 #include "../common/rt_context.hpp"
 #include "../common/logging.hpp"
 #include "../adquisicion_datos/pexda16.hpp"
+#include "../common/error_publisher.hpp"
 
 #include <pthread.h>
 #include <csignal>
@@ -39,6 +40,8 @@ static void signal_handler(int sig)
         LOG_INFO("MAIN", "Señal " + std::to_string(sig) + " recibida → parando sistema...");
         g_ctx->running.store(false);
     }
+    // Detener publisher de errores
+    ecu::g_error_publisher.stop();
 }
 
 int main()
@@ -47,6 +50,20 @@ int main()
               << "║   ECU ATC8110 — RT Multi-Hilo   ║\n"
               << "║   SCHED_FIFO / PREEMPT kernel   ║\n"
               << "╚══════════════════════════════════╝\n" << std::endl;
+
+    // ── 0. Inicializar sistema de errores (UNIX socket /run/ecu/errors.sock) ──
+    LOG_INFO("MAIN", "Inicializando sistema de errores...");
+    ecu::ErrorPublisherConfig pub_config;
+    pub_config.socket_path = "/run/ecu/errors.sock";
+    pub_config.send_snap_on_connect = true;
+    pub_config.snap_interval_ms = 1000;
+    
+    if (ecu::g_error_publisher.init(pub_config)) {
+        ecu::g_error_publisher.start();
+        LOG_INFO("MAIN", "Error Publisher: /run/ecu/errors.sock");
+    } else {
+        LOG_WARN("MAIN", "Error Publisher no disponible");
+    }
 
     // ── 1. Bloquear páginas de memoria en RAM (evita page faults en RT) ───
     common::lock_memory();
@@ -147,6 +164,10 @@ int main()
     ctx.sensores.stop();
     ctx.can_motors.stop();
     ctx.can_bms.stop();
+
+    // ── 9. Parada del sistema de errores ─────────────────────────────────
+    LOG_INFO("MAIN", "Parando sistema de errores...");
+    ecu::g_error_publisher.stop();
 
     LOG_INFO("MAIN", "ECU ATC8110 apagado correctamente.");
     return 0;

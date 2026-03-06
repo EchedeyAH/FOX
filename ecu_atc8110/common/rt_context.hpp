@@ -19,6 +19,11 @@
 #include "../adquisicion_datos/pexda16.hpp"
 #include "../common/interfaces.hpp"
 
+// Módulos de seguridad y protección
+#include "motor_timeout_detector.hpp"
+#include "voltage_protection.hpp"
+#include "system_mode_manager.hpp"
+
 #include <mutex>
 #include <atomic>
 #include <memory>
@@ -53,6 +58,12 @@ struct RtContext {
     comunicacion_can::CanManager can_bms{"emuccan1"};     // CAN BMS 500kbps
     adquisicion_datos::SensorManager sensores{};
     std::unique_ptr<common::IActuatorWriter> actuador;    // PEX-DA16 (opcional)
+
+    // ── Módulos de seguridad y protección (instancias globales) ───────────
+    // Referencias a las instancias globales de los módulos de seguridad
+    common::MotorTimeoutDetector& timeout_detector = common::get_motor_timeout_detector();
+    common::VoltageProtection& voltage_protection = common::get_voltage_protection();
+    common::SystemModeManager& mode_manager = common::get_system_mode_manager();
 
     // ── Constructor: valores seguros por defecto ───────────────────────────
     RtContext()
