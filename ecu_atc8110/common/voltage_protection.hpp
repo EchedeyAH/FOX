@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cstdint>
 
+#include "logging.hpp"
 #include "error_catalog.hpp"
 #include "error_publisher.hpp"
 

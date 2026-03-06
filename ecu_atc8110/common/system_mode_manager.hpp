@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <array>
 
+#include "logging.hpp"
 #include "error_catalog.hpp"
 #include "error_publisher.hpp"
 

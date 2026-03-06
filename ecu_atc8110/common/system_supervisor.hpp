@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <array>
 
+#include "logging.hpp"
 #include "error_catalog.hpp"
 #include "error_publisher.hpp"
 #include "system_mode_manager.hpp"
@@ -276,8 +277,9 @@ inline void SystemSupervisor::check_soc(SupervisorResult& result) {
         evt.group = ecu::ErrorGroup::BMS;
         evt.status = ecu::ErrorStatus::ACTIVO;
         evt.origin = "SUPERVISOR";
-        evt.description = "SOC crítico: " + std::to_string(sensors_.soc_percent) + "%";
-        evt.threshold_value = static_cast<int16_t>(sensors_.soc_percent);
+        static thread_local std::string soc_desc;
+        soc_desc = "SOC crítico: " + std::to_string(sensors_.soc_percent) + "%";
+        evt.description = soc_desc.c_str();
         
         ecu::g_error_publisher.publish_event(evt);
     }
@@ -304,7 +306,9 @@ inline void SystemSupervisor::check_battery_temp(SupervisorResult& result) {
         evt.group = ecu::ErrorGroup::BMS;
         evt.status = ecu::ErrorStatus::ACTIVO;
         evt.origin = "SUPERVISOR";
-        evt.description = "Temp batería crítica: " + std::to_string(sensors_.temp_battery_c) + "°C";
+        static thread_local std::string temp_desc;
+        temp_desc = "Temp batería crítica: " + std::to_string(sensors_.temp_battery_c) + "°C";
+        evt.description = temp_desc.c_str();
         
         ecu::g_error_publisher.publish_event(evt);
     }
@@ -333,7 +337,7 @@ inline void SystemSupervisor::check_motor_temps(SupervisorResult& result) {
             evt.timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
             
-            ErrorCode code = (i == 0) ? ecu::ErrorCode::M1_TEMP_HIGH :
+            ecu::ErrorCode code = (i == 0) ? ecu::ErrorCode::M1_TEMP_HIGH :
                             (i == 1) ? ecu::ErrorCode::M2_TEMP_HIGH :
                             (i == 2) ? ecu::ErrorCode::M3_TEMP_HIGH :
                             ecu::ErrorCode::M4_TEMP_HIGH;
@@ -342,8 +346,12 @@ inline void SystemSupervisor::check_motor_temps(SupervisorResult& result) {
             evt.level = ecu::ErrorLevel::CRITICO;
             evt.group = ecu::ErrorGroup::MOTOR;
             evt.status = ecu::ErrorStatus::ACTIVO;
-            evt.origin = "M" + std::to_string(i + 1);
-            evt.description = "Temp motor crítica: " + std::to_string(temp) + "°C";
+            static thread_local std::string origin_str;
+            static thread_local std::string motor_desc;
+            origin_str = "M" + std::to_string(i + 1);
+            motor_desc = "Temp motor crítica: " + std::to_string(temp) + "°C";
+            evt.origin = origin_str.c_str();
+            evt.description = motor_desc.c_str();
             
             ecu::g_error_publisher.publish_event(evt);
         }
