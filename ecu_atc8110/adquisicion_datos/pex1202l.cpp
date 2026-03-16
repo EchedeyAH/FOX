@@ -31,11 +31,15 @@ public:
 
         ixpci_reg reg{};
         reg.id = IXPCI_ADGCR;
-        reg.value = PEX_GAIN_UNI_10V;  // Modo unipolar 0-10V
+        reg.value = PEX_GAIN_UNI_5V;  // Modo unipolar 0-5V (estable)
         reg.mode = IXPCI_RM_NORMAL;
 
         if (ioctl(fd, IXPCI_WRITE_REG, &reg) < 0) {
-            LOG_WARN("Pex1202L", "No se pudo configurar rango unipolar 0-10V");
+            LOG_WARN("Pex1202L", "No se pudo configurar rango unipolar 0-5V, usando rango por defecto");
+            unipolar_vmax_ = 5.0f;
+        } else {
+            unipolar_vmax_ = 5.0f;
+            LOG_INFO("Pex1202L", "Rango ADC configurado: unipolar 0-5V");
         }
 
         return true;
@@ -66,7 +70,7 @@ public:
         static int debug_count = 0;
         bool debug_this_cycle = (debug_count++ % 20 == 0);
 
-        // IMPORTANTE: Lectura dummy en AI_15 para estabilizar MUX
+        // IMPORTANTE: Lectura dummy en AI_15 para estabilizar MUX global
         if (debug_this_cycle) LOG_INFO("Pex1202L", "Seleccionando canal dummy AI_15...");
         if (pex1202::select_channel(fd, AD_CHANNEL_DUMMY, AD_CONFIG_UNIPOLAR_5V) < 0) {
             LOG_ERROR("Pex1202L", "FALLO: Handshake en canal dummy");
@@ -84,7 +88,7 @@ public:
         for (const auto& channel : config_) {
             // Determinar configuración bipolar/unipolar según canal
             int config_code = AD_CONFIG_UNIPOLAR_5V;  // default
-            float v_max = 5.0f;
+            float v_max = unipolar_vmax_;
             
             if (channel.name == "corriente_eje_d" || channel.name == "corriente_eje_t") {
                 config_code = AD_CONFIG_BIPOLAR_5V;
@@ -98,7 +102,16 @@ public:
                 continue;
             }
 
-            // Leer ADC
+            // Dummy conversion + settling
+            int dummy = pex1202::read_adc(fd);
+            if (dummy < 0) {
+                LOG_ERROR("Pex1202L", "FALLO ADC dummy CH" + std::to_string(channel.channel) + " (" + channel.name + ")");
+                samples.push_back({channel.name, 0.0});
+                continue;
+            }
+            usleep(20);
+
+            // Leer ADC real
             int raw = pex1202::read_adc(fd);
             if (raw < 0) {
                 LOG_ERROR("Pex1202L", "FALLO ADC CH" + std::to_string(channel.channel) + " (" + channel.name + ")");
@@ -108,6 +121,25 @@ public:
 
             // Convertir a voltaje
             float voltage = pex1202::compute_voltage(raw, config_code, v_max);
+
+            // Clamp a rango físico
+            if (config_code == AD_CONFIG_BIPOLAR_5V) {
+                if (voltage < -v_max) voltage = -v_max;
+                if (voltage >  v_max) voltage =  v_max;
+            } else {
+                if (voltage < 0.0f) voltage = 0.0f;
+                if (voltage > v_max) voltage = v_max;
+            }
+
+            // Detectar raw=0 persistente
+            if (raw == 0) {
+                zero_count_[channel.name]++;
+                if (zero_count_[channel.name] >= 5 && debug_this_cycle) {
+                    LOG_WARN("Pex1202L", "Lectura raw=0 persistente en " + channel.name);
+                }
+            } else {
+                zero_count_[channel.name] = 0;
+            }
 
             if (debug_this_cycle) {
                 LOG_INFO("Pex1202L", 
@@ -139,6 +171,8 @@ public:
 private:
     SensorConfig config_;
     bool mock_mode_{false};
+    float unipolar_vmax_{5.0f};
+    std::map<std::string, int> zero_count_;
 };
 
 std::unique_ptr<common::ISensorReader>
