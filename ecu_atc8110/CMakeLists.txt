@@ -92,39 +92,6 @@ target_link_libraries(test_analog_inputs
     PRIVATE Threads::Threads stdc++fs
 )
 
-# Simple ADC Test (no handshake, minimal dependencies)
-add_executable(test_simple_adc
-    test_simple_adc.cpp
-)
-
-target_include_directories(test_simple_adc PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
-    ${IXPIO_INCLUDE}
-)
-
-target_link_libraries(test_simple_adc
-    PRIVATE
-)
-
-# Direct Copy Test (read_channels.c ported to C++)
-add_executable(test_adc_direct
-    test_adc_direct.cpp
-)
-
-target_include_directories(test_adc_direct PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
-    ${IXPIO_INCLUDE}
-)
-
-target_link_libraries(test_adc_direct
-    PRIVATE
-)
-
-
-
-
 # ===== LIBRERÍAS =====
 file(GLOB COMMON_SOURCES common/*.cpp)
 file(GLOB ADQ_SOURCES adquisicion_datos/*.cpp)
@@ -145,6 +112,38 @@ target_include_directories(ecu_adquisicion_datos PUBLIC
 
 target_include_directories(ecu_comunicacion_can PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Simple ADC Test (no handshake, minimal dependencies)
+add_executable(test_simple_adc
+    test_simple_adc.cpp
+)
+
+target_include_directories(test_simple_adc PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${IXPIO_INCLUDE}
+)
+
+target_link_libraries(test_simple_adc
+    PRIVATE
+    ecu_adquisicion_datos
+    Threads::Threads
+)
+
+# Direct Copy Test (read_channels.c ported to C++)
+add_executable(test_adc_direct
+    test_adc_direct.cpp
+)
+
+target_include_directories(test_adc_direct PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${IXPIO_INCLUDE}
+)
+
+target_link_libraries(test_adc_direct
+    PRIVATE
 )
 
 # Tools
