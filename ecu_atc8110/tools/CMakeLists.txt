@@ -5,12 +5,7 @@ add_executable(can_diagnostic
     can_diagnostic.cpp
 )
 
-target_link_libraries(can_diagnostic
-    PRIVATE
-    ecu_comunicacion_can
-    ecu_common
-    pthread
-)
+link_ecu_libs(can_diagnostic)
 
 target_include_directories(can_diagnostic
     PRIVATE
@@ -22,12 +17,7 @@ add_executable(sensor_diagnostic
     sensor_diagnostic.cpp
 )
 
-target_link_libraries(sensor_diagnostic
-    PRIVATE
-    ecu_adquisicion_datos
-    ecu_common
-    pthread
-)
+link_ecu_libs(sensor_diagnostic)
 
 target_include_directories(sensor_diagnostic
     PRIVATE
