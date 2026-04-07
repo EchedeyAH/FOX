@@ -54,8 +54,8 @@ jobs:
           Write-Host "Reiniciando ECU..."
           ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "pkill -9 ecu_atc8110 || true"
           Start-Sleep -Seconds 2
-          # Usar subshell y disown para asegurar que SSH no espere
-          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "cd /home/fox/ecu_app/bin && (nohup sudo ./ecu_atc8110 > ../logs/ecu_`$(date +%Y%m%d_%H%M%S).log 2>&1 < /dev/null &) && sleep 1"
+          # Usar comillas simples para evitar que PowerShell expanda $(date)
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'cd /home/fox/ecu_app/bin && (nohup sudo -n ./ecu_atc8110 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 < /dev/null &)'
           Write-Host "ECU iniciada en segundo plano"
         shell: pwsh
 
@@ -63,7 +63,8 @@ jobs:
         run: |
           Write-Host "Verificando estado de la ECU..."
           Start-Sleep -Seconds 3
-          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "if pgrep -x ecu_atc8110 > /dev/null; then echo 'ECU corriendo correctamente'; echo 'PID:' `$(pgrep -x ecu_atc8110); else echo 'ECU no esta corriendo'; exit 1; fi"
+          # Usar comillas simples para que $(pgrep) se evalúe en el remoto
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'if pgrep -x ecu_atc8110 > /dev/null; then echo "ECU corriendo correctamente"; echo "PID: $(pgrep -x ecu_atc8110)"; else echo "ECU no esta corriendo"; tail -30 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -30; exit 1; fi'
         shell: pwsh
 
       - name: Mostrar logs recientes
