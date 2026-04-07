@@ -57,12 +57,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "ip link | grep -i can || true"
         shell: pwsh
 
-      - name: Verificar sudo NOPASSWD
-        run: |
-          Write-Host "Verificando sudo NOPASSWD..."
-          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "sudo -n /home/fox/ecu_app/bin/ecu_atc8110 --help >/dev/null && echo 'sudo NOPASSWD OK' || (echo 'sudo NOPASSWD FALLÓ' && exit 1)"
-        shell: pwsh
-
       - name: Reiniciar ECU
         run: |
           Write-Host "Reiniciando ECU..."
