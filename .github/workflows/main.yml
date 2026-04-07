@@ -51,6 +51,18 @@ jobs:
           ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "sudo /home/fox/ecu_app/bin/setup_can.sh --real"
         shell: pwsh
 
+      - name: Verificar CAN
+        run: |
+          Write-Host "Verificando interfaces CAN..."
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "ip link | grep -i can || true"
+        shell: pwsh
+
+      - name: Verificar sudo NOPASSWD
+        run: |
+          Write-Host "Verificando sudo NOPASSWD..."
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 "sudo -n /home/fox/ecu_app/bin/ecu_atc8110 --help >/dev/null && echo 'sudo NOPASSWD OK' || (echo 'sudo NOPASSWD FALLÓ' && exit 1)"
+        shell: pwsh
+
       - name: Reiniciar ECU
         run: |
           Write-Host "Reiniciando ECU..."
@@ -58,6 +70,7 @@ jobs:
           Start-Sleep -Seconds 2
           # Usar comillas simples para evitar que PowerShell expanda $(date)
           ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'cd /home/fox/ecu_app/bin && (nohup sudo -n ./ecu_atc8110 > ../logs/ecu_$(date +%Y%m%d_%H%M%S).log 2>&1 < /dev/null &)'
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'sleep 1; if pgrep -x ecu_atc8110 > /dev/null; then echo "ECU iniciada (PID: $(pgrep -x ecu_atc8110))"; else echo "ADVERTENCIA: ECU no encontrada tras arranque"; tail -30 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -30; fi'
           Write-Host "ECU iniciada en segundo plano"
         shell: pwsh
 
@@ -66,7 +79,7 @@ jobs:
           Write-Host "Verificando estado de la ECU..."
           Start-Sleep -Seconds 3
           # Usar comillas simples para que $(pgrep) se evalúe en el remoto
-          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'if pgrep -x ecu_atc8110 > /dev/null; then echo "ECU corriendo correctamente"; echo "PID: $(pgrep -x ecu_atc8110)"; else echo "ECU no esta corriendo"; tail -30 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -30; exit 1; fi'
+          ssh -o StrictHostKeyChecking=no fox@193.147.165.236 'if pgrep -x ecu_atc8110 > /dev/null; then echo "ECU corriendo correctamente"; echo "PID: $(pgrep -x ecu_atc8110)"; else echo "ECU no esta corriendo"; echo "=== Ultimos logs ==="; tail -30 /home/fox/ecu_app/logs/ecu_*.log 2>/dev/null | tail -30; exit 1; fi'
         shell: pwsh
 
       - name: Mostrar logs recientes
