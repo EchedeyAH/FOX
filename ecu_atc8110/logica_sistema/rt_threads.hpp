@@ -372,6 +372,13 @@ inline void* thread_watchdog(void* arg)
                              " -> " + std::to_string(vbat_mv) + " mV");
         }
 
+        // Diagnóstico periódico de VBAT para entender SAFE_STOP
+        static int vbat_log_cnt = 0;
+        if (vbat_log_cnt++ % 20 == 0) {
+            LOG_INFO("WDG", "VBAT actual: " + std::to_string(vbat_mv) + " mV (comm_ok=" +
+                            std::to_string(snap.battery.communication_ok ? 1 : 0) + ")");
+        }
+
         auto voltage_result = ctx->voltage_protection.check_voltage(vbat_mv);
         
         if (voltage_result.safe_stop && ctx->estado.load() == EstadoEcu::Operando) {
