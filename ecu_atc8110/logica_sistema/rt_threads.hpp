@@ -361,8 +361,18 @@ inline void* thread_watchdog(void* arg)
             continue;
         }
 
-        auto voltage_result = ctx->voltage_protection.check_voltage(
-            static_cast<int32_t>(snap.battery.pack_voltage_mv));
+        // Normalizar posibles escalas erróneas (V, dV, cV -> mV)
+        int32_t vbat_mv = static_cast<int32_t>(snap.battery.pack_voltage_mv);
+        int32_t vbat_raw = vbat_mv;
+        if (vbat_mv > 0 && vbat_mv < 200) vbat_mv = vbat_mv * 1000;
+        else if (vbat_mv > 0 && vbat_mv < 2000) vbat_mv = vbat_mv * 100;
+        else if (vbat_mv > 0 && vbat_mv < 20000) vbat_mv = vbat_mv * 10;
+        if (vbat_mv != vbat_raw) {
+            LOG_WARN("WDG", "VBAT escala corregida: raw=" + std::to_string(vbat_raw) +
+                             " -> " + std::to_string(vbat_mv) + " mV");
+        }
+
+        auto voltage_result = ctx->voltage_protection.check_voltage(vbat_mv);
         
         if (voltage_result.safe_stop && ctx->estado.load() == EstadoEcu::Operando) {
             // Voltaje crítico → SAFE_STOP
