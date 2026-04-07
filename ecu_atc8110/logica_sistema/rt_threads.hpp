@@ -26,6 +26,7 @@
 #include "../common/motor_timeout_detector.hpp"
 #include "../common/voltage_protection.hpp"
 #include "../common/system_mode_manager.hpp"
+#include "../control_vehiculo/ao_control.h"
 
 #include <thread>
 #include <chrono>
@@ -236,6 +237,9 @@ inline void* thread_can_tx_motors(void* arg)
         if (ctx->estado.load() == EstadoEcu::Operando) {
             auto snap = ctx->read_snapshot();
 
+            float acelerador_out[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+            float freno_out[4]      = {0.0f, 0.0f, 0.0f, 0.0f};
+
             for (size_t i = 0; i < snap.motors.size(); ++i) {
                 const auto& motor    = snap.motors[i];
                 uint8_t     motor_id = static_cast<uint8_t>(i + 1); // 1-4
@@ -253,11 +257,8 @@ inline void* thread_can_tx_motors(void* arg)
                 // Enviar por CAN
                 ctx->can_motors.send_motor_command(motor_id, throttle, brake);
 
-                // Salida analógica (PEX-DA16) si está disponible
-                if (ctx->actuador) {
-                    std::string ch = "AO" + std::to_string(i); // AO0..AO3
-                    ctx->actuador->write_output(ch, voltage);
-                }
+                // Salidas analogicas (via ao_update_from_control)
+                acelerador_out[i] = static_cast<float>(voltage);
 
                 // Log Motor 1 cada 10 ciclos (~500ms)
                 if (motor_id == 1 && log_cnt++ % 10 == 0) {
@@ -266,6 +267,9 @@ inline void* thread_can_tx_motors(void* arg)
                                      + " AO=" + std::to_string(voltage) + "V");
                 }
             }
+
+            // Actualizar salidas analogicas (mapeo legacy -> PEX-DA16)
+            ao_update_from_control(acelerador_out, freno_out);
 
             // Telemetría cada 20 ciclos (~1s)
             if (++telemetry_cnt >= 20) {

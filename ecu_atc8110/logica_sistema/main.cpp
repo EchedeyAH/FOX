@@ -24,6 +24,7 @@
 #include "../common/rt_context.hpp"
 #include "../common/logging.hpp"
 #include "../adquisicion_datos/pexda16.hpp"
+#include "../adquisicion_datos/ao_output.h"
 #include "../common/error_publisher.hpp"
 
 #include <pthread.h>
@@ -102,6 +103,9 @@ int main()
         LOG_WARN("MAIN", "PEX-DA16 no disponible — control solo por CAN");
         ctx.actuador = nullptr;
     }
+
+    // Inicializar modulo AO (PEX-DA16)
+    ao_init();
 
     // ── 5. Activar flag de ejecución ──────────────────────────────────────
     ctx.running.store(true);

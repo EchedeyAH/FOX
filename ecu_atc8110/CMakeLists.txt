@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(ecu_atc8110 LANGUAGES CXX)
+project(ecu_atc8110 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,13 +14,14 @@ set(IXPIO_INCLUDE ${IXPIO_ROOT}/include)
 # App sources (excluding common/adquisicion_datos/comunicacion_can)
 file(GLOB ECU_APP_SOURCES
     control_vehiculo/*.cpp
+    control_vehiculo/*.c
     logica_sistema/supervisor.cpp
     interfaces/cli_interface.cpp
 )
 
 # ===== LIBRERÍAS =====
 file(GLOB COMMON_SOURCES common/*.cpp)
-file(GLOB ADQ_SOURCES adquisicion_datos/*.cpp)
+file(GLOB ADQ_SOURCES adquisicion_datos/*.cpp adquisicion_datos/*.c)
 file(GLOB CAN_SOURCES comunicacion_can/*.cpp)
 
 add_library(ecu_common STATIC ${COMMON_SOURCES})
