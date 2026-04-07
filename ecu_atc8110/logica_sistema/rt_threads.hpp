@@ -351,7 +351,18 @@ inline void* thread_watchdog(void* arg)
         }
 
         // ─── INTEGRACIÓN: Verificar voltaje de batería ───
-        auto voltage_result = ctx->voltage_protection.check_voltage(snap.battery.pack_voltage_mv);
+        // Evitar SAFE_STOP si no hay datos BMS válidos aún
+        static int vbat_warn_cnt = 0;
+        if (!snap.battery.communication_ok || snap.battery.pack_voltage_mv <= 0.0) {
+            if (vbat_warn_cnt++ % 20 == 0) {
+                LOG_WARN("WDG", "VBAT no válida (sin BMS o 0 mV) -> omitiendo protección");
+            }
+            common::periodic_sleep(next, common::periods::WATCHDOG_NS);
+            continue;
+        }
+
+        auto voltage_result = ctx->voltage_protection.check_voltage(
+            static_cast<int32_t>(snap.battery.pack_voltage_mv));
         
         if (voltage_result.safe_stop && ctx->estado.load() == EstadoEcu::Operando) {
             // Voltaje crítico → SAFE_STOP
