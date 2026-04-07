@@ -132,8 +132,20 @@ void BmsCanHandler::process_state_message(int index, int value, common::BatteryS
             battery_state.cell_v_min_id = static_cast<uint8_t>(value);
             break;
         case 11:
-            battery_state.pack_voltage_mv = static_cast<double>(value);
-            LOG_DEBUG("BMS", "Voltaje pack: " + std::to_string(value) + " mV");
+        {
+            // Heuristica de escala:
+            // - Si valor < 200  -> asumir V (ej: 61 -> 61000 mV)
+            // - Si valor < 2000 -> asumir decivoltios (ej: 610 -> 61000 mV)
+            // - Si valor < 20000-> asumir centivoltios (ej: 6100 -> 61000 mV)
+            // - En otro caso    -> asumir mV
+            int mv = value;
+            if (value < 200) mv = value * 1000;
+            else if (value < 2000) mv = value * 100;
+            else if (value < 20000) mv = value * 10;
+            battery_state.pack_voltage_mv = static_cast<double>(mv);
+            LOG_DEBUG("BMS", "Voltaje pack raw=" + std::to_string(value) +
+                             " -> " + std::to_string(mv) + " mV");
+        }
             break;
         case 12:
             battery_state.pack_current_ma = static_cast<double>(static_cast<int16_t>(value));
