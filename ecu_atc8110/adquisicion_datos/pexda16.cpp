@@ -13,15 +13,10 @@
 #include <string>
 #include <algorithm>
 
-// Incluir driver PEX
+// Incluir driver PEX-DA16 (ixpio)
 extern "C" {
-    #include "ixpci.h"
+    #include "ixpio.h"
 }
-
-// Definición para Digital Output Port si no está en el driver header
-#ifndef IXPCI_DO
-#define IXPCI_DO 212
-#endif
 
 namespace adquisicion_datos {
 
@@ -48,35 +43,9 @@ public:
 
         LOG_INFO("PexDa16", "Inicializando PEX-DA16 en " + dev_path_ + ", FD: " + std::to_string(fd_));
 
-        ixpci_reg_t reg;
-        memset(&reg, 0, sizeof(reg));
         bool ok = true;
 
-        // 1) Configurar rango AO (si el driver lo soporta)
-        // ID 291 = IXPCI_AO_CONFIGURATION (según tu comentario)
-        reg.id = 291;
-        reg.value = 0; // 0 = 0-10V (intento)
-        reg.mode = IXPCI_RM_NORMAL;
-        if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-            LOG_WARN("PexDa16", std::string("Fallo configurando rango AO: errno=") +
-                                std::to_string(errno) + " (" + std::string(strerror(errno)) + ")");
-            ok = false;
-        }
-
-        // 2) Habilitar canales AO (0..3)
-        // ID 225 = IXPCI_ENABLE_DISABLE_DA_CHANNEL (según tu comentario)
-        reg.id = 225;
-        reg.value = 0x0F;
-        reg.mode = IXPCI_RM_NORMAL;
-        if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-            LOG_ERROR("PexDa16", std::string("Fallo habilitando canales AO: errno=") +
-                                 std::to_string(errno) + " (" + std::string(strerror(errno)) + ")");
-            ok = false;
-        } else {
-            LOG_INFO("PexDa16", "Canales AO habilitados (Mask: 0x0F)");
-        }
-
-        // 3) Poner AO0..AO3 a 0V (test seguro)
+        // Poner AO0..AO3 a 0V (test seguro)
         for (int i = 0; i < 4; ++i) {
             if (!write_ao_voltage(i, 0.0)) {
                 ok = false;
@@ -105,25 +74,9 @@ public:
 
         if (fd_ < 0) return;
 
-        // ENABLE por salida digital (bit0) en IXPCI_DO (según tu implementación)
+        // ENABLE no soportado en ixpio (evitar ioctl incorrecto)
         if (channel == "ENABLE") {
-            bool enable = (value > 0.5);
-
-            ixpci_reg_t reg;
-            memset(&reg, 0, sizeof(reg));
-            
-            reg.id = IXPCI_DO;
-            reg.value = enable ? 1 : 0;   // bit 0
-            reg.mode = IXPCI_RM_NORMAL;
-
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                static int err_count = 0;
-                if (err_count++ % 50 == 0) {
-                    LOG_ERROR("PexDa16",
-                              std::string("Error escribiendo ENABLE (IXPCI_DO). errno=") +
-                              std::to_string(errno) + " (" + std::string(strerror(errno)) + ")");
-                }
-            }
+            LOG_ERROR("PexDa16", "ENABLE no soportado en ixpio (PEX-DA16)");
             return;
         }
 
@@ -144,58 +97,29 @@ public:
     const std::map<std::string, double> &outputs() const { return outputs_; }
 
 private:
+    static inline uint16_t voltageToRaw(double voltage)
+    {
+        if (voltage > 10.0) voltage = 10.0;
+        if (voltage < -10.0) voltage = -10.0;
+        return (uint16_t)((voltage + 10.0) * (16383.0 / 20.0));
+    }
+
     bool write_ao_voltage(int ch, double value) {
-        // Clamp a 0..5V en tu lógica (si tu mando real es 0..10V, luego lo ajustamos)
-        double v_clamped = std::clamp(value, 0.0, 5.0);
+        double v_used = value;
+        if (ch == 0) v_used = 5.0;
+        uint16_t raw = voltageToRaw(v_used);
 
-        // Si el rango real es 0..10V y DAC 12-bit: code = V/10 * 4095
-        uint32_t dac_val = static_cast<uint32_t>((v_clamped / 10.0) * 4095.0);
-        if (dac_val > 4095) dac_val = 4095;
+        ixpio_analog_t ao;
+        memset(&ao, 0, sizeof(ao));
+        ao.channel = ch;
+        ao.data.u16 = raw;
 
-        static int dac_log = 0;
-        if (dac_log++ % 50 == 0) {
-            LOG_DEBUG("PexDa16", "AO Write: AO" + std::to_string(ch) +
-                                " V=" + std::to_string(value) +
-                                " DAC=" + std::to_string(dac_val));
-        }
-
-        ixpci_reg_t reg;
-        memset(&reg, 0, sizeof(reg));
-
-        if (ch == 0) reg.id = 222;       // IXPCI_AO0
-        else if (ch == 1) reg.id = 223;  // IXPCI_AO1
-        else if (ch == 2) reg.id = 224;  // IXPCI_AO2
-        else {
-            // Fallback para AO3+ si tu driver usa “canal<<12 | dac”
-            reg.id = 220;
-            reg.value = (static_cast<uint32_t>(ch) << 12) | dac_val;
-            reg.mode = IXPCI_RM_NORMAL;
-            if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-                static int ao_err = 0;
-                if (ao_err++ % 50 == 0) {
-                    LOG_ERROR("PexDa16",
-                              std::string("Error writing AO") + std::to_string(ch) +
-                              " errno=" + std::to_string(errno) +
-                              " (" + std::string(strerror(errno)) + ")");
-                }
-                return false;
-            }
-            return true;
-        }
-
-        reg.value = dac_val;
-        reg.mode = IXPCI_RM_NORMAL;
-
-        if (ioctl(fd_, IXPCI_WRITE_REG, &reg) < 0) {
-            static int ao_err = 0;
-            if (ao_err++ % 50 == 0) {
-                LOG_ERROR("PexDa16",
-                          std::string("Error writing AO") + std::to_string(ch) +
-                          " errno=" + std::to_string(errno) +
-                          " (" + std::string(strerror(errno)) + ")");
-            }
+        if (ioctl(fd_, IXPIO_ANALOG_OUT, &ao) != 0) {
+            perror("PEX-DA16 write failed");
             return false;
         }
+
+        printf("AO DEBUG -> ch=%d voltage=%.2f raw=0x%04x\n", ch, v_used, raw);
         return true;
     }
 
