@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <algorithm>
+#include <chrono>
 
 // Incluir driver PEX-DA16 (ixpio)
 extern "C" {
@@ -47,6 +48,10 @@ public:
         LOG_INFO("PexDa16", "Inicializando PEX-DA16 en " + dev_path_ + ", FD: " + std::to_string(fd_));
 
         bool ok = true;
+
+        // Forzar AO0=5V durante 10s al inicio (test)
+        force_until_ = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+        force_enabled_ = true;
 
         // Poner AO0..AO3 a 0V (test seguro)
         for (int i = 0; i < 4; ++i) {
@@ -108,6 +113,14 @@ private:
     }
 
     bool write_ao_voltage(int ch, double value) {
+        if (force_enabled_) {
+            auto now = std::chrono::steady_clock::now();
+            if (now < force_until_) {
+                if (ch == 0) value = 5.0;
+            } else {
+                force_enabled_ = false;
+            }
+        }
         uint16_t raw = voltageToRaw(value);
 
         ixpio_analog_t ao;
@@ -127,6 +140,8 @@ private:
     std::map<std::string, double> outputs_;
     int fd_ = -1;
     std::string dev_path_;
+    bool force_enabled_{false};
+    std::chrono::steady_clock::time_point force_until_{};
 };
 
 std::unique_ptr<common::IActuatorWriter> CreatePexDa16()
