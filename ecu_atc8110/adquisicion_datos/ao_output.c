@@ -23,6 +23,7 @@
 #define AO_HW_CHANNELS 4
 #define AO_DAC_MAX     16383
 #define AO_VOLT_MAX    10.0f
+#define AO_VOLT_MIN   -10.0f
 
 static int g_ao_fd = -1;
 static int g_ao_ready = 0;
@@ -37,11 +38,11 @@ static int ao_open_device(void)
     return -1;
 }
 
-static uint32_t ao_voltage_to_code(float v)
+static inline uint16_t voltageToDAC(float voltage)
 {
-    if (v < 0.0f) v = 0.0f;
-    if (v > AO_VOLT_MAX) v = AO_VOLT_MAX;
-    return (uint32_t)((v / AO_VOLT_MAX) * (float)AO_DAC_MAX + 0.5f);
+    if (voltage > AO_VOLT_MAX) voltage = AO_VOLT_MAX;
+    if (voltage < AO_VOLT_MIN) voltage = AO_VOLT_MIN;
+    return (uint16_t)((voltage + AO_VOLT_MAX) * ((float)AO_DAC_MAX / 20.0f));
 }
 
 static void ao_write_raw(int ch, uint32_t code)
@@ -54,7 +55,7 @@ static void ao_write_raw(int ch, uint32_t code)
     else if (ch == 2) reg.id = AO_CH2_REG;
     else {
         reg.id = AO_FALLBACK;
-        reg.value = ((uint32_t)ch << 12) | (code & 0x0FFF);
+        reg.value = ((uint32_t)ch << 12) | (code & 0x3FFF);
         reg.mode = IXPCI_RM_NORMAL;
         (void)ioctl(g_ao_fd, IXPCI_WRITE_REG, &reg);
         return;
@@ -108,8 +109,7 @@ void ao_set_channel(int channel, float voltage)
     if (!g_ao_ready) return;
     if (channel < 0 || channel >= AO_HW_CHANNELS) return;
 
-    uint32_t code = ao_voltage_to_code(voltage);
-    if (code > AO_DAC_MAX) code = AO_DAC_MAX;
+    uint16_t code = voltageToDAC(voltage);
     ao_write_raw(channel, code);
 }
 
