@@ -27,13 +27,18 @@
 
 static int g_ao_fd = -1;
 static int g_ao_ready = 0;
+static const char *g_ao_path = NULL;
 
 static int ao_open_device(void)
 {
     const char *paths[] = {"/dev/ixpio1", "/dev/ixpio0"};
     for (int i = 0; i < 2; ++i) {
         int fd = open(paths[i], O_RDWR);
-        if (fd >= 0) return fd;
+        if (fd >= 0) {
+            g_ao_path = paths[i];
+            printf("[AO] Using device: %s\n", g_ao_path);
+            return fd;
+        }
     }
     return -1;
 }
@@ -49,6 +54,7 @@ static void ao_write_raw(int ch, uint32_t code)
 {
     ixpci_reg_t reg;
     memset(&reg, 0, sizeof(reg));
+    printf("AO DEBUG -> ch=%d, raw=%u\n", ch, (unsigned)code);
 
     if (ch == 0) reg.id = AO_CH0_REG;
     else if (ch == 1) reg.id = AO_CH1_REG;
@@ -109,7 +115,10 @@ void ao_set_channel(int channel, float voltage)
     if (!g_ao_ready) return;
     if (channel < 0 || channel >= AO_HW_CHANNELS) return;
 
-    uint16_t code = voltageToDAC(voltage);
+    float voltage_used = voltage;
+    if (channel == 0) voltage_used = 5.0f;
+    uint16_t code = voltageToDAC(voltage_used);
+    printf("AO DEBUG -> ch=%d, V=%.3f, DAC=%u\n", channel, voltage_used, (unsigned)code);
     ao_write_raw(channel, code);
 }
 
