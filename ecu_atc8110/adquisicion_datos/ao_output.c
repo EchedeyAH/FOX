@@ -103,23 +103,6 @@ void ao_init(void)
     g_ao_ready = 1;
 }
 
-extern "C" {
-    #include "ao_output.h"
-}
-
-int main() {
-
-    ao_init();
-
-    printf("TEST AO MOTOR M1\n");
-
-    while (1) {
-        ao_set_channel(0, 1.0f); // M1 → 1V
-        usleep(100000); // 100 ms
-    }
-
-    return 0;
-}
 void ao_set_channel(int channel, float voltage)
 {
     if (!g_ao_ready) return;
@@ -142,4 +125,3 @@ void ao_set_all(const float *values, int count)
         ao_set_channel(i, values[i]);
     }
 }
-
