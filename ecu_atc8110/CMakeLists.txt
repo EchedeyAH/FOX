@@ -126,6 +126,19 @@ target_include_directories(test_simple_adc PRIVATE
 
 link_ecu_libs(test_simple_adc)
 
+# Test Analog Outputs (PEX-DA16)
+add_executable(test_ao_output
+    test_ao_main.cpp
+)
+
+target_include_directories(test_ao_output PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/adquisicion_datos
+    ${IXPIO_INCLUDE}
+)
+
+link_ecu_libs(test_ao_output)
+
 # Direct Copy Test (read_channels.c ported to C++)
 add_executable(test_adc_direct
     test_adc_direct.cpp
