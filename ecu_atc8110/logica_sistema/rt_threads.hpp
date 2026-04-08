@@ -268,8 +268,13 @@ inline void* thread_can_tx_motors(void* arg)
                 }
             }
 
-            // Actualizar salidas analogicas (mapeo legacy -> PEX-DA16)
-            ao_update_from_control(acelerador_out, freno_out);
+            // Actualizar salidas analogicas (PEX-DA16)
+            if (ctx->actuador) {
+                for (int i = 0; i < 4; ++i) {
+                    std::string ch = "AO" + std::to_string(i);
+                    ctx->actuador->write_output(ch, acelerador_out[i]);
+                }
+            }
 
             // Telemetría cada 20 ciclos (~1s)
             if (++telemetry_cnt >= 20) {
