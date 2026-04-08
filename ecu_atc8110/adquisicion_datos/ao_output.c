@@ -9,15 +9,7 @@
 #include <stdio.h>
 
 // Driver PEX-DA16 (ixpio)
-#include "ixpci.h"
-
-// Registros ixpio/ixpci usados por el driver (ver tools/pex_da16_auto_mapper)
-#define AO_RANGE_REG   291  // IXPCI_AO_CONFIGURATION
-#define AO_ENABLE_REG  225  // IXPCI_ENABLE_DISABLE_DA_CHANNEL
-#define AO_CH0_REG     222  // IXPCI_AO0
-#define AO_CH1_REG     223  // IXPCI_AO1
-#define AO_CH2_REG     224  // IXPCI_AO2
-#define AO_FALLBACK    220  // Fallback: (ch<<12 | dac)
+#include "ixpio.h"
 
 // Suposicion (segun requisitos): 4 canales AO, 0-10V, 14 bits.
 #define AO_HW_CHANNELS 4
@@ -39,6 +31,7 @@ static int ao_open_device(void)
             printf("[AO] Using device: %s\n", g_ao_path);
             return fd;
         }
+        printf("ERROR opening %s errno=%d (%s)\n", paths[i], errno, strerror(errno));
     }
     return -1;
 }
@@ -52,24 +45,14 @@ static inline uint16_t voltageToDAC(float voltage)
 
 static void ao_write_raw(int ch, uint32_t code)
 {
-    ixpci_reg_t reg;
-    memset(&reg, 0, sizeof(reg));
     printf("AO DEBUG -> ch=%d, raw=%u\n", ch, (unsigned)code);
-
-    if (ch == 0) reg.id = AO_CH0_REG;
-    else if (ch == 1) reg.id = AO_CH1_REG;
-    else if (ch == 2) reg.id = AO_CH2_REG;
-    else {
-        reg.id = AO_FALLBACK;
-        reg.value = ((uint32_t)ch << 12) | (code & 0x3FFF);
-        reg.mode = IXPCI_RM_NORMAL;
-        (void)ioctl(g_ao_fd, IXPCI_WRITE_REG, &reg);
-        return;
+    ixpio_analog_t ao;
+    memset(&ao, 0, sizeof(ao));
+    ao.channel = ch;
+    ao.data.u16 = (uint16_t)(code & 0x3FFF);
+    if (ioctl(g_ao_fd, IXPIO_ANALOG_OUT, &ao) != 0) {
+        perror("PEX-DA16 ioctl failed");
     }
-
-    reg.value = code;
-    reg.mode = IXPCI_RM_NORMAL;
-    (void)ioctl(g_ao_fd, IXPCI_WRITE_REG, &reg);
 }
 
 void ao_init(void)
@@ -78,28 +61,9 @@ void ao_init(void)
 
     g_ao_fd = ao_open_device();
     if (g_ao_fd < 0) {
-        fprintf(stderr, "[AO] No se pudo abrir /dev/ixpio0/1 (PEX-DA16).\n");
+        fprintf(stderr, "[AO] No se pudo abrir /dev/ixpio0 o /dev/ixpio1 (PEX-DA16).\n");
         g_ao_ready = 0;
         return;
-    }
-
-    ixpci_reg_t reg;
-    memset(&reg, 0, sizeof(reg));
-
-    // Configurar rango AO (0 = 0-10V segun driver)
-    reg.id = AO_RANGE_REG;
-    reg.value = 0;
-    reg.mode = IXPCI_RM_NORMAL;
-    if (ioctl(g_ao_fd, IXPCI_WRITE_REG, &reg) < 0) {
-        fprintf(stderr, "[AO] Fallo configurando rango AO: errno=%d\n", errno);
-    }
-
-    // Habilitar AO0..AO3
-    reg.id = AO_ENABLE_REG;
-    reg.value = 0x0F;
-    reg.mode = IXPCI_RM_NORMAL;
-    if (ioctl(g_ao_fd, IXPCI_WRITE_REG, &reg) < 0) {
-        fprintf(stderr, "[AO] Fallo habilitando canales AO: errno=%d\n", errno);
     }
 
     // Poner AO0..AO3 a 0V
@@ -115,10 +79,8 @@ void ao_set_channel(int channel, float voltage)
     if (!g_ao_ready) return;
     if (channel < 0 || channel >= AO_HW_CHANNELS) return;
 
-    float voltage_used = voltage;
-    if (channel == 0) voltage_used = 5.0f;
-    uint16_t code = voltageToDAC(voltage_used);
-    printf("AO DEBUG -> ch=%d, V=%.3f, DAC=%u\n", channel, voltage_used, (unsigned)code);
+    uint16_t code = voltageToDAC(voltage);
+    printf("AO DEBUG -> ch=%d, V=%.3f, DAC=%u\n", channel, voltage, (unsigned)code);
     ao_write_raw(channel, code);
 }
 

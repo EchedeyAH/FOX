@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <cstring>
 #include <cerrno>
+#include <cstdio>
 #include <map>
 #include <string>
 #include <algorithm>
@@ -30,6 +31,7 @@ public:
         dev_path_ = "/dev/ixpio1";
         fd_ = open(dev_path_.c_str(), O_RDWR);
         if (fd_ < 0) {
+            printf("ERROR opening %s errno=%d (%s)\n", dev_path_.c_str(), errno, strerror(errno));
             LOG_WARN("PexDa16", "No se pudo abrir " + dev_path_ +
                                ". Probando fallback a /dev/ixpio0...");
             dev_path_ = "/dev/ixpio0";
@@ -37,6 +39,7 @@ public:
         }
 
         if (fd_ < 0) {
+            printf("ERROR opening %s errno=%d (%s)\n", dev_path_.c_str(), errno, strerror(errno));
             LOG_ERROR("PexDa16", "No se encontró hardware PEX-DA16 en /dev/ixpio1 o /dev/ixpio0.");
             return false;
         }
@@ -105,9 +108,7 @@ private:
     }
 
     bool write_ao_voltage(int ch, double value) {
-        double v_used = value;
-        if (ch == 0) v_used = 5.0;
-        uint16_t raw = voltageToRaw(v_used);
+        uint16_t raw = voltageToRaw(value);
 
         ixpio_analog_t ao;
         memset(&ao, 0, sizeof(ao));
@@ -119,7 +120,7 @@ private:
             return false;
         }
 
-        printf("AO DEBUG -> ch=%d voltage=%.2f raw=0x%04x\n", ch, v_used, raw);
+        printf("AO DEBUG -> ch=%d voltage=%.2f raw=0x%04x\n", ch, value, raw);
         return true;
     }
 

@@ -9,6 +9,7 @@
 #include <string>
 #include <cstring>
 #include <cerrno>
+#include <cstdio>
 #include <chrono>
 
 namespace adquisicion_datos {
@@ -43,6 +44,7 @@ public:
 
         if (fd < 0) {
             int e = errno;
+            printf("ERROR opening %s errno=%d (%s)\n", dev_path.c_str(), e, strerror(e));
             failed_fds_.insert(index);
             last_fail_pci_[index] = now;
             LOG_WARN("PexDevice", "Fallo al abrir " + dev_path + ": errno=" + 
@@ -78,6 +80,7 @@ public:
             int fd = open(dev_path.c_str(), O_RDONLY);
             if (fd < 0) {
                 int e = errno;
+                printf("ERROR opening %s errno=%d (%s)\n", dev_path.c_str(), e, strerror(e));
                 LOG_WARN("PexDevice",
                         "No se pudo abrir " + dev_path +
                         " errno=" + std::to_string(e) +
