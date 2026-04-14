@@ -23,6 +23,7 @@
 #include "../common/rt_thread.hpp"
 #include "../common/rt_context.hpp"
 #include "../common/logging.hpp"
+#include "../common/logger.hpp"
 #include "../adquisicion_datos/pexda16.hpp"
 #include "../common/error_publisher.hpp"
 
@@ -46,6 +47,10 @@ static void signal_handler(int sig)
 
 int main()
 {
+    if (!common::Logger::Instance().Init()) {
+        std::cerr << "[WARN] [MAIN] No se pudo inicializar logger (datos_pruebas)" << std::endl;
+    }
+
     std::cout << "╔══════════════════════════════════╗\n"
               << "║   ECU ATC8110 — RT Multi-Hilo   ║\n"
               << "║   SCHED_FIFO / PREEMPT kernel   ║\n"
@@ -170,5 +175,6 @@ int main()
     ecu::g_error_publisher.stop();
 
     LOG_INFO("MAIN", "ECU ATC8110 apagado correctamente.");
+    common::Logger::Instance().Shutdown();
     return 0;
 }

@@ -1,5 +1,6 @@
 #include "logica_sistema/state_machine.hpp"
 #include "common/logging.hpp"
+#include "common/logger.hpp"
 #include <csignal>
 #include <chrono>
 #include <thread>
@@ -13,6 +14,10 @@ void signal_handler(int) {
 
 int main()
 {
+    if (!common::Logger::Instance().Init()) {
+        std::cerr << "[WARN] [MAIN] No se pudo inicializar logger (datos_pruebas)" << std::endl;
+    }
+
     // Configurar handler de señales
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -59,6 +64,7 @@ int main()
     LOG_INFO("MAIN", "Apagando sistema...");
     std::cout << "Sistema detenido correctamente." << std::endl;
     std::cout << "========================================" << std::endl;
+    common::Logger::Instance().Shutdown();
     
     return 0;
 }
