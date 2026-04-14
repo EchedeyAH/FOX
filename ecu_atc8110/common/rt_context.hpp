@@ -52,6 +52,7 @@ struct RtContext {
     // ── Control de ciclo de vida ────────────────────────────────────────────
     std::atomic<bool>       running{false};  // true = todos los hilos activos
     std::atomic<EstadoEcu>  estado{EstadoEcu::Inicializando};
+    std::atomic<bool>       adc_ok{true};
 
     // ── Módulos de hardware (propiedad del contexto) ────────────────────────
     comunicacion_can::CanManager can_motors{"emuccan0"};  // CAN motores 1Mbps
@@ -87,8 +88,9 @@ struct RtContext {
         std::lock_guard<std::mutex> lock(mtx_snapshot);
         snapshot.vehicle.accelerator = 0.0;
         snapshot.vehicle.brake       = 0.0;
+        bool accel_seen = false;
         for (const auto& s : samples) {
-            if      (s.name == "acelerador")    snapshot.vehicle.accelerator = s.value;
+            if      (s.name == "acelerador")  { snapshot.vehicle.accelerator = s.value; accel_seen = true; }
             else if (s.name == "freno")         snapshot.vehicle.brake = std::max(snapshot.vehicle.brake, s.value);
             else if (s.name == "volante")       snapshot.vehicle.steering = s.value;
             else if (s.name == "suspension_fl") snapshot.vehicle.suspension_mm[0] = s.value;
@@ -96,6 +98,7 @@ struct RtContext {
             else if (s.name == "suspension_rl") snapshot.vehicle.suspension_mm[2] = s.value;
             else if (s.name == "suspension_rr") snapshot.vehicle.suspension_mm[3] = s.value;
         }
+        adc_ok.store(!samples.empty() && accel_seen, std::memory_order_relaxed);
     }
 
     /** Copia el snapshot para uso local dentro de un hilo (lectura segura) */

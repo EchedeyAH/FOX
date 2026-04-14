@@ -5,6 +5,7 @@
 #include "../comunicacion_can/can_manager.hpp"
 #include "../comunicacion_can/can_initializer.hpp"
 #include "../control_vehiculo/controllers.hpp"
+#include "../control_vehiculo/safe_motor_test.hpp"
 #include "../adquisicion_datos/sensor_manager.hpp"
 #include "../adquisicion_datos/pexda16.hpp"
 
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
+#include <cstdio>
 
 namespace logica_sistema {
 
@@ -32,6 +34,8 @@ public:
 private:
     EstadoEcu estado_{EstadoEcu::Inicializando};
     common::SystemSnapshot snapshot_{};
+    bool adc_ok_{true};
+    control_vehiculo::SafeMotorTest safe_motor_{};
     
     // Arquitectura Dual-CAN
     // EMUC-B202: CH1=Motors(1M), CH2=BMS(500k)
@@ -186,9 +190,10 @@ inline void StateMachine::refresh_sensors()
     // Valores por defecto si no hay sensores
     snapshot_.vehicle.accelerator = 0.0; 
     snapshot_.vehicle.brake = 0.0;
+    bool accel_seen = false;
 
     for (const auto &s : samples) {
-        if (s.name == "acelerador") snapshot_.vehicle.accelerator = s.value;
+        if (s.name == "acelerador") { snapshot_.vehicle.accelerator = s.value; accel_seen = true; }
         else if (s.name == "freno") snapshot_.vehicle.brake = std::max(snapshot_.vehicle.brake, s.value);
         else if (s.name == "volante") snapshot_.vehicle.steering = s.value;
         else if (s.name == "suspension_fl") snapshot_.vehicle.suspension_mm[0] = s.value;
@@ -196,6 +201,7 @@ inline void StateMachine::refresh_sensors()
         else if (s.name == "suspension_rl") snapshot_.vehicle.suspension_mm[2] = s.value;
         else if (s.name == "suspension_rr") snapshot_.vehicle.suspension_mm[3] = s.value;
     }
+    adc_ok_ = (!samples.empty() && accel_seen);
     
     // [FORCE] Override accelerator for testing (RAMP UP) - DISABLED
     /*
@@ -225,13 +231,12 @@ inline void StateMachine::send_motor_commands()
 {
     // [DEBUG] Counter for logging throttling
     static int log_cnt = 0;
+    constexpr double LOOP_DT_S = 0.05;
+    bool comm_ok = true;
 
     for (size_t i = 0; i < snapshot_.motors.size(); ++i) {
         const auto& motor = snapshot_.motors[i];
         uint8_t motor_id = static_cast<uint8_t>(i + 1); // 1-4
-        
-        // Analog Output Update (0-5V)
-        double voltage_cmd = 0.0;
 
         if (motor.enabled) {
             // Convertir torque_nm a throttle (0-255) for CAN
@@ -239,32 +244,38 @@ inline void StateMachine::send_motor_commands()
             uint8_t brake = 0; // Future: Map brake if needed
             
             // CAN Command
-            can_motors_.send_motor_command(motor_id, throttle, brake);
-
-            // Analog Output Command (0-5V)
-            // Asumimos 100Nm = 5V (Full Scale)
-            // Clamp negative values to 0
-            voltage_cmd = std::max(0.0, (motor.torque_nm / 100.0) * 5.0);
-            if (voltage_cmd > 5.0) voltage_cmd = 5.0;
+            comm_ok = comm_ok && can_motors_.send_motor_command(motor_id, throttle, brake);
 
             // [DEBUG] Loguear comando para verificar torque (solo Motor 1 para no saturar)
             if (motor_id == 1 && (log_cnt++ % 10 == 0)) { // Log cada 500ms
                  LOG_INFO("StateMachine", "TX Motor 1 -> Throttle: " + std::to_string(static_cast<int>(throttle)) + 
-                          " (Torque: " + std::to_string(motor.torque_nm) + " Nm) | AO: " + std::to_string(voltage_cmd) + "V");
+                          " (Torque: " + std::to_string(motor.torque_nm) + " Nm)");
             }
         } else {
             // Motor deshabilitado: enviar throttle = 0
-            can_motors_.send_motor_command(motor_id, 0, 0);
-            voltage_cmd = 0.0;
+            comm_ok = comm_ok && can_motors_.send_motor_command(motor_id, 0, 0);
         }
-
-        // Write to DAQ (Analog Outputs) - Solo si PEX-DA16 está disponible
-        if (actuator_) {
-             std::string ch = "AO" + std::to_string(i); // AO0, AO1, AO2, AO3
-             actuator_->write_output(ch, voltage_cmd);
-        }
-        // Si no hay PEX-DA16, el control es 100% por CAN (sin salidas analógicas)
     }
+
+    safe_motor_.update(snapshot_.vehicle.accelerator,
+                       snapshot_.vehicle.brake,
+                       adc_ok_,
+                       comm_ok,
+                       LOOP_DT_S);
+
+    // Write to DAQ (Analog Outputs) - Solo si PEX-DA16 está disponible
+    if (actuator_) {
+        for (int i = 0; i < 4; ++i) {
+            control_vehiculo::safeWriteAnalog(actuator_.get(), i, safe_motor_.current_voltage);
+        }
+    }
+    // Si no hay PEX-DA16, el control es 100% por CAN (sin salidas analógicas)
+
+    printf("[MOTOR] state=%d throttle=%.2f target=%.2f current=%.2f\n",
+           static_cast<int>(safe_motor_.state),
+           snapshot_.vehicle.accelerator,
+           safe_motor_.target_voltage,
+           safe_motor_.current_voltage);
 }
 
 inline void StateMachine::request_motor_telemetry()

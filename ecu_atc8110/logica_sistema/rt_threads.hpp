@@ -27,11 +27,13 @@
 #include "../common/voltage_protection.hpp"
 #include "../common/system_mode_manager.hpp"
 #include "../control_vehiculo/ao_control.h"
+#include "../control_vehiculo/safe_motor_test.hpp"
 
 #include <thread>
 #include <chrono>
 #include <algorithm>
 #include <cstring>
+#include <cstdio>
 
 namespace logica_sistema {
 
@@ -232,13 +234,15 @@ inline void* thread_can_tx_motors(void* arg)
 
     constexpr double MAX_TORQUE   = 100.0; // Nm
     constexpr double TORQUE_TO_V  = 5.0 / MAX_TORQUE; // 100Nm → 5V
+    constexpr double LOOP_DT_S    = 0.05;
+    control_vehiculo::SafeMotorTest safe_motor{};
 
     while (ctx->running.load()) {
         if (ctx->estado.load() == EstadoEcu::Operando) {
             auto snap = ctx->read_snapshot();
-
-            float acelerador_out[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-            float freno_out[4]      = {0.0f, 0.0f, 0.0f, 0.0f};
+            const double throttle_in = snap.vehicle.accelerator;
+            const double brake_in = snap.vehicle.brake;
+            bool comm_ok = true;
 
             for (size_t i = 0; i < snap.motors.size(); ++i) {
                 const auto& motor    = snap.motors[i];
@@ -255,10 +259,7 @@ inline void* thread_can_tx_motors(void* arg)
                 }
 
                 // Enviar por CAN
-                ctx->can_motors.send_motor_command(motor_id, throttle, brake);
-
-                // Salidas analogicas (via ao_update_from_control)
-                acelerador_out[i] = static_cast<float>(voltage);
+                comm_ok = comm_ok && ctx->can_motors.send_motor_command(motor_id, throttle, brake);
 
                 // Log Motor 1 cada 10 ciclos (~500ms)
                 if (motor_id == 1 && log_cnt++ % 10 == 0) {
@@ -268,13 +269,21 @@ inline void* thread_can_tx_motors(void* arg)
                 }
             }
 
-            // Actualizar salidas analogicas (PEX-DA16)
+            const bool adc_ok = ctx->adc_ok.load(std::memory_order_relaxed);
+            safe_motor.update(throttle_in, brake_in, adc_ok, comm_ok, LOOP_DT_S);
+
+            // Actualizar salidas analogicas (PEX-DA16) con capa segura
             if (ctx->actuador) {
                 for (int i = 0; i < 4; ++i) {
-                    std::string ch = "AO" + std::to_string(i);
-                    ctx->actuador->write_output(ch, acelerador_out[i]);
+                    control_vehiculo::safeWriteAnalog(ctx->actuador.get(), i, safe_motor.current_voltage);
                 }
             }
+
+            printf("[MOTOR] state=%d throttle=%.2f target=%.2f current=%.2f\n",
+                   static_cast<int>(safe_motor.state),
+                   throttle_in,
+                   safe_motor.target_voltage,
+                   safe_motor.current_voltage);
 
             // Telemetría cada 20 ciclos (~1s)
             if (++telemetry_cnt >= 20) {
