@@ -6,7 +6,6 @@
 #include <cstring>
 #include <cctype>
 #include <ctime>
-#include <filesystem>
 #include <fcntl.h>
 #include <poll.h>
 #include <sstream>
@@ -14,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <dirent.h>
 
 namespace {
 
@@ -41,22 +41,30 @@ std::string TimestampForFile()
     return std::string(buf);
 }
 
-int NextTestNumber(const std::filesystem::path& dir)
+bool EnsureDirExists(const std::string& dir)
 {
-    std::error_code ec;
-    if (!std::filesystem::exists(dir, ec) || ec) {
+    if (::mkdir(dir.c_str(), 0755) == 0) {
+        return true;
+    }
+    if (errno == EEXIST) {
+        return true;
+    }
+    return false;
+}
+
+int NextTestNumber(const std::string& dir)
+{
+    DIR* d = ::opendir(dir.c_str());
+    if (!d) {
         return 1;
     }
 
     int max_num = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
-        if (ec) {
-            break;
-        }
-        if (!entry.is_regular_file()) {
+    while (const dirent* ent = ::readdir(d)) {
+        if (!ent->d_name) {
             continue;
         }
-        const auto name = entry.path().filename().string();
+        const std::string name(ent->d_name);
         const std::string prefix = "Prueba_";
         if (name.rfind(prefix, 0) != 0) {
             continue;
@@ -76,6 +84,7 @@ int NextTestNumber(const std::filesystem::path& dir)
             max_num = static_cast<int>(num);
         }
     }
+    ::closedir(d);
     return max_num + 1;
 }
 
@@ -145,10 +154,8 @@ bool Logger::Init(const Config& cfg)
         return true;
     }
 
-    const std::filesystem::path dir(cfg.base_dir);
-    std::error_code ec;
-    std::filesystem::create_directories(dir, ec);
-    if (ec) {
+    const std::string dir = cfg.base_dir;
+    if (!EnsureDirExists(dir)) {
         initialized_.store(false);
         return false;
     }
@@ -156,7 +163,7 @@ bool Logger::Init(const Config& cfg)
     const int test_number = NextTestNumber(dir);
     const std::string ts = TimestampForFile();
     const std::string filename = "Prueba_" + std::to_string(test_number) + "_" + ts + ".log";
-    log_path_ = (dir / filename).string();
+    log_path_ = dir + "/" + filename;
 
     log_fd_ = ::open(log_path_.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
     if (log_fd_ < 0) {
