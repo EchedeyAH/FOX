@@ -87,6 +87,3 @@ inline void safeWriteAnalog(common::IActuatorWriter* actuator, int channel, doub
     const std::string ch = "AO" + std::to_string(channel);
     actuator->write_output(ch, voltage);
 }
-
-} // namespace control_vehiculo
-EOF
