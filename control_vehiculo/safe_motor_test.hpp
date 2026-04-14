@@ -1,4 +1,3 @@
-cat > /home/fox/ecu_atc8110/control_vehiculo/safe_motor_test.hpp <<'EOF'
 #pragma once
 
 #include "../common/interfaces.hpp"
