@@ -82,10 +82,7 @@ Se emplean técnicas de *mocking*, *loopback* CAN y simuladores de señales anal
 
 ## 📞 Contacto / Créditos
 
-Proyecto desarrollado dentro del marco de trabajos de fin de grado/máster en ingeniería industrial.
+**Autor:** Echedey Aguilar Hernández
+eaguilar1@us.es
 
-**Autor:** [Nombre del autor académico aquí]  
-**Tutor académico:** [Nombre del tutor]
-
-Repositorio mantenido por el equipo técnico del sistema FOX.
 
