@@ -147,6 +147,11 @@ Logger::~Logger()
     Shutdown();
 }
 
+bool Logger::Init()
+{
+    return Init(Config{});
+}
+
 bool Logger::Init(const Config& cfg)
 {
     bool expected = false;

@@ -10,12 +10,14 @@ namespace common {
 class Logger {
 public:
     struct Config {
-        std::string base_dir = "datos_pruebas";
+        std::string base_dir;
+        Config() : base_dir("datos_pruebas") {}
     };
 
     static Logger& Instance();
 
-    bool Init(const Config& cfg = Config{});
+    bool Init();
+    bool Init(const Config& cfg);
     void Shutdown();
 
     const std::string& log_path() const { return log_path_; }
