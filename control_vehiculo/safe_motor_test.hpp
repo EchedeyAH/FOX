@@ -1,3 +1,4 @@
+cat > /home/fox/ecu_atc8110/control_vehiculo/safe_motor_test.hpp <<'EOF'
 #pragma once
 
 #include "../common/interfaces.hpp"
@@ -61,7 +62,6 @@ struct SafeMotorTest {
             }
             break;
         case MotorState::RUNNING:
-            // Se mantiene en RUNNING salvo fallo explícito
             break;
         }
 
@@ -90,3 +90,4 @@ inline void safeWriteAnalog(common::IActuatorWriter* actuator, int channel, doub
 }
 
 } // namespace control_vehiculo
+EOF
