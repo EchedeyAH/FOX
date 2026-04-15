@@ -1,6 +1,12 @@
 #pragma once
 
+#if __has_include("../common/interfaces.hpp")
 #include "../common/interfaces.hpp"
+#elif __has_include("../ecu_atc8110/common/interfaces.hpp")
+#include "../ecu_atc8110/common/interfaces.hpp"
+#else
+#error "No se encontro common/interfaces.hpp para safe_motor_test.hpp"
+#endif
 
 #include <algorithm>
 #include <cmath>
