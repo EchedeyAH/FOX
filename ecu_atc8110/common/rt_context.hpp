@@ -69,7 +69,10 @@ struct RtContext {
     // ── Constructor: valores seguros por defecto ───────────────────────────
     RtContext()
     {
-        snapshot.battery.pack_voltage_mv  = 380000; // 380V nominal
+        // Valor inicial coherente con arquitectura ~61V para evitar disparos
+        // de protección por defecto antes de recibir trama BMS válida.
+        snapshot.battery.pack_voltage_mv  = 61000;
+        snapshot.battery.communication_ok = false;
         snapshot.battery.pack_current_ma  = 0;
         snapshot.battery.state_of_charge  = 50.0;
         snapshot.motors = {

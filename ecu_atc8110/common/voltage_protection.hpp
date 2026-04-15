@@ -9,11 +9,11 @@
  *   - Limitación de potencia (LIMP_MODE) o parada (SAFE_STOP)
  *   - Integración con ErrorManager y HMI
  * 
- * Umbrales (pueden configurarse):
+ * Umbrales (pueden configurarse) para pack nominal ~61V:
  *   - Vbat bajo crítico: < 50V → CRITICO → SAFE_STOP
- *   - Vbat bajo: < 60V → GRAVE → LIMP_MODE
- *   - Vbat alto: > 90V → GRAVE → LIMP_MODE
- *   - Vbat crítico alto: > 95V → CRITICO → SAFE_STOP
+ *   - Vbat bajo: < 55V → GRAVE → LIMP_MODE
+ *   - Vbat alto: > 67V → GRAVE → LIMP_MODE
+ *   - Vbat crítico alto: > 70V → CRITICO → SAFE_STOP
  */
 
 #include <atomic>
@@ -28,9 +28,9 @@ namespace common {
 
 // Umbrales de voltaje (en milivoltios)
 constexpr int32_t VBAT_CRITICAL_LOW_MV   = 50000;  // < 50V  → CRITICO
-constexpr int32_t VBAT_LOW_MV            = 60000;  // < 60V   → GRAVE  
-constexpr int32_t VBAT_HIGH_MV          = 90000;  // > 90V   → GRAVE
-constexpr int32_t VBAT_CRITICAL_HIGH_MV = 95000;  // > 95V   → CRITICO
+constexpr int32_t VBAT_LOW_MV            = 55000;  // < 55V  → GRAVE
+constexpr int32_t VBAT_HIGH_MV           = 67000;  // > 67V  → GRAVE
+constexpr int32_t VBAT_CRITICAL_HIGH_MV  = 70000;  // > 70V  → CRITICO
 
 // Histéresis para recuperación (mV)
 constexpr int32_t VBAT_HYSTERESIS_MV    = 5000;   // 5V de histéresis

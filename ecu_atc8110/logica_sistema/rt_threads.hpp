@@ -27,7 +27,7 @@
 #include "../common/voltage_protection.hpp"
 #include "../common/system_mode_manager.hpp"
 #include "../control_vehiculo/ao_control.h"
-#include "../../control_vehiculo/safe_motor_test.hpp"
+#include "../control_vehiculo/safe_motor_test.hpp"
 
 #include <thread>
 #include <chrono>

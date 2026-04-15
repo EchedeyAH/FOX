@@ -26,7 +26,7 @@ struct AnalogSample {
 
 struct BatteryState {
     // Comunicación
-    bool communication_ok{true};
+    bool communication_ok{false};
     bool bms_error{false};
     
     // Datos del pack completo
