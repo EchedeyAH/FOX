@@ -232,10 +232,17 @@ inline void* thread_can_tx_motors(void* arg)
     int telemetry_cnt = 0;
     static int log_cnt = 0;
 
-    constexpr double MAX_TORQUE   = 100.0; // Nm
-    constexpr double TORQUE_TO_V  = 5.0 / MAX_TORQUE; // 100Nm → 5V
+    // ✅ SAFE_TEST_MODE: Limitar torque a 15 Nm
+    constexpr double MAX_TORQUE   = control_vehiculo::SAFE_TEST_MODE ? 
+                                    control_vehiculo::MAX_TORQUE_SAFE : 100.0;
+    constexpr double MAX_VOLTAGE  = control_vehiculo::SAFE_TEST_MODE ?
+                                    control_vehiculo::MAX_VOLTAGE_SAFE : 5.0;
+    constexpr double TORQUE_TO_V  = MAX_VOLTAGE / MAX_TORQUE;
     constexpr double LOOP_DT_S    = 0.05;
     control_vehiculo::SafeMotorTest safe_motor{};
+    
+    // Log mode control
+    static int can_tx_log_count = 0;
 
     while (ctx->running.load()) {
         if (ctx->estado.load() == EstadoEcu::Operando) {
@@ -261,11 +268,23 @@ inline void* thread_can_tx_motors(void* arg)
                 // Enviar por CAN
                 comm_ok = comm_ok && ctx->can_motors.send_motor_command(motor_id, throttle, brake);
 
-                // Log Motor 1 cada 10 ciclos (~500ms)
-                if (motor_id == 1 && log_cnt++ % 10 == 0) {
-                    LOG_INFO("CAN_TX", "M1 throttle=" + std::to_string(static_cast<int>(throttle))
-                                     + " torque=" + std::to_string(motor.torque_nm) + "Nm"
-                                     + " AO=" + std::to_string(voltage) + "V");
+                // Log Motor 1 cada 10 ciclos (~500ms) - MEJORADO para SAFE_TEST
+                if (motor_id == 1 && can_tx_log_count++ % 10 == 0) {
+                    double clamped_torque = std::clamp(motor.torque_nm, 0.0, MAX_TORQUE);
+                    printf("[CAN_TX_M1] torque=%6.2f(clamped)→%6.2f(max=%5.1f) "
+                           "throttle=%3d voltage=%5.2fV AO_limit=%.1fV\n",
+                           motor.torque_nm,
+                           clamped_torque,
+                           MAX_TORQUE,
+                           static_cast<int>(throttle),
+                           std::clamp(clamped_torque * TORQUE_TO_V, 0.0, MAX_VOLTAGE),
+                           MAX_VOLTAGE);
+                    
+                    if (control_vehiculo::SAFE_TEST_MODE) {
+                        printf("               ⚠️ SAFE_TEST_MODE ACTIVE - max_torque=%5.1f Nm, max_voltage=%5.2f V\n",
+                               control_vehiculo::MAX_TORQUE_SAFE,
+                               control_vehiculo::MAX_VOLTAGE_SAFE);
+                    }
                 }
             }
 
@@ -279,11 +298,15 @@ inline void* thread_can_tx_motors(void* arg)
                 }
             }
 
-            printf("[MOTOR] state=%d throttle=%.2f target=%.2f current=%.2f\n",
-                   static_cast<int>(safe_motor.state),
+            printf("[SAFE_MOTOR] throttle_in=%.2f target_throttle=%.2f current_throttle=%.2f "
+                   "voltage=%.2f(max=%.1f) brake_in=%.2f faults=%d\n",
                    throttle_in,
-                   safe_motor.target_voltage,
-                   safe_motor.current_voltage);
+                   safe_motor.throttle_target,
+                   safe_motor.throttle_current,
+                   safe_motor.current_voltage,
+                   safe_motor.max_safe_voltage,
+                   brake_in,
+                   safe_motor.fault_count);
 
             // Telemetría cada 20 ciclos (~1s)
             if (++telemetry_cnt >= 20) {

@@ -293,18 +293,19 @@ void Logger::ReaderLoop()
 
 void Logger::WriteLine(const std::string& line)
 {
-    const std::string output = HasTimestampPrefix(line)
+    const std::string file_out = HasTimestampPrefix(line)
         ? (line + "\n")
         : ("[" + TimestampForLine() + "] " + line + "\n");
+    const std::string console_out = line + "\n";
 
     std::lock_guard<std::mutex> lock(write_mutex_);
     if (log_fd_ >= 0) {
-        WriteAll(log_fd_, output.c_str(), output.size());
+        WriteAll(log_fd_, file_out.c_str(), file_out.size());
     }
     if (console_out_fd_ >= 0) {
-        WriteAll(console_out_fd_, output.c_str(), output.size());
+        WriteAll(console_out_fd_, console_out.c_str(), console_out.size());
     } else if (console_err_fd_ >= 0) {
-        WriteAll(console_err_fd_, output.c_str(), output.size());
+        WriteAll(console_err_fd_, console_out.c_str(), console_out.size());
     }
 }
 
