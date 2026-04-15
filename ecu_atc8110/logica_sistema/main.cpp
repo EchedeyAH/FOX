@@ -87,12 +87,12 @@ int main()
     // ── 4. Iniciar hardware ───────────────────────────────────────────────
     LOG_INFO("MAIN", "Iniciando buses CAN...");
     if (ctx.can_motors.start())
-        LOG_INFO("MAIN", "CAN Motores (emuccan0 @ 1Mbps) OK");
+        LOG_INFO("MAIN", "CAN Motores (emuccan2 @ 1Mbps) OK");
     else
         LOG_ERROR("MAIN", "CAN Motores: fallo al iniciar");
 
     if (ctx.can_bms.start())
-        LOG_INFO("MAIN", "CAN BMS (emuccan1 @ 500kbps) OK");
+        LOG_INFO("MAIN", "CAN BMS (emuccan0 @ 500kbps) OK");
     else
         LOG_ERROR("MAIN", "CAN BMS: fallo al iniciar");
 

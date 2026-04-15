@@ -39,7 +39,7 @@ fi
 log "Usando puerto: $EMUC_PORT"
 
 # Iniciar el daemon EMUC
-# -s8 = 1 Mbps para emuccan0 (Motores)
+# -s8 = 1 Mbps para canales de motores/supervisor
 # -s7 = 500 Kbps (si el driver lo soporta, sino usar -s8 para ambos)
 # Nota: Algunos drivers EMUC usan un solo -s para todos los puertos
 log "Iniciando daemon emucd_64..."
@@ -58,8 +58,8 @@ fi
 
 log "Daemon iniciado correctamente (PID: $DAEMON_PID)"
 
-# Configurar emuccan0 (Motores - 1 Mbps)
-log "Configurando emuccan0 (Motores)..."
+# Configurar emuccan0 (BMS en este mapeo)
+log "Configurando emuccan0 (BMS)..."
 if ip link show emuccan0 > /dev/null 2>&1; then
     ip link set emuccan0 down 2>/dev/null || true
     ip link set emuccan0 txqueuelen 1000
@@ -69,8 +69,8 @@ else
     log "⚠ emuccan0 no disponible"
 fi
 
-# Configurar emuccan1 (BMS - 500 Kbps)
-log "Configurando emuccan1 (BMS)..."
+# Configurar emuccan1 (IMU en este mapeo)
+log "Configurando emuccan1 (IMU)..."
 if ip link show emuccan1 > /dev/null 2>&1; then
     ip link set emuccan1 down 2>/dev/null || true
     ip link set emuccan1 txqueuelen 1000
@@ -80,11 +80,23 @@ else
     log "⚠ emuccan1 no disponible"
 fi
 
+# Configurar emuccan2 (Motores)
+log "Configurando emuccan2 (Motores)..."
+if ip link show emuccan2 > /dev/null 2>&1; then
+    ip link set emuccan2 down 2>/dev/null || true
+    ip link set emuccan2 txqueuelen 1000
+    ip link set emuccan2 up
+    log "✓ emuccan2 configurado y activo"
+else
+    log "⚠ emuccan2 no disponible"
+fi
+
 # Verificar estado final
 log ""
 log "Estado de interfaces CAN:"
 ip -details link show emuccan0 2>/dev/null | tee -a "$LOG_FILE" || log "emuccan0: No disponible"
 ip -details link show emuccan1 2>/dev/null | tee -a "$LOG_FILE" || log "emuccan1: No disponible"
+ip -details link show emuccan2 2>/dev/null | tee -a "$LOG_FILE" || log "emuccan2: No disponible"
 
 log ""
 log "Configuración CAN completada exitosamente"

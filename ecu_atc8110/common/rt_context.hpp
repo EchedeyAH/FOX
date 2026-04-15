@@ -55,8 +55,8 @@ struct RtContext {
     std::atomic<bool>       adc_ok{true};
 
     // ── Módulos de hardware (propiedad del contexto) ────────────────────────
-    comunicacion_can::CanManager can_motors{"emuccan0"};  // CAN motores 1Mbps
-    comunicacion_can::CanManager can_bms{"emuccan1"};     // CAN BMS 500kbps
+    comunicacion_can::CanManager can_motors{"emuccan2"};  // CAN motores 1Mbps
+    comunicacion_can::CanManager can_bms{"emuccan0"};     // CAN BMS 500kbps
     adquisicion_datos::SensorManager sensores{};
     std::unique_ptr<common::IActuatorWriter> actuador;    // PEX-DA16 (opcional)
 
