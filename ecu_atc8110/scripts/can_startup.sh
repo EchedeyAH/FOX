@@ -21,42 +21,53 @@ log "Limpiando procesos previos..."
 pkill -9 emucd_64 2>/dev/null || true
 sleep 2
 
-# Detectar el puerto USB correcto (ttyACM0, ttyACM1, ttyACM2, etc.)
-EMUC_PORT=""
+# Detectar puertos USB disponibles (ttyACM0, ttyACM1, ...)
+EMUC_PORTS=()
 for port in /dev/ttyACM{0..3}; do
     if [ -e "$port" ]; then
         log "Puerto detectado: $port"
-        EMUC_PORT=$(basename "$port")
-        break
+        EMUC_PORTS+=("$(basename "$port")")
     fi
 done
 
-if [ -z "$EMUC_PORT" ]; then
+if [ ${#EMUC_PORTS[@]} -eq 0 ]; then
     log "ERROR: No se encontró ningún puerto ttyACM*"
     exit 1
 fi
 
-log "Usando puerto: $EMUC_PORT"
+DAEMON_PIDS=()
 
-# Iniciar el daemon EMUC
-# -s8 = 1 Mbps para canales de motores/supervisor
-# -s7 = 500 Kbps (si el driver lo soporta, sino usar -s8 para ambos)
-# Nota: Algunos drivers EMUC usan un solo -s para todos los puertos
-log "Iniciando daemon emucd_64..."
-/usr/sbin/emucd_64 -s8 -e0 "$EMUC_PORT" emuccan0 emuccan1 emuccan2 emuccan3 > /tmp/emuc_daemon.log 2>&1 &
-DAEMON_PID=$!
+start_emucd() {
+    local port="$1"
+    local if0="$2"
+    local if1="$3"
+    local daemon_log="$4"
 
-sleep 3
+    log "Iniciando daemon emucd_64 en ${port} -> ${if0},${if1} ..."
+    /usr/sbin/emucd_64 -s8 -e0 "$port" "$if0" "$if1" > "$daemon_log" 2>&1 &
+    local pid=$!
+    sleep 2
 
-# Verificar que el daemon sigue corriendo
-if ! ps -p $DAEMON_PID > /dev/null 2>&1; then
-    log "ERROR: El daemon emucd_64 falló al iniciar"
-    log "Log del daemon:"
-    cat /tmp/emuc_daemon.log | tee -a "$LOG_FILE"
-    exit 1
+    if ps -p "$pid" > /dev/null 2>&1; then
+        log "Daemon iniciado correctamente (PID: $pid)"
+        DAEMON_PIDS+=("$pid")
+    else
+        log "ERROR: emucd_64 falló en ${port} para ${if0},${if1}"
+        log "Log ${daemon_log}:"
+        cat "$daemon_log" | tee -a "$LOG_FILE"
+        return 1
+    fi
+}
+
+# Puerto 0 -> emuccan0/1 (BMS/IMU)
+start_emucd "${EMUC_PORTS[0]}" emuccan0 emuccan1 /tmp/emuc_daemon_0.log
+
+# Puerto 1 -> emuccan2/3 (MOTORES y extra), si existe
+if [ ${#EMUC_PORTS[@]} -ge 2 ]; then
+    start_emucd "${EMUC_PORTS[1]}" emuccan2 emuccan3 /tmp/emuc_daemon_1.log
+else
+    log "⚠ Solo hay un puerto ttyACM disponible; emuccan2/3 pueden no existir"
 fi
-
-log "Daemon iniciado correctamente (PID: $DAEMON_PID)"
 
 # Configurar emuccan0 (BMS en este mapeo)
 log "Configurando emuccan0 (BMS)..."
